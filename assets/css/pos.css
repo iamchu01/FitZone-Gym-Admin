@@ -1,0 +1,78 @@
+.category-btn {
+    display: inline-block;
+    padding: auto;
+    text-align: center;
+    transition: all 0.3s ease;
+    background-color: #fff;
+    border-color: #fff;
+    color: #000;
+    border-radius: 10px;
+    width: 100px;
+    height: 90px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.category-image {
+    width: 50px; /* Adjust the size as needed */
+    height: 50px;
+    margin-bottom: 5px;
+    object-fit: cover; /* Makes the image cover the area of the container */
+   
+}
+
+.btn-outline-success {
+    border: 1px solid #ededed;
+    color: #000000;
+}
+
+.btn-outline-success:hover {
+    background-color: #48c92f;
+    color: #fff;
+}
+
+.col {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px; /* Set margin between categories to 5px */
+}
+
+.product-image{
+    width: auto; /* Adjust the size as needed */
+    height: auto;
+    margin-bottom: 5px;
+    object-fit: cover; /* Makes the image cover the area of the container */
+    margin-top: 5px
+}
+.product-card{
+    object-fit: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+ 
+}
+.order-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+/*cart css */
+.order-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+}
+
+.order-details {
+    flex: 1;
+    padding-left: 10px;
+}
+
+.order-quantity {
+    display: flex;
+    align-items: center;
+}
+
+.order-quantity button {
+    margin: 0 5px;
+}

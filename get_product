@@ -1,0 +1,16 @@
+<?php
+require_once('vincludes/load.php');
+
+if(isset($_GET['id'])) {
+    $product_id = (int)$_GET['id'];
+    $product = find_by_id('products', $product_id);
+    
+    if($product) {
+        echo json_encode($product);
+    } else {
+        echo json_encode(['error' => 'Product not found']);
+    }
+} else {
+    echo json_encode(['error' => 'Invalid request']);
+}
+?>

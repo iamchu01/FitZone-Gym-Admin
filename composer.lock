@@ -1,0 +1,75 @@
+{
+  "_readme": [
+    "This file locks the dependencies of your project to a known state",
+    "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+    "This file is @generated automatically"
+  ],
+  "content-hash": "031d4c06f9d67f69a877b4fe4456e7ee",
+  "packages": [
+    {
+      "name": "coreproc/msisdn-ph",
+      "version": "1.3.0",
+      "source": {
+        "type": "git",
+        "url": "https://github.com/CoreProc/msisdn-ph-php.git",
+        "reference": "fea2fb8ef4e26cdf62fabf1668d4b3912771b597"
+      },
+      "dist": {
+        "type": "zip",
+        "url": "https://api.github.com/repos/CoreProc/msisdn-ph-php/zipball/fea2fb8ef4e26cdf62fabf1668d4b3912771b597",
+        "reference": "fea2fb8ef4e26cdf62fabf1668d4b3912771b597",
+        "shasum": ""
+      },
+      "require": {
+        "ext-json": "*",
+        "php": ">=5.4"
+      },
+      "require-dev": {
+        "phpunit/phpunit": "4.*",
+        "scrutinizer/ocular": "~1.1"
+      },
+      "type": "library",
+      "autoload": {
+        "psr-4": {
+          "Coreproc\\MsisdnPh\\": "src"
+        }
+      },
+      "notification-url": "https://packagist.org/downloads/",
+      "license": [
+        "MIT"
+      ],
+      "authors": [
+        {
+          "name": "Chris Bautista",
+          "email": "chris.bautista@coreproc.ph",
+          "homepage": "https://coreproc.com",
+          "role": "Developer"
+        }
+      ],
+      "description": "An MSISDN identification and cleaner library for Philippine telco subscribers",
+      "homepage": "http://github.com/coreproc/msisdn-ph-php",
+      "keywords": [
+        "globe",
+        "mobile number",
+        "msisdn",
+        "msisdn philippines",
+        "smart",
+        "sun"
+      ],
+      "support": {
+        "issues": "https://github.com/CoreProc/msisdn-ph-php/issues",
+        "source": "https://github.com/CoreProc/msisdn-ph-php/tree/1.3.0"
+      },
+      "time": "2021-08-24T02:04:47+00:00"
+    }
+  ],
+  "packages-dev": [],
+  "aliases": [],
+  "minimum-stability": "stable",
+  "stability-flags": {},
+  "prefer-stable": false,
+  "prefer-lowest": false,
+  "platform": {},
+  "platform-dev": {},
+  "plugin-api-version": "2.6.0"
+}
