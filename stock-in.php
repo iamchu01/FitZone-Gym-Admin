@@ -266,20 +266,10 @@ foreach ($all_categories as $cat) {
     <td><?php echo remove_junk(ucfirst($cat['name'])); ?></td>
     <td class="text-center"><?php echo $category_stock[$cat['id']]; ?></td> <!-- Display In-Stock quantity -->
     <td class="text-center">
-        <div class="dropdown action-label">
-            <a href="#" class="btn btn-white btn-sm btn-rounded dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                <i class="fa fa-dot-circle-o text-primary"></i> Actions
+            <a href="#" class="btn btn-success"  data-toggle="modal" data-target="#addProductModal"  aria-expanded="false"  onclick="setEditCategory(<?php echo $cat['id']; ?>, '<?php echo addslashes($cat['name']); ?>');">
+                <i class=" fa fa-gift text-primary"></i> Stock-in
             </a>
-            <div class="dropdown-menu dropdown-menu-right">
-              
-            <a href="#" class="dropdown-item" 
-   data-toggle="modal" 
-   data-target="#addProductModal" 
-   onclick="setEditCategory(<?php echo $cat['id']; ?>, '<?php echo addslashes($cat['name']); ?>');"> 
-   Stock In
-</a>
-            </div>
-        </div>
+
     </td>
 </tr>
 
@@ -296,14 +286,14 @@ foreach ($all_categories as $cat) {
             </div>
 </div>
 </div>
-<div class="modal fade" id="addProductModal" tabindex="-1" role="dialog" aria-labelledby="addProductModalLabel" aria-hidden="true">
+<div class="modal " id="addProductModal" tabindex="-1" role="dialog" aria-labelledby="addProductModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addProductModalLabel"></h5>
                 <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <span aria-hidden="true">&times;</span>
+                    </button>
             </div>
             <div class="modal-body" style="margin: 1px;">
     <div class="row no-gutters">
