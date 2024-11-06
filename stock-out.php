@@ -201,12 +201,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             </td>
                                             <td class="text-center"><?php echo remove_junk($product['date']); ?></td>
                                             <td class="text-center">
-                                            <button class="btn btn-danger stock-out" 
+                                            <button class="btn btn-danger stock-out fa fa-trash" 
     data-product-id="<?php echo (int)$product['id']; ?>" 
     data-product-name="<?php echo remove_junk($product['name']); ?>" 
     data-product-quantity="<?php echo remove_junk($product['quantity']); ?>" 
     data-product-batch="<?php echo remove_junk($product['date']); ?>"
-    data-product-item-code="<?php echo remove_junk($product['item_code']); ?>">Stock Out</button>
+    data-product-item-code="<?php echo remove_junk($product['item_code']); ?>"> Stock Out</button>
 
                                             </td>
                                         </tr>
@@ -225,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form id="stockOutForm" method="POST" action="stock-out.php">
                 <div class="modal-header">
                     <h5 class="modal-title" id="stockOutModalLabel">Stock Out Product</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -254,7 +254,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Confirm Stock Out</button>
                 </div>
             </form>
