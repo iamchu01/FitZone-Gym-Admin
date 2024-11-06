@@ -1,0 +1,6 @@
+{
+  "name": "avech/fit-zone-gym",
+  "require": {
+    "coreproc/msisdn-ph": "^1.0"
+  }
+}
