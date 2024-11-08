@@ -25,7 +25,7 @@
         body * {
             visibility: hidden;
         }
-        .table, .table * {
+        .table, .table *, .print-title {
             visibility: visible;
         }
         body {
@@ -78,7 +78,7 @@ $all_photo = find_all('media');
                                 <input type="text" id="category-search" class="form-control" placeholder="Type Product name...">
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col text-end">
                             <button id="print-button" class="btn btn-primary">
                                 <i class="fa fa-print"></i> Print
                             </button>
@@ -88,13 +88,13 @@ $all_photo = find_all('media');
                         <div class="table-responsive">
                             
                             <table class="table table-bordered datatable" style="width: 100%;">
-                            <div class="text-center mb-3 tabletitle"><h3>Stock Out Report</h3></div>
+                            <div class="text-center mb-3 tabletitle print-title"><h3>Stock Out Report</h3></div>
                                 <thead>
                                     <tr>                                      
                                         <th class="text-center" style="width: 5%;">#</th>
                                         <th class="text-center" style="width: 10%;">Stock out Item</th>
                                         <th class="text-center" style="width: 10%;">Quantity</th>
-                                        <th class="text-center" style="width: 10%;">Date</th>
+                                        <th class="text-center" style="width: 10%;">Stock out date</th>
                                         <th class="text-center" style="width: 30%;">Reason</th>
                                         <th class="text-center" style="width: 10%;">Item Code</th>
                                     </tr>

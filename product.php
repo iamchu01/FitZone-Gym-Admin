@@ -122,24 +122,17 @@ $min_expiration_date = date('Y-m-d', strtotime('+5 months'));
   <div class="row">
 
      <div class="row">
-      <div class="col"> <h3 class="page-title">Product Stock List </h3>
-    </div>
-    <div class="col">
-      <div class="dropdown position-absolute top-0 end-0">
-  <a class="btn btn-success dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false" title="Inventory management Navigation bar" data-toggle="tooltip">
-    <span class="fa fa-navicon"></span>
-  </a>
 
-  <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-  <li><a class="dropdown-item" href="admin.php"><span class="fa fa-home"></span> Inventory Overview</a></li>
-    <li><a class="dropdown-item" href="categorie.php"><span class="fa fa-th"></span> Add Product</a></li>
-    <li><a class="dropdown-item" href="product.php"><span class="fa fa-th-large"></span> Product Stock List</a></li>
-    <li><a class="dropdown-item" href="gym_equipment.php"><span class="fa fa-shopping-cart"></span> Store Products</a></li>
-    <li><a class="dropdown-item" href="gym_equipment.php"><span class="fa fa-cubes"></span> Gym equipment</a></li>
-  </ul>
-</div>
-
-    </div>
+                  
+                        <div class="col">
+                            <h3 class="page-title">Inventory Stock list</h3>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="admin.php">Inventory Management</a></li>
+                                <li class="breadcrumb-item active">Inventory Stock list</li>
+                            </ul>
+                        </div>
+             
+ 
     <div class="col-md-12">
      <?php echo display_msg($msg); ?>
      </div>
@@ -236,7 +229,7 @@ $min_expiration_date = date('Y-m-d', strtotime('+5 months'));
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <a href="#" data-toggle="modal" data-target="#editProductModal" aria-expanded="false"
-                                 onclick="setEditProduct(<?php echo $product['id']; ?>, '<?php echo addslashes($cat['name']); ?>, '<?php echo addslashes($product['item_code']); ?>', <?php echo $product['buy_price']; ?>, <?php echo $product['sale_price']; ?>, '<?php echo $product['quantity']; ?>, '<?php echo $product['expiration_date']; ?>', <?php echo $product['is_perishable']; ?>)">
+                            class="dropdown-item"onclick="setEditProduct(<?php echo $product['id']; ?>, '<?php echo addslashes($cat['name']); ?>, '<?php echo addslashes($product['item_code']); ?>', <?php echo $product['buy_price']; ?>, <?php echo $product['sale_price']; ?>, '<?php echo $product['quantity']; ?>, '<?php echo $product['expiration_date']; ?>', <?php echo $product['is_perishable']; ?>)">
                                 <i class="fa fa-edit"></i> Edit
                             </a>
                             <a href="delete_product.php?id=<?php echo (int)$product['id'];?>" class="dropdown-item" title="Delete" data-toggle="tooltip" onclick="return confirm('Are you sure you want to delete this product batch?');">
