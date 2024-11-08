@@ -42,7 +42,7 @@
                     </div>
                 </div>
 
-                <!-- POS Section -->
+                <!-- POS Sectio -->
                 <div class="row">
                     <div class="col-md-8">
                         <!-- Product Selection -->
