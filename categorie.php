@@ -153,9 +153,6 @@ if (isset($_POST['add_cat'])) {
                             <div class="form-group">
                                 <input type="text" class="form-control" name="categorie-name" placeholder="Product Name" required>
                             </div>
-                            <div class="form-group">
-                            <textarea id="paragraphText" name="categorie-name" rows="4" placeholder="Product description" cols="50"></textarea>
-                             </div>
                             <button type="submit" name="add_cat" class="btn btn-primary">Add Product</button>
                         </form>
                     </div>
@@ -257,7 +254,7 @@ if (isset($_POST['add_cat'])) {
     <div class="modal-content">
       <form id="editCategoryForm" method="post">
         <div class="modal-header">
-          <h5 class="modal-title" id="editCategoryModalLabel">Edit Category</h5>
+          <h5 class="modal-title" id="editCategoryModalLabel">Edit Product</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -265,7 +262,7 @@ if (isset($_POST['add_cat'])) {
         <div class="modal-body">
           <input type="hidden" name="edit_cat_id" id="edit_cat_id">
           <div class="form-group">
-            <label for="edit_cat_name">Category Name</label>
+            <label for="edit_cat_name">Product Name</label>
             <input type="text" class="form-control" name="categorie-name" id="edit_cat_name" required>
           </div>
           
