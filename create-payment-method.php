@@ -217,7 +217,7 @@
     function toggleStatus(methodId, newStatus) {
       // Perform AJAX request to update the status
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", "toggle-payment-status.php", true);
+      xhr.open("POST", "backend-add-authenticate/toggle-payment-status.php", true);
       xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
       xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {

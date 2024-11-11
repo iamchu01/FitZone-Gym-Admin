@@ -71,6 +71,8 @@
                     <th>Plan Type</th>
                     <th>Duration (in Days)</th>
                     <th>Pricing</th>
+                    <th>Payment Method</th>
+                    <th>Description</th>
                     <th>Status</th>
                     <th class="text-end">Action</th>
                   </tr>
@@ -85,8 +87,8 @@
                     while ($row = $result->fetch_assoc()) {
                       $plan_name = htmlspecialchars($row['plan_name']);
                       $plan_type = htmlspecialchars($row['plan_type']);
-                      $price = htmlspecialchars($row['price']);
                       $duration_days = htmlspecialchars($row['duration_days']);
+                      $price = htmlspecialchars($row['price']);
                       $payment_method = htmlspecialchars($row['payment_method']);
                       $description = htmlspecialchars($row['description']);
                       $status = htmlspecialchars($row['status']);
@@ -97,8 +99,8 @@
                       <tr>
                         <td><?php echo $plan_name; ?></td>
                         <td><?php echo $plan_type; ?></td>
-                        <td>₱<?php echo number_format($price, 2); ?></td>
                         <td><?php echo $duration_days . ' days'; ?></td>
+                        <td>₱<?php echo number_format($price, 2); ?></td>
                         <td><?php echo $payment_method; ?></td>
                         <td><?php echo $description ? $description : 'N/A'; ?></td>
                         <td>
@@ -195,14 +197,12 @@
                     <div class="form-group">
                       <label for="payment-selector-dropdown" class="form-label">Payment Methods
                         <span class="text-danger">*</span></label>
-
                       <!-- Dropdown Trigger -->
                       <div class="dropdown">
                         <button class="btn btn-secondary w-100 text-start" type="button" id="paymentSelectorButton"
                           data-bs-toggle="dropdown" aria-expanded="false">
                           <span id="selected-options">Select Payment Methods</span>
                         </button>
-
                         <!-- Dropdown Menu with Checkboxes -->
                         <ul class="dropdown-menu w-100" aria-labelledby="paymentSelectorButton"
                           style="max-height: 200px; overflow-y: auto;">
@@ -217,11 +217,10 @@
                             <hr class="dropdown-divider">
                           </li>
                           <div id="payment-options">
-                            <?php include 'fetch-payment-methods.php'; ?>
+                            <?php include 'backend-add-authenticate/fetch-payment-methods.php'; ?>
                           </div>
                         </ul>
                       </div>
-
                       <!-- <small id="selected-count" class="text-muted">0 methods selected</small> -->
                     </div>
                   </div>
@@ -274,12 +273,34 @@
       const selectedSummary = Array.from(checkboxes).map(checkbox => checkbox.nextElementSibling.textContent);
       const displayText = selectedSummary.length > 0 ? selectedSummary.join(", ") : "Select Payment Methods";
       document.getElementById("selected-options").textContent = displayText;
-
-      // Uncheck 'Select All' if not all options are selected
       document.getElementById("selectAll").checked = checkboxes.length === document.querySelectorAll(
         "#payment-options .form-check-input").length;
     }
   </script>
+
+  <script>
+    function updateStatus(planId, status) {
+      // Send an AJAX request to update the status
+      fetch('backend-add-authenticate/update-plan-status.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ plan_id: planId, status: status })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Reload the page or update the status element
+            location.reload();
+          } else {
+            alert("Error updating status: " + data.message);
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+  </script>
+
 
 
 </body>
