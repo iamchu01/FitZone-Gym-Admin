@@ -94,9 +94,6 @@
                                         <label class="col-form-label col-md-2">Membership Fee</label>
                                         <div class="col-md-10">
                                             <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text">₱</span>
-                                                </div>
                                                 <input type="number" class="form-control" id="membershipFee" placeholder="Enter amount" disabled>
                                             </div>
                                         </div>
