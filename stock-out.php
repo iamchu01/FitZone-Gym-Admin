@@ -26,6 +26,9 @@ $products = join_product_table(); // Fetching product data
 $all_categories = find_all('categories');
 $all_photo = find_all('media');
 
+$products = join_product_table(); // Fetching product data
+$all_categories = find_all('categories');
+$all_photo = find_all('media');
 
 
 // Include your database connection fil
@@ -34,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $missingFields = [];
 
     // Check for required fields
-    foreach (['product_id', 'stockOutQuantity', 'reason', 'product_description'] as $field) {
+    foreach (['product_id', 'stockOutQuantity', 'reason'] as $field) {
         if (empty($_POST[$field])) $missingFields[] = ucfirst(str_replace('_', ' ', $field));
     }
 
@@ -49,10 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $quantity_out = (int)$_POST['stockOutQuantity'];
     $reason = $db->escape($_POST['reason']);
     $date_out = date('Y-m-d');
-    
 
     // Check product existence and quantity
-    $sql = "SELECT p.id, c.name, p.quantity, p.item_code, p.description FROM products p JOIN categories c ON p.categorie_id = c.id WHERE p.id = ? LIMIT 1";
+    $sql = "SELECT p.id, c.name, p.quantity, p.item_code FROM products p JOIN categories c ON p.categorie_id = c.id WHERE p.id = ? LIMIT 1";
     $stmt = $db->con->prepare($sql);
     $stmt->bind_param("s", $product_id);
     $stmt->execute();
@@ -66,9 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->con->begin_transaction();
             try {
                 // Insert stock-out record
-                $sql = "INSERT INTO stock_out (product_name, quantity, date, item_code, reason, description) VALUES (?, ?, NOW(), ?, ?, ?)";
+                $sql = "INSERT INTO stock_out (product_name, quantity, date, item_code, reason) VALUES (?, ?, NOW(), ?, ?)";
                 $stmt = $db->con->prepare($sql);
-                $stmt->bind_param("sssss", $product['name'], $quantity_out, $product['item_code'], $reason, $product['description']);
+                $stmt->bind_param("ssss", $product['name'], $quantity_out, $product['item_code'], $reason);
                 if (!$stmt->execute()) {
                     throw new Exception($stmt->error); // Throw an exception if execution fails
                 }
@@ -150,7 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <th class="text-center" style="width: 30px;">#</th>
                                         <th class="text-center" style="width: 10%;">Photo</th>
                                         <th class="text-center" style="width: 50%;">Name</th>
-                                        <th class="text-center" style="width: 10%;">Item description</th>
                                         <th class="text-center" style="width: 10%;">Item Code</th>
                                         <th class="text-center" style="width: 10%;">In-Stock</th>
                                         <th class="text-center" style="width: 10%;">Buying Price</th>
@@ -185,7 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <?php endif; ?>
                                             </td>
                                             <td class="text-center"><?php echo remove_junk($product['name']); ?></td>
-                                            <td><?php echo remove_junk($product['description']); ?></td>
                                             <td><?php echo remove_junk($product['item_code']); ?></td>
                                             <td class="text-center"><?php echo (int)$product['quantity']; ?></td>
                                             <td><?php echo remove_junk($product['buy_price']); ?></td>
@@ -204,7 +204,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <button class="btn btn-danger stock-out fa fa-trash" 
     data-product-id="<?php echo (int)$product['id']; ?>" 
     data-product-name="<?php echo remove_junk($product['name']); ?>" 
-    data-product-description="<?php echo remove_junk($product['description']); ?>"  
     data-product-quantity="<?php echo remove_junk($product['quantity']); ?>" 
     data-product-batch="<?php echo remove_junk($product['date']); ?>"
     data-product-item-code="<?php echo remove_junk($product['item_code']); ?>"> Stock Out</button>
@@ -233,22 +232,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="modal-body">
                     <input type="hidden" name="product_id" id="product_id" value="">
                     <div class="form-group">
-                        <label for="item_code">Item Code</label>
-                        <input type="text" class="form-control" name="item_code" id="item_code" readonly>
-                    </div>
-                    <div class="form-group">
                         <label for="product_name">Product Name</label>
                         <input type="text" class="form-control" name="product_name" id="product_name" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="product_description">Product description</label>
-                        <input type="text" class="form-control" name="product_description" id="product_description" readonly>
                     </div>
                     <div class="form-group">
                         <label for="product_quantity">Available Quantity</label>
                         <input type="number" class="form-control" name="product_quantity" id="product_quantity" readonly>
                     </div>
-                    
+                    <div class="form-group">
+                        <label for="item_code">Item Code</label>
+                        <input type="text" class="form-control" name="item_code" id="item_code" readonly>
+                    </div>
                     <div class="form-group">
                         <label for="stockOutQuantity">Stock Out Quantity</label>
                         <input type="number" class="form-control" name="stockOutQuantity" id="stockOutQuantity" required>
@@ -274,13 +268,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <script>
     $(document).on('click', '.stock-out', function() {
-    var productName = $(this).data('product-name');   
+        var productName = $(this).data('product-name'); 
     var productQuantity = $(this).data('product-quantity'); 
-    var itemCode = $(this).data('product-item-code');
-    var productDescription = $(this).data('product-description')
+    var itemCode = $(this).data('product-item-code'); // Update to use item code
 
     $('#product_name').val(productName); 
-    $('#product_description').val(productDescription);
     $('#product_id').val($(this).data('product-id')); 
     $('#product_quantity').val(productQuantity); 
     $('#item_code').val(itemCode); // Set the item code in the modal
@@ -304,7 +296,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $('#category-search').on('keyup', function() {
         var value = $(this).val().toLowerCase();
         $('.datatable tbody tr').filter(function() {
-            $(this).toggle($(this).find('td:nth-child(3)').text().toLowerCase().indexOf(value) > -1);
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
         });
     });
 </script>

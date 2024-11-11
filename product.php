@@ -6,47 +6,25 @@
     <?php require_once('vincludes/load.php'); ?>
     <?php include 'layouts/head-css.php'; ?>
     <script>
-     function editProductModal(id, categoryName, description, itemCode, buyPrice, salePrice, quantity, expirationDate, isPerishable) {
-    document.getElementById('edit_cat_id').value = id;  // Set the hidden product ID field
-    
-    // Display category name as product name
-    document.getElementById('product-name').value = categoryName;
-    document.getElementById('product-description').value = description;
-    document.getElementById('product-item-code').value = itemCode;
-    document.getElementById('product-buying-price').value = buyPrice;
-    document.getElementById('product-selling-price').value = salePrice;
-    document.getElementById('product-quantity').value = quantity;
-    document.getElementById('product-expiration-date').value = expirationDate;
-
-    // Handle perishable checkbox
-    document.getElementById('perishable-select').checked = isPerishable == 1;
-    $('#perishable-select').trigger('change');
-}
-
-
 $(document).ready(function() {
-    // Function to validate selling price against buying price
-    function validatePrices() {
-        var buyingPrice = parseFloat($('#product-buying-price').val());
-        var sellingPrice = parseFloat($('#product-selling-price').val());
+    // Check selling price against buying price
+    $('input[name="saleing-price"], input[name="buying-price"]').on('input', function() {
+        var buyingPrice = parseFloat($('input[name="buying-price"]').val());
+        var sellingPrice = parseFloat($('input[name="saleing-price"]').val());
 
+        // Check if selling price is less than buying price
         if (!isNaN(sellingPrice) && !isNaN(buyingPrice) && sellingPrice < buyingPrice) {
-            $('#product-selling-price').addClass('is-invalid');
+            // Show validation message
+            $('input[name="saleing-price"]').addClass('is-invalid');
             $('.selling-price-feedback').text('Selling price must be greater than or equal to buying price.').show();
-            $('button[type="submit"]').prop('disabled', true);
+            $('button[type="submit"]').prop('disabled', true); // Disable submit button
         } else {
-            $('#product-selling-price').removeClass('is-invalid');
+            // Clear validation message
+            $('input[name="saleing-price"]').removeClass('is-invalid');
             $('.selling-price-feedback').text('').hide();
-            $('button[type="submit"]').prop('disabled', false);
+            $('button[type="submit"]').prop('disabled', false); // Enable submit button if valid
         }
-    }
-
-    // Trigger validation on input for buying and selling price fields
-    $('#product-buying-price, #product-selling-price').on('input', function() {
-        validatePrices();
     });
-
-    // Show or hide expiration date based on perishable checkbox status
     $('#is-perishable').change(function() {
         if ($(this).is(':checked')) {
             $('#expiration-date-group').show();
@@ -54,16 +32,6 @@ $(document).ready(function() {
             $('#expiration-date-group').hide();
         }
     });
-
-    // Validate before form submission for expiration date if perishable
-    $('form').on('submit', function(e) {
-        if ($('#is-perishable').is(':checked') && !$('input[name="expiration-date"]').val()) {
-            e.preventDefault();
-            $('.expiration-date-feedback').text('Expiration date is required for perishable items.').show();
-        }
-    });
-
-
       // Validate before form submission
       $('form').on('submit', function(e) {
         let isPerishable = $('#perishable-select').val() === 'perishable';
@@ -83,6 +51,10 @@ $(document).ready(function() {
             $(this).toggle($(this).find('td:nth-child(3)').text().toLowerCase().indexOf(value) > -1);
         });
     });
+    // Optional: Initialize visibility when the modal is shown
+    $('#addProductModal').on('show.bs.modal', function() {
+        $('#perishable-select').trigger('change'); // Trigger change to set initial visibility
+    });
     
 // Check item code uniqueness (existing code)
 $('input[name="item-code"]').on('input', function() {
@@ -93,9 +65,28 @@ $('input[name="item-code"]').on('input', function() {
     // Check selling price against buying price
    
 });
-// Example function to open the modal with pre-filled data
-
   
+function setEditProduct(productId, productName, categoryId, itemCode, buyPrice, salePrice, quantity, expirationDate, isPerishable) {
+    // Set the values in the modal
+    $('#edit_product_id').val(productId);  // Set product ID in the hidden input
+    $('#edit-product-category').val(categoryId);  // Set the category
+    $('#edit-item-code').val(itemCode);  // Set item code
+    $('#edit-buying-price').val(buyPrice);  // Set buying price
+    $('#edit-saleing-price').val(salePrice);  // Set selling price
+    $('#edit-product-quantity').val(quantity);  // Set quantity
+    
+    // Set expiration date and handle perishable check
+    $('#edit-expiration-date').val(expirationDate);  // Set expiration date
+    $('#edit-is-perishable').prop('checked', isPerishable);  // Set perishable status
+    
+    // Disable expiration date if not perishable
+    if (isPerishable) {
+        $('#edit-expiration-date').prop('disabled', false);
+    } else {
+        $('#edit-expiration-date').prop('disabled', true);
+    }
+}
+
 
   </script>
   <style>
@@ -123,57 +114,7 @@ $all_categories = find_all('categories');
 
 $all_photo = find_all('media');
 $min_expiration_date = date('Y-m-d', strtotime('+5 months'));
-// Function to validate selling price
-function validatePrices($buyPrice, $sellPrice) {
-    if ($sellPrice < $buyPrice) {
-        return false; // Selling price must be greater than or equal to buying price
-    }
-    return true;
-}
 
-// Update Product
-if (isset($_POST['update_product'])) {
-    $edit_cat_id = (int)$_POST['edit_cat_id'];
-    $product_description = $_POST['product-description'];
-    $product_item_code = $_POST['product-item-code'];
-    $product_buying_price = (float)$_POST['product-buying-price'];
-    $product_selling_price = (float)$_POST['product-selling-price'];
-    $product_expiration_date = isset($_POST['product-expiration-date']) ? $_POST['product-expiration-date'] : NULL;
-    $product_is_perishable = isset($_POST['perishable-select']) ? 1 : 0;
-    $product_photo = $_POST['product-photo']; // Assuming this is the photo URL or path
-
-    // Validate prices
-    if (!validatePrices($product_buying_price, $product_selling_price)) {
-        $session->msg('d', "Selling price must be greater than or equal to buying price.");
-        redirect('inventory.php', false); // Redirect to the inventory page without changing the URL
-    }
-
-    // Update product in the database, excluding the name field
-    $query = "UPDATE products SET 
-                description = '{$product_description}',
-                item_code = '{$product_item_code}',
-                buy_price = '{$product_buying_price}',
-                sale_price = '{$product_selling_price}',
-                expiration_date = '{$product_expiration_date}',
-                is_perishable = '{$product_is_perishable}',
-                media_id = '{$product_photo}'
-                WHERE id = '{$edit_cat_id}'";
-
-    if ($db->query($query)) {
-        $session->msg('s', "Product updated successfully.");
-        echo "<script>
-                setTimeout(function(){
-                    window.location.href = 'product.php';
-                }, 100);
-              </script>";
-       // redirect('product.php', false); // Redirect to the product page without changing the URL
-    } else {
-        $session->msg('d', "Sorry, failed to update product!");
-        redirect('product.php', false); // Redirect to the product page without changing the URL
-    }
-}
-
-?>
 ?>
 <?php include 'layouts/menu.php'; ?> 
 <div class="page-wrapper">
@@ -229,7 +170,6 @@ if (isset($_POST['update_product'])) {
                     <th class="text-center" style="width: 30px;">#</th>
                     <th class="text-center" style="width: 10%;">Photo</th>
                     <th class="text-center" style="width: 50%;">Name</th>
-                    <th class="text-center" style="width: 10%;">Description</th>
                     <th class="text-center" style="width: 10%;">Item Code</th>
                     <th class="text-center" style="width: 10%;">In-Stock</th>
                     <th class="text-center" style="width: 10%;">Buying Price</th>
@@ -264,7 +204,6 @@ if (isset($_POST['update_product'])) {
                 <?php endif; ?>
             </td>
             <td class="text-center"><?php echo remove_junk($product['categorie']); ?></td>
-            <td class="text-center"><?php echo remove_junk($product['description']); ?></td>
             <td class="text-center"><?php echo remove_junk($product['item_code']); ?></td>
             <td class="text-center"><?php echo remove_junk($product['quantity']); ?></td>
             <td class="text-center"><?php echo remove_junk($product['buy_price']); ?></td>
@@ -288,15 +227,11 @@ if (isset($_POST['update_product'])) {
                         <a href="#" class="btn btn-white btn-sm btn-rounded dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                             <i class="fa fa-dot-circle-o text-primary"></i> Actions
                         </a>
-                        
                         <div class="dropdown-menu dropdown-menu-right">
-                        <a href="#" data-toggle="modal" data-target="#editProductModal" aria-expanded="false"
-                            class="dropdown-item" 
-                            onclick="editProductModal(<?php echo $product['id']; ?>, '<?php echo addslashes($product['categorie']); ?>', '<?php echo addslashes($product['description']); ?>', '<?php echo addslashes($product['item_code']); ?>', <?php echo $product['buy_price']; ?>, <?php echo $product['sale_price']; ?>, '<?php echo $product['quantity']; ?>', '<?php echo $product['expiration_date']; ?>', <?php echo $product['is_perishable']; ?>)">
+                            <a href="#" data-toggle="modal" data-target="#editProductModal" aria-expanded="false"
+                            class="dropdown-item"onclick="setEditProduct(<?php echo $product['id']; ?>, '<?php echo addslashes($cat['name']); ?>, '<?php echo addslashes($product['item_code']); ?>', <?php echo $product['buy_price']; ?>, <?php echo $product['sale_price']; ?>, '<?php echo $product['quantity']; ?>, '<?php echo $product['expiration_date']; ?>', <?php echo $product['is_perishable']; ?>)">
                                 <i class="fa fa-edit"></i> Edit
-                         </a>
-                            
-
+                            </a>
                             <a href="delete_product.php?id=<?php echo (int)$product['id'];?>" class="dropdown-item" title="Delete" data-toggle="tooltip" onclick="return confirm('Are you sure you want to delete this product batch?');">
                                 <i class="fa fa-trash"></i> Delete
                             </a>
@@ -317,97 +252,86 @@ if (isset($_POST['update_product'])) {
   </div>
   </div>
 </div>
-</div>
+
 <!-- Edit Product Modal -->
-<div class="modal" id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel" aria-hidden="true">
+<div class="modal " id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModal" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
+                <h5 class="modal-title" id="editProductModal"></h5>
                 <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <span aria-hidden="true">&times;</span>
+                    </button>
             </div>
             <div class="modal-body" style="margin: 1px;">
-                <div class="row no-gutters">
-                    <div class="col-12">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <strong>
-                                    <span class="fa fa-th-large"></span>
-                                    <span>Edit Product</span>
-                                </strong>
-                            </div>
-                            <div class="panel-body">
-                            <form method="post" action="product.php" class="clearfix">
-    <input type="hidden" id="edit_cat_id" name="edit_cat_id" value="">
+    <div class="row no-gutters">
+        <div class="col-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong>
+                        <span class="fa fa-th-large"></span>
+                        <span>Stock in Product</span>
+                    </strong>
+                </div>
+                <div class="panel-body">
+                <form method="post" action="stock-in.php" class="clearfix">
+                                    <!-- Hidden input for category ID -->
+                                    <input type="hidden" id="edit_cat_id" name="edit_cat_id" value="">
 
-    <div class="form-group">
-        <div class="row">
-            <div class="col-md-6">
-            
-            <input type="text" class="form-control" id="product-name" name="product-name" readonly>
-                    
-            </div>
-            <div class="col-md-6">
-                <select class="form-control" name="product-photo">
-                    <option value="">Select Product Photo</option>
-                    <?php foreach ($all_photo as $photo): ?>
-                        <option value="<?php echo $photo['id'] ?>"><?php echo $photo['file_name'] ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+                    <div class="form-group">
+    <div class="row">
+        <div class="col-md-6">
+            <select class="form-control" name="product-categorie" id="product-category" required>
+                <option value=""></option>
+                <?php foreach ($all_categories as $cat): ?>
+                    <option value="<?php echo (int)$cat['id']; ?>"><?php echo $cat['name']; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <select class="form-control" name="product-photo">
+                <option value="">Select Product Photo</option>
+                <?php foreach ($all_photo as $photo): ?>
+                    <option value="<?php echo (int)$photo['id'] ?>"><?php echo $photo['file_name'] ?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
     </div>
-
-    <!-- Other fields -->
-    <div class="form-group">
-        <div class="row">
-        
-            <div class="col-md-4">
-            <label for="product-quantity">Quantity</label>
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-shopping-cart"></i></span>
-                    <input type="number" class="form-control" name="product-quantity" id="product-quantity" disabled>
-                </div>
-            </div>
-           
-            <div class="col-md-4">
-            <label for="product-buying-price">Buying price</label>
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
-                    <input type="number" class="form-control" name="product-buying-price" id="product-buying-price" required>
-                    <span class="input-group-addon">.00</span>
-                </div>
-            </div>
-            <div class="col-md-4">
-            <label for="product-selling-price">Selling price</label>
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
-                    <input type="number" class="form-control" name="product-selling-price" id="product-selling-price" required>
-                    <span class="input-group-addon">.00</span>
-                   
-                </div>
-                <div class="invalid-feedback selling-price-feedback" style="display:none;"></div>
-            </div>
-        </div>
-    </div>
-    <div class="form-group">
-    <label for="product-item-code">Item code</label>
-                                        <div class="input-group">
-                                           
-                                            <span class="input-group-addon"><i class="fa fa-barcode"></i></span>
-                                            <input type="text" class="form-control" name="product-item-code" id="product-item-code"  >
-                                        </div>
-                                        
-                                    </di>
-                                    <div class="form-group">
-                                    <label for="product-description">Item description</label>
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="fa fa-hashtag"></i></span>
-                                            <input type="text" class="form-control" name="product-description" id="product-description" required>
+</div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon"><i class="fa fa-shopping-cart"></i></span>
+                                                    <input type="number" class="form-control" name="product-quantity" placeholder="Product Quantity" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
+                                                    <input type="number" class="form-control" name="buying-price" placeholder="Buying Price" required>
+                                                    <span class="input-group-addon">.00</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
+                                                    <input type="number" class="form-control" name="saleing-price" placeholder="Selling Price" required>
+                                                    <span class="input-group-addon">.00</span>
+                                                </div>
+                                                <div class="invalid-feedback selling-price-feedback" style="display:none;"></div>
+                                            </div>
                                         </div>
                                     </div>
+                                    
+                                    <div class="form-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fa fa-barcode"></i></span>
+                                            <input type="text" class="form-control" name="item-code" placeholder="Item Code" required>
+                                        </div>
+                                        <div class="invalid-feedback item-code-feedback" style="display:none;"></div>
+                                    </div>
+
+                                    <!-- Checkbox for Perishable -->
                                     <div class="form-group">
                                         <div class="form-check">
                                             <input type="checkbox" class="form-check-input" id="is-perishable" name="is_perishable" value="1">
@@ -421,13 +345,8 @@ if (isset($_POST['update_product'])) {
                                         <div class="expiration-date-feedback text-danger" style="display: none;"></div> <!-- Feedback message container -->
                                     </div>
 
-   
-
-    <div class="form-group text-center">
-        <button type="submit" class="btn btn-primary" name="update_product">Save Changes</button>
-    </div>
-</form>
-
+                                    <button type="submit" name="" class="btn btn-primary">Update</button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -436,6 +355,8 @@ if (isset($_POST['update_product'])) {
         </div>
     </div>
 </div>
+
+
 <?php include_once('vlayouts/footer.php'); ?>
 <?php include 'layouts/customizer.php'; ?>
 <?php include 'layouts/vendor-scripts.php'; ?>

@@ -17,7 +17,6 @@ if (isset($_GET['category_id'])) {
         echo "<tr>";
         echo "<th>Product Name</th>";
         echo "<th>SRP</th>";
-        echo "<th>Item description</th>";
         echo "<th>Item Code</th>";
         echo "<th>Quantity in Stock</th>";
         echo "<th>Action (Select Quantity)</th>";
@@ -35,7 +34,6 @@ if (isset($_GET['category_id'])) {
             echo "<tr>";
             echo "<td>" . remove_junk($category['name']) . "</td>";
             echo "<td>$" . $product['sale_price'] . "</td>";
-            echo "<td>" . $product['description'] . "</td>";
             echo "<td>" . $product['item_code'] . "</td>";
             echo "<td>" . $product['quantity'] . "</td>";
             echo "<td>";

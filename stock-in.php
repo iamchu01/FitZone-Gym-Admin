@@ -113,6 +113,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_cat'])) {
       }
   }
   
+  // Proceed with deletion if there are no products linked to this category
+  $delete_id = delete_by_id('categories', $categorie_id);
+  if ($delete_id) {
+      $session->msg("s", "Category deleted.");
+      redirect('categorie.php');
+  } else {
+      $session->msg("d", "Category deletion failed.");
+      redirect('categorie.php');
+  }
+}
+
+// Update Category if 'edit_cat' is posted
+if (isset($_POST['edit_cat'])) {
+    $cat_id = (int)$_POST['edit_cat_id'];
+    $cat_name = remove_junk($db->escape($_POST['categorie-name']));
+
+    if (!empty($cat_name)) {
+        $sql = "UPDATE categories SET name='{$cat_name}' WHERE id='{$cat_id}'";
+        if ($db->query($sql) && $db->affected_rows() === 1) {
+            $session->msg("s", "Successfully updated product");
+        } else {
+            $session->msg("d", "Failed to update product.");
+        }
+    } else {
+        $session->msg("d", "Product name cannot be empty.");
+    }
+    redirect('categorie.php', false);
 }
 
 ?>
@@ -124,12 +151,11 @@ if (isset($_POST['add_product'])) {
     $item_code = remove_junk($db->escape($_POST['item-code']));
     $is_perishable = isset($_POST['is_perishable']) ? (int)$_POST['is_perishable'] : 0; // Default to non-perishable
     $expiration_date = NULL; // Initialize to NULL for non-perishable items
-    $item_discription = remove_junk($db->escape($_POST['item-description']));
-    $req_fields = ['product-categorie', 'product-quantity', 'buying-price', 'saleing-price', 'item-code','item-description'];
+
+    $req_fields = ['product-categorie', 'product-quantity', 'buying-price', 'saleing-price', 'item-code'];
     validate_fields($req_fields);
     
     if (empty($errors)) {
-       
         $p_cat   = remove_junk($db->escape($_POST['product-categorie']));
         $p_qty   = (int)remove_junk($db->escape($_POST['product-quantity'])); // Ensure quantity is an integer
         $p_buy   = (float)remove_junk($db->escape($_POST['buying-price'])); // Ensure buying price is a float
@@ -155,22 +181,18 @@ if (isset($_POST['add_product'])) {
         } else {
             $date = make_date(); // Get the current date
 
-            $query  = "INSERT INTO products (quantity, buy_price, sale_price, categorie_id, media_id, date, expiration_date, is_perishable, item_code, description) VALUES ";
+            $query  = "INSERT INTO products (quantity, buy_price, sale_price, categorie_id, media_id, date, expiration_date, is_perishable, item_code) VALUES ";
             $query .= "('{$p_qty}', '{$p_buy}', '{$p_sale}', '{$p_cat}', '{$media_id}', '{$date}', ";
             $query .= $expiration_date ? "'{$expiration_date}', " : "NULL, ";
-            $query .= "{$is_perishable}, '{$item_code}', '{$item_discription}')";
+            $query .= "{$is_perishable}, '{$item_code}')";
+            
             // Execute the query
             if ($db->query($query)) {
                 $session->msg('s', "Product added successfully!");
-                echo "<script>
-                setTimeout(function(){
-                    window.location.href = 'stock-in.php';
-                }, 100);
-              </script>";
-               // redirect('stock-in.php', false);
+                redirect('stock-in.php', false);
             } else {
-               
-                 $session->msg('d', 'Sorry, failed to add product!');
+                // error_log("Database Insert Error: " . $db->error); // Log error for debugging
+                // $session->msg('d', 'Sorry, failed to add product!');
                 redirect('stock-in.php', false);
             }
         }
@@ -216,14 +238,12 @@ foreach ($all_categories as $cat) {
                             <span class="input-group-addon"><i class="fa fa-search"></i></span>
                             <input type="text" id="category-search" class="form-control" placeholder="Type Product name...">
                         </div>
-                        
-                       
                     </div>
                     <!-- <div class="pull-right">
                  <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#addProductModal">Stock in</a> -->
             <!-- </div>
                     <div class="pull-right">
-                 -->
+                <a href="stock-out.php" class="btn btn-danger" >Stock Out</a> -->
            
                     </div>
                    
@@ -266,51 +286,50 @@ foreach ($all_categories as $cat) {
             </div>
 </div>
 </div>
-                                    <!-- stock-in product modal -->
-                                    <div class="modal " id="addProductModal" tabindex="-1" role="dialog" aria-labelledby="addProductModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog modal-lg" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="addProductModalLabel"></h5>
-                                                    <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                        </button>
-                                                </div>
-                                                <div class="modal-body" style="margin: 1px;">
-                                        <div class="row no-gutters">
-                                            <div class="col-12">
-                                                <div class="panel panel-default">
-                                                    <div class="panel-heading">
-                                                        <strong>
-                                                            <span class="fa fa-th-large"></span>
-                                                            <span>Stock in Product</span>
-                                                        </strong>
-                                                    </div>
-                                                    <div class="panel-body">
-                                                    <form method="post" action="stock-in.php" class="clearfix">
-                                                                        <!-- Hidden input for category ID -->
-                                                                        <input type="hidden" id="edit_cat_id" name="edit_cat_id" value="">
+<div class="modal " id="addProductModal" tabindex="-1" role="dialog" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel"></h5>
+                <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                    </button>
+            </div>
+            <div class="modal-body" style="margin: 1px;">
+    <div class="row no-gutters">
+        <div class="col-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong>
+                        <span class="fa fa-th-large"></span>
+                        <span>Stock in Product</span>
+                    </strong>
+                </div>
+                <div class="panel-body">
+                <form method="post" action="stock-in.php" class="clearfix">
+                                    <!-- Hidden input for category ID -->
+                                    <input type="hidden" id="edit_cat_id" name="edit_cat_id" value="">
 
-                                                        <div class="form-group">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <select class="form-control" name="product-categorie" id="product-category" required>
-                                                    <option value=""></option>
-                                                    <?php foreach ($all_categories as $cat): ?>
-                                                        <option value="<?php echo (int)$cat['id']; ?>"><?php echo $cat['name']; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <select class="form-control" name="product-photo">
-                                                    <option value="">Select Product Photo</option>
-                                                    <?php foreach ($all_photo as $photo): ?>
-                                                        <option value="<?php echo (int)$photo['id'] ?>"><?php echo $photo['file_name'] ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
+                    <div class="form-group">
+    <div class="row">
+        <div class="col-md-6">
+            <select class="form-control" name="product-categorie" id="product-category" required>
+                <option value=""></option>
+                <?php foreach ($all_categories as $cat): ?>
+                    <option value="<?php echo (int)$cat['id']; ?>"><?php echo $cat['name']; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <select class="form-control" name="product-photo">
+                <option value="">Select Product Photo</option>
+                <?php foreach ($all_photo as $photo): ?>
+                    <option value="<?php echo (int)$photo['id'] ?>"><?php echo $photo['file_name'] ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+    </div>
+</div>
                                     <div class="form-group">
                                         <div class="row">
                                             <div class="col-md-4">
@@ -343,13 +362,6 @@ foreach ($all_categories as $cat) {
                                             <input type="text" class="form-control" name="item-code" placeholder="Item Code" required>
                                         </div>
                                         <div class="invalid-feedback item-code-feedback" style="display:none;"></div>
-                                    </div>
-                                     
-                                    <div class="form-group">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="fa fa-hashtag"></i></span>
-                                            <input type="text" class="form-control" name="item-description" placeholder="Item description" required>
-                                        </div>
                                     </div>
 
                                     <!-- Checkbox for Perishable -->
