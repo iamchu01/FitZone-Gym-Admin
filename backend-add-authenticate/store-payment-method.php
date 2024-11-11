@@ -1,7 +1,6 @@
 <?php
 include '../layouts/db-connection.php';
 
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $method_name = $_POST['method_name'];
   $method_type = $_POST['method_type'];
