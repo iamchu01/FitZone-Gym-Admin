@@ -205,7 +205,7 @@ include 'layouts/db-connection.php';
               </div>
 
               <form id="addMemberForm" class="needs-validation member-info" method="POST"
-                action="process-add-member.php">
+                action="backend-add-authenticate/process-add-member.php">
                 <div class="row">
                   <!-- Firstname -->
                   <div class="col-sm-6">
@@ -426,7 +426,7 @@ include 'layouts/db-connection.php';
     </div>
     <!-- end main wrapper-->
 
-    <script src="assets/js/add-member.js"></script>
+    <script src="backend-add-authenticate/add-member.js"></script>
     <!-- Toastr JS -->
 
 
@@ -467,7 +467,7 @@ include 'layouts/db-connection.php';
 
         if (memberId) {
           var xhr = new XMLHttpRequest();
-          xhr.open("POST", "archive-member.php", true);
+          xhr.open("POST", "backend-add-authenticate/archive-member.php", true);
           xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
           xhr.onreadystatechange = function () {
@@ -502,7 +502,7 @@ include 'layouts/db-connection.php';
     <script>
       function updateStatus(memberId, newStatus) {
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "member-update-status.php", true);
+        xhr.open("POST", "backend-add-authenticate/member-update-status.php", true);
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
         xhr.onreadystatechange = function () {
