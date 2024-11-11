@@ -26,7 +26,7 @@
           <p class="account-subtitle">ADMIN</p>
 
           <!-- Account Form -->
-          <form action="admin-login-auth.php" method="post">
+          <form action="backend-add-authenticate/admin-login-auth.php" method="post">
             <div class="form-group">
               <label>Username</label>
               <input class="form-control" type="text" name="username" required>

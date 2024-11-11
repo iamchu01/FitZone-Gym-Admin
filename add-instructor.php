@@ -176,7 +176,7 @@
 
               <!-- //* Add Instructor Form -->
               <form id="addUserForm" class="needs-validation instructor-info" method="POST"
-                action="process-add-instructor.php">
+                action="backend-add-authenticate/process-add-instructor.php">
                 <div class="row">
 
                   <!-- //* firstname -->
@@ -413,7 +413,7 @@
 
   </div>
   <!-- end main wrapper-->
-  <script src="assets/js/add-instructor.js"></script>
+  <script src="backend-add-authenticate/add-instructor.js"></script>
   <!-- Toastr JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
@@ -425,7 +425,7 @@
   <script>
     function updateStatus(instructorId, newStatus) {
       var xhr = new XMLHttpRequest();
-      xhr.open("POST", "instructor-update-status.php", true);
+      xhr.open("POST", "backend-add-authenticate/instructor-update-status.php", true);
       xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
       xhr.onreadystatechange = function () {
@@ -470,7 +470,7 @@
 
       if (instructorId) {
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "archive-instructor.php", true);
+        xhr.open("POST", "backend-add-authenticate/archive-instructor.php", true);
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
         xhr.onreadystatechange = function () {
@@ -518,7 +518,7 @@
     function handleAddInstructor() {
       // Simulate form submission and show success modal
       var xhr = new XMLHttpRequest();
-      xhr.open("POST", "process-add-instructor.php", true);
+      xhr.open("POST", "backend-add-authenticate/process-add-instructor.php", true);
       xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
       xhr.onreadystatechange = function () {
@@ -550,7 +550,7 @@
       const searchValue = this.value;
 
       const xhr = new XMLHttpRequest();
-      xhr.open('GET', 'search-instructors.php?search=' + encodeURIComponent(searchValue), true);
+      xhr.open('GET', 'backend-add-authenticate/search-instructors.php?search=' + encodeURIComponent(searchValue), true);
       xhr.onload = function () {
         if (this.status === 200) {
           document.getElementById('instructorsTable').innerHTML = this.responseText;
