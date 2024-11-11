@@ -124,7 +124,7 @@
                               <div class="dropdown-menu dropdown-menu-right">
                                 <a class="dropdown-item"
                                   href="instructor-profile.php?id=<?php echo $row['instructor_id']; ?>">
-                                  <i class="fa fa-eye m-r-5"></i> View Details
+                                  <i class="fa fa-eye m-r-5"></i> View Profile
                                 </a>
                                 <a id="archive-link-<?php echo $row['instructor_id']; ?>"
                                   class="dropdown-item <?php echo ($status === 'Inactive') ? '' : 'disabled'; ?>" href="#"

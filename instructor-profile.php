@@ -2,11 +2,12 @@
 include 'layouts/session.php';
 include 'layouts/head-main.php';
 include 'layouts/db-connection.php';
+include 'backend-add-authenticate/get_instructor_profile.php';
 ?>
 
 <head>
 
-  <title>Instructor Profile - HRMS admin template</title>
+  <title>Instructor Profile</title>
 
   <?php include 'layouts/title-meta.php'; ?>
 
@@ -52,10 +53,15 @@ include 'layouts/db-connection.php';
                     <div class="row">
                       <div class="col-md-5 mt-3">
                         <div class="profile-info-left mx-4">
-                          <h3 class="user-name mt-4">John Doe</h3>
+                          <h3 class="user-name mt-4">
+                            <?php echo htmlspecialchars($instructor['first_name'] . ' ' . $instructor['last_name']); ?>
+                          </h3>
                           <small class="text-muted">Instructor</small>
-                          <div class="small doj text-muted">Date of Join : 06/12/2000</div>
-                          <div class="small doj text-muted">Specialization : Group Fitness, Strength and Conditioning
+                          <div class="small doj text-muted">Date of Join:
+                            <?php echo htmlspecialchars($instructor['instructor_join_date']); ?>
+                          </div>
+                          <div class="small doj text-muted">Specialization:
+                            <?php echo htmlspecialchars($instructor['specialization']); ?>
                           </div>
                         </div>
                       </div>
@@ -63,23 +69,23 @@ include 'layouts/db-connection.php';
                         <ul class="personal-info">
                           <li>
                             <div class="title">Phone:</div>
-                            <div class="text"><a href="">9876543210</a></div>
+                            <div class="text"><?php echo htmlspecialchars($instructor['phone_number']); ?></div>
                           </li>
                           <li>
                             <div class="title">Birthdate:</div>
-                            <div class="text">06/12/200</div>
+                            <div class="text"><?php echo htmlspecialchars($instructor['date_of_birth']); ?></div>
                           </li>
                           <li>
                             <div class="title">Age:</div>
-                            <div class="text">24 years old</div>
+                            <div class="text"><?php echo htmlspecialchars($instructor['age']); ?> years old</div>
                           </li>
                           <li>
                             <div class="title">Gender:</div>
-                            <div class="text">Male</div>
+                            <div class="text"><?php echo htmlspecialchars($instructor['gender']); ?></div>
                           </li>
                           <li>
                             <div class="title">Address:</div>
-                            <div class="text">1861 Bayonne Ave, Manchester Township, NJ, 08759</div>
+                            <div class="text"><?php echo htmlspecialchars($instructor['address']); ?></div>
                           </li>
                         </ul>
                       </div>

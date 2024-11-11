@@ -6,7 +6,7 @@ include 'layouts/db-connection.php';
 ?>
 
 <head>
-  <title>Members - HRMS admin template</title>
+  <title>Members</title>
   <?php include 'layouts/title-meta.php'; ?>
   <?php include 'layouts/head-css.php'; ?>
   <!-- Toastr CSS -->
@@ -144,7 +144,7 @@ include 'layouts/db-connection.php';
                                 aria-expanded="false"><i class="material-icons">more_vert</i></a>
                               <div class="dropdown-menu dropdown-menu-right">
                                 <a class="dropdown-item" href="member-profile.php?id=<?php echo $row['member_id']; ?>">
-                                  <i class="fa fa-eye m-r-5"></i> View Details
+                                  <i class="fa fa-eye m-r-5"></i> View Profile
                                 </a>
                                 <a id="archive-link-<?php echo $row['member_id']; ?>"
                                   class="dropdown-item <?php echo ($status === 'Inactive') ? '' : 'disabled'; ?>" href="#"
