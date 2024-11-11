@@ -28,19 +28,19 @@ try {
 
         // Redirect based on role
         if ($user['role'] === 'admin') {
-          header("Location: admin-dashboard.php");
+          header("Location: ../admin-dashboard.php");
         } elseif ($user['role'] === 'staff') {
           header("Location: staff-dashboard.php");
         }
         exit;
       } else {
         // Redirect back with error for invalid credentials
-        header("Location: admin-login.php?error=invalid_credentials");
+        header("Location: ../admin-login.php?error=invalid_credentials");
         exit;
       }
     } else {
       // Redirect back with error for empty fields
-      header("Location: admin-login.php?error=empty_fields");
+      header("Location: ../admin-login.php?error=empty_fields");
       exit;
     }
   }

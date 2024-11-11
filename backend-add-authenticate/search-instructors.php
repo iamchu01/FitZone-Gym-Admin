@@ -1,10 +1,11 @@
 <?php
-include 'layouts/db-connection.php';
+include '../layouts/db-connection.php';
+
 
 $search_query = "";
 if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
-    $search = $conn->real_escape_string(trim($_GET['search']));
-    $search_query = "AND (first_name LIKE '%$search%' OR last_name LIKE '%$search%' OR phone_number LIKE '%$search%')";
+  $search = $conn->real_escape_string(trim($_GET['search']));
+  $search_query = "AND (first_name LIKE '%$search%' OR last_name LIKE '%$search%' OR phone_number LIKE '%$search%')";
 }
 
 // Fetch instructors based on search criteria
@@ -12,8 +13,8 @@ $query = "SELECT * FROM tbl_add_instructors WHERE archive_status = 'Unarchived' 
 $result = $conn->query($query);
 
 if ($result->num_rows > 0) {
-    echo '<table class="table table-striped custom-table datatable">';
-    echo '<thead>
+  echo '<table class="table table-striped custom-table datatable">';
+  echo '<thead>
             <tr>
                 <th>Name</th>
                 <th>Phone Number</th>
@@ -23,16 +24,16 @@ if ($result->num_rows > 0) {
                 <th class="text-end">Action</th>
             </tr>
           </thead>';
-    echo '<tbody>';
-    while ($row = $result->fetch_assoc()) {
-        $full_name = htmlspecialchars($row['first_name'] . ' ' . $row['last_name']);
-        $phone_number = htmlspecialchars($row['phone_number']);
-        $gender = htmlspecialchars($row['gender']);
-        $specialization = htmlspecialchars($row['specialization']);
-        $status = htmlspecialchars($row['status']);
-        $status_label = $status === 'Active' ? 'text-success' : 'text-danger';
+  echo '<tbody>';
+  while ($row = $result->fetch_assoc()) {
+    $full_name = htmlspecialchars($row['first_name'] . ' ' . $row['last_name']);
+    $phone_number = htmlspecialchars($row['phone_number']);
+    $gender = htmlspecialchars($row['gender']);
+    $specialization = htmlspecialchars($row['specialization']);
+    $status = htmlspecialchars($row['status']);
+    $status_label = $status === 'Active' ? 'text-success' : 'text-danger';
 
-        echo "<tr>
+    echo "<tr>
                 <td>
                     <h2 class='table-avatar'>
                         <a href='instructor-profile.php?id={$row['instructor_id']}' class='avatar'><img src='assets/img/profiles/avatar-19.jpg' alt=''></a>
@@ -45,7 +46,7 @@ if ($result->num_rows > 0) {
                 <td>
                     <div class='dropdown action-label'>
                         <a href='#' class='btn btn-white btn-sm btn-rounded dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>
-                            <i id='status-{$row['instructor_id']}' class='fa fa-dot-circle-o $status_label'></i> 
+                            <i id='status-{$row['instructor_id']}' class='fa fa-dot-circle-o $status_label'></i>
                             <span id='status-text-{$row['instructor_id']}'>$status</span>
                         </a>
                         <div class='dropdown-menu'>
@@ -64,9 +65,9 @@ if ($result->num_rows > 0) {
                     </div>
                 </td>
               </tr>";
-    }
-    echo '</tbody></table>';
+  }
+  echo '</tbody></table>';
 } else {
-    echo "<p class='text-center'>No instructors found</p>";
+  echo "<p class='text-center'>No instructors found</p>";
 }
 ?>
