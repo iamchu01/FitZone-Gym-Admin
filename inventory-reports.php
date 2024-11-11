@@ -93,12 +93,10 @@ $all_photo = find_all('media');
                                     <tr>                                      
                                         <th class="text-center" style="width: 5%;">#</th>
                                         <th class="text-center" style="width: 10%;">Stock out Item</th>
-                                        <th class="text-center" style="width: 10%;">Item Description</th>
-                                        <th class="text-center" style="width: 10%;">Item Code</th>
                                         <th class="text-center" style="width: 10%;">Quantity</th>
                                         <th class="text-center" style="width: 10%;">Stock out date</th>
                                         <th class="text-center" style="width: 30%;">Reason</th>
-                                        
+                                        <th class="text-center" style="width: 10%;">Item Code</th>
                                     </tr>
                                 </thead>
                                 
@@ -109,12 +107,10 @@ $all_photo = find_all('media');
                                                 <td class="text-center"><?php echo count_id(); ?></td>                                              
                                                
                                                 <td class="text-center"><?php echo remove_junk($report['product_name']); ?></td>
-                                                <td class="text-center"><?php echo remove_junk($report['description']); ?></td>
-                                                <td class="text-center"><?php echo remove_junk($report['item_code']); ?></td>
                                                 <td class="text-center"><?php echo remove_junk($report['quantity']); ?></td>
                                                 <td class="text-center"><?php echo read_date($report['date']); ?></td>
                                                 <td class="text-center"><?php echo remove_junk($report['reason']); ?></td>
-                                               
+                                                <td class="text-center"><?php echo remove_junk($report['item_code']); ?></td>
                                             </tr>  
                                         <?php endforeach; ?>
                                     <?php else: ?>
