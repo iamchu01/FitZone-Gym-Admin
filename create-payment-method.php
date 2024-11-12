@@ -35,7 +35,7 @@
             <div class="col-auto float-end ms-auto">
               <a href="#" class="btn add-btn" data-bs-toggle="modal" data-bs-target="#create_payment"><i
                   class="fa fa-plus">
-                </i> Create Payment</a>
+                </i> Add Payment Method</a>
             </div>
           </div>
         </div>
