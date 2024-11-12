@@ -37,7 +37,7 @@
             </div>
             <div class="col-auto float-end ms-auto">
               <a href="#" class="btn add-btn" data-bs-toggle="modal" data-bs-target="#add_instructor"><i
-                  class="fa fa-plus"></i> Add Instructors</a>
+                  class="fa fa-plus"></i> Add Instructor</a>
             </div>
           </div>
         </div>
