@@ -1,5 +1,6 @@
 <?php
   require_once('vincludes/load.php');
+  include 'layouts/session.php';
   // Checkin What level user has permission to view this page
   //page_require_level(2);
 ?>
