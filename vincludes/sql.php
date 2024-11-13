@@ -64,6 +64,24 @@ function count_by_id($table){
      return($db->fetch_assoc($result));
   }
 }
+function count_by_id_mem($table){
+  global $db;
+  if(tableExists($table))
+  {
+    $sql    = "SELECT COUNT(member_id) AS total FROM ".$db->escape($table);
+    $result = $db->query($sql);
+     return($db->fetch_assoc($result));
+  }
+}
+function count_by_id_ins($table){
+  global $db;
+  if(tableExists($table))
+  {
+    $sql    = "SELECT COUNT(instructor_id) AS total FROM ".$db->escape($table);
+    $result = $db->query($sql);
+     return($db->fetch_assoc($result));
+  }
+}
 /*--------------------------------------------------------------*/
 /* Determine if database table exists
 /*--------------------------------------------------------------*/

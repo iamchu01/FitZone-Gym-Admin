@@ -9,7 +9,11 @@
         <?php include 'layouts/head-css.php'; ?>
         
     </head> 
+<?php
+$member = count_by_id_mem('tbl_add_members');
+$instructors = count_by_id_ins('tbl_add_instructors')
 
+ ?>
     <?php include 'layouts/body.php'; ?>
 
         <!-- Main Wrapper -->
@@ -60,10 +64,10 @@
                         <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
                             <div class="card dash-widget">
                                 <div class="card-body">
-                                    <span class="dash-widget-icon"><i class="fa fa-diamond"></i></span>
+                                    <span class="dash-widget-icon"><i class="fa fa-user"></i></span>
                                     <div class="dash-widget-info">
-                                        <h3>37</h3>
-                                        <span>Tasks</span>
+                                    <h3><?php echo $instructors ['total'];?></h3>
+                                        <span>Instructors</span>
                                     </div>
                                 </div>
                             </div>
@@ -73,8 +77,8 @@
                                 <div class="card-body">
                                     <span class="dash-widget-icon"><i class="fa fa-user"></i></span>
                                     <div class="dash-widget-info">
-                                        <h3>218</h3>
-                                        <span>Employees</span>
+                                    <h3><?php echo $member ['total'];?></h3>
+                                        <span>Gym Members</span>
                                     </div>
                                 </div>
                             </div>
