@@ -4,32 +4,137 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POS - GYMMS</title>
+   
     <?php include 'layouts/head-main.php'; ?>
     <?php include 'layouts/title-meta.php'; ?>
     <?php include 'layouts/head-css.php'; ?>
     <?php require_once('vincludes/load.php'); ?>
     <?php include 'layouts/session.php'; ?>
-
-    <link rel="stylesheet" href="path/to/bootstrap.min.css">
-    <script src="path/to/jquery.min.js"></script>
-    <script src="path/to/bootstrap.bundle.min.js"></script>
-
+    
     <style>
         .cart-table { width: 100%; }
         .cart-table th, .cart-table td { text-align: center; }
         .total-display { font-size: 1.5rem; font-weight: bold; }
+       
+@media print {
+    /* Hide elements not needed in the printed receipt */
+    body * {
+        visibility: hidden;
+    }
+    #receipt-modal, #receipt-modal * {
+        visibility: visible;
+    }
+    #receipt-modal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        font-size: 12px;
+    }
+
+    /* Center content and remove border for a clean look */
+    .modal-content {
+        border: none;
+        box-shadow: none;
+    }
+    .modal-header, .modal-footer {
+        display: none; /* Hide modal header and footer for print */
+    }
+
+    /* Style adjustments for better readability */
+    .modal-body {
+        padding: 0;
+    }
+    .table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+    .table th, .table td {
+        padding: 8px;
+        text-align: left;
+        border: 1px solid #000;
+    }
+    .modal-title {
+        font-size: 1.25em;
+        font-weight: bold;
+        text-align: center;
+    }
+}
+
+
     </style>
+<?php
+require_once('vincludes/load.php');
+
+if (isset($_POST['confirm_checkout'])) {
+    // Assuming these are POSTed values from the modal form
+    $cart_items = $_POST['cart_items']; // Array of items with 'id', 'name', 'quantity', 'price'
+    $total_amount = $_POST['total_amount'];
+    $discount = $_POST['discount'] ?? 0;
+    $amount_received = $_POST['amount_received'];
+    $change_cash = $_POST['change'];
+    $payment_method = $_POST['payment_method'];
+    $transaction_id = $_POST['transaction_id']; // Assuming transaction ID is passed from the frontend
+
+    // Start a transaction for better error handling
+    $db->begin_transaction();
+    
+    try {
+        // Loop through cart items to update product quantities and insert each item into transactions
+        foreach ($cart_items as $item) {
+            $product_id = $item['id'];
+            $product_quantity = $item['quantity'];
+            $product_name = $item['name'];
+
+            // Update the product quantity in the products table
+            $update_quantity_sql = "UPDATE products SET quantity = quantity - {$product_quantity} WHERE id = '{$product_id}' AND quantity >= {$product_quantity}";
+            $result = $db->query($update_quantity_sql);
+
+            if (!$result) {
+                throw new Exception("Error updating product quantity: " . $db->error);
+            }
+
+            // Insert transaction record for each product purchased
+            $transaction_sql = "INSERT INTO pos_transaction 
+                (id, transaction_date, total_amount, discount, amount_received, change_cash, payment_method, product_name, product_quantity, created_at)
+                VALUES 
+                ('{$transaction_id}', NOW(), '{$total_amount}', '{$discount}', '{$amount_received}', '{$change_cash}', '{$payment_method}', '{$product_name}', '{$product_quantity}', NOW())";
+
+            $result = $db->query($transaction_sql);
+
+            if (!$result) {
+                throw new Exception("Error inserting transaction: " . $db->error);
+            }
+        }
+
+        // Commit the transaction if everything is successful
+        $db->commit();
+        $session->msg('s', 'Transaction successful!');
+        redirect('pos.php', false);
+    } catch (Exception $e) {
+        // Rollback if any error occurs
+        $db->rollback();
+        $session->msg('d', 'Sorry, failed to process transaction! Error: ' . $e->getMessage());
+        redirect('pos.php', false);
+    }
+}
+
+
+?>
+
     <?php 
-     $products = join_product_table();
+    $products = join_product_table();
     $all_categories = find_all('categories');
+    $discounts = find_all('discount');
     ?>
 </head>
 <body>
-    <div class="main-wrapper">
+    <div class="main-wrapper" >
         <?php include 'layouts/menu.php'; ?>
-
-        <div class="page-wrapper">
-            <div class="content container-fluid">
+        <div class="page-wrapper"style="padding-top:0%;">
+            <div class="content container-fluid ">
                 <div class="page-header">
                     <div class="row align-items-center">
                         <div class="col">
@@ -72,7 +177,6 @@
                                                 <td><?php echo $product['description']; ?></td>
                                                 <td><?php echo $product['quantity'] > 0 ? $product['quantity'] : 'Out of Stock'; ?></td>
                                                 <td><?php echo number_format($product['sale_price'], 2); ?></td>
-                                                
                                                 <td>
                                                     <input type="number" 
                                                         id="qty-<?php echo $product['id']; ?>" 
@@ -83,7 +187,6 @@
                                                         style="width: 70px;" 
                                                         <?php echo $product['quantity'] == 0 ? 'disabled' : ''; ?>>
                                                 </td>
-                                                
                                                 <td>
                                                     <button class="btn btn-success add-to-cart" 
                                                             data-id="<?php echo $product['id']; ?>" 
@@ -103,65 +206,123 @@
 
                     <div class="col-md-4">
                         <!-- Cart Section -->
-                        <div class="card">
-    <div class="card-header">
-        <h5>Cart</h5>
-    </div>
-    <div class="card-body">
-        <table class="table cart-table">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                    <th>Remove</th>
-                </tr>
-            </thead>
-            <tbody id="cart-items">
-                <!-- Cart items go here -->
-            </tbody>
-        </table>
-       
-        <div class="form-group">
-    <label for="discount">Discount</label>
-    <select id="discount" class="form-control">
-        <option value="0">No Discount</option>
-        <option value="5">5% Off</option>
-        <option value="10">10% Off</option>
-        <option value="15">15% Off</option>
-        <option value="20">20% Off</option>
-    </select>
-</div>
-<div class="total-display">Total: ₱<span id="total-price">0.00</span></div>
-        <!-- Payment Method Selection -->
-        <div class="form-group">    
-            <label for="payment-method">Payment Method</label><br>
-            
-            <!-- Cash Option -->
-            <input type="radio" id="cash" name="payment-method" value="cash" class="form-check-input" checked>
-            <label for="cash" class="form-check-label border-primary p-2">Cash</label>
+                        <div class="card" style="height: 100%">
+                            <div class="card-header">
+                                <h5>Cart</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table cart-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Qty</th>
+                                            <th>Price</th>
+                                            <th>Total</th>
+                                            <th>Remove</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cart-items">
+                                        <!-- Cart items go here -->
+                                    </tbody>
+                                </table>
 
-            <!-- GCash Option -->
-            <input type="radio" id="gcash" name="payment-method" value="gcash" class="form-check-input ml-3">
-            <label for="gcash" class="form-check-label border-success p-2">GCash</label>
-        </div>
+                                <div class="form-group">
+                                    <label for="discount">Discount</label>
+                                    <select id="discount" class="form-control">
+                                        <option value="0">No Discount</option>
+                                        <?php foreach ($discounts as $discount): ?>
+                                            <option value="<?php echo $discount['discount_percentage']; ?>">
+                                            <?php echo $discount['discount_name']; ?> - <?php echo $discount['discount_percentage']; ?>%  
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
 
-        <button class="btn btn-primary btn-block" id="checkout">Checkout</button>
-    </div>
-</div>
+                                <div class="total-display">Total: ₱<span id="total-price">0.00</span></div>
 
+                                <div class="form-group">
+                                    <label for="amount-received">Amount Received</label>
+                                    <input type="number" id="amount-received" class="form-control" placeholder="Enter amount received">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="change">Change</label>
+                                    <div id="change" class="form-control" disabled>₱0.00</div>
+                                </div>
+
+                                <div class="form-group">    
+                                    <label for="payment-method">Payment Method</label><br>
+                                    <input type="radio" id="cash" name="payment-method" value="cash" class="form-check-input" checked>
+                                    <label for="cash" class="form-check-label border-primary p-2">Cash</label>
+
+                                    <input type="radio" id="gcash" name="payment-method" value="gcash" class="form-check-input ml-3">
+                                    <label for="gcash" class="form-check-label border-success p-2">GCash</label>
+                                </div>
+
+                                <button class="btn btn-primary btn-block" id="checkout" data-toggle="modal">Checkout</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <!-- recibo -->
+    <form method="POST" action="pos.php" id="checkout-form">
+    <div class="modal" tabindex="-1" id="receipt-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header d-flex flex-column align-items-center">
+                    <h5 class="modal-title text-center">FITZONE Receipt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex flex-column align-items-center">
+                        <img src="assets/img/fzlogo.png" alt="FITZONE Logo" class="mb-2" style="max-width: 100px;">
+                    </div>
+                    <p><strong>Transaction ID:</strong> <span id="transaction-id"></span></p>
+                    <p><strong>Date:</strong> <span id="transaction-date"></span></p>
 
-    <script>
-  $(document).ready(function () {
-    let cart = {};
+                    <h5>Products Purchased:</h5>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-list-receipt">
+                            <!-- Dynamic content will be inserted here -->
+                        </tbody>
+                    </table>
+
+                    <p><strong>Discount Applied:</strong> <span id="discount-receipt"></span></p>
+                    <p><strong>Amount Received:</strong> ₱<span id="amount-received-receipt"></span></p>
+                    <p><strong>Change:</strong> ₱<span id="change-receipt"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.print();"><div class="fa fa-print"> print</div></button>
+                    <!-- Change the type to 'button' to avoid form submission -->
+                    <button type="button" class="btn btn-primary" id="confirm-checkout">Confirm Checkout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+<script>
+    $(document).ready(function () {
+    let cart = {}; // Cart object to store items
     let totalQuantityInCart = 0; // Track total quantity in the cart
+    let discount = 0; // Discount value
+    let amountReceived = 0; // Amount received from user
+    let totalPrice = 0; // Store total price here
 
+    // Handle add to cart
     $('.add-to-cart').on('click', function () {
         const id = $(this).data('id');
         const name = $(this).data('name');
@@ -176,12 +337,6 @@
             return; // Prevent adding to cart
         }
 
-        // Check if adding this quantity will exceed the total available stock in the cart
-        if (totalQuantityInCart + quantity > availableQty) {
-            alert('You cannot add more than the available stock in the cart.');
-            return; // Prevent adding to cart
-        }
-
         // Add to cart or update quantity if it exists
         if (cart[id]) {
             cart[id].quantity += quantity;
@@ -193,6 +348,7 @@
         updateCart();
     });
 
+    // Handle remove from cart
     $(document).on('click', '.remove-from-cart', function () {
         const id = $(this).data('id');
         totalQuantityInCart -= cart[id].quantity; // Update total quantity when removing from cart
@@ -200,12 +356,13 @@
         updateCart();
     });
 
+    // Update cart display and calculate total
     function updateCart() {
-        let total = 0;
+        totalPrice = 0;
         $('#cart-items').empty();
         $.each(cart, function (id, item) {
             const itemTotal = item.price * item.quantity;
-            total += itemTotal;
+            totalPrice += itemTotal;
             $('#cart-items').append(`
                 <tr>
                     <td>${item.name}</td>
@@ -216,24 +373,133 @@
                 </tr>
             `);
         });
-        $('#total-price').text(total.toFixed(2));
-    }
-});
 
-$('#product-search').on('keyup', function() {
-    var value = $(this).val().toLowerCase();
-    $('tbody tr').filter(function() {
-        $(this).toggle(
-            $(this).find('td:nth-child(1)').text().toLowerCase().indexOf(value) > -1 ||
-            $(this).find('td:nth-child(2)').text().toLowerCase().indexOf(value) > -1
-        );
+        // Apply discount
+        totalPrice = totalPrice - (totalPrice * discount / 100);
+
+        // Display the total after discount
+        $('#total-price').text(totalPrice.toFixed(2));
+
+        // Update the amount received input (this will calculate the change)
+        $('#amount-received').on('input', function () {
+            amountReceived = parseFloat($(this).val()) || 0;
+            const change = amountReceived - totalPrice;
+            $('#change').text(change < 0 ? '₱0.00' : '₱' + change.toFixed(2));
+        });
+    }
+
+    // Handle discount selection
+    $('#discount').on('change', function () {
+        discount = parseFloat($(this).val());
+        updateCart();
+    });
+
+    // Handle checkout
+    $('#checkout').on('click', function () {
+        if (totalQuantityInCart === 0) {
+            alert('No items in cart!');
+            return;
+        }
+
+        amountReceived = parseFloat($('#amount-received').val());
+        if (isNaN(amountReceived) || amountReceived < totalPrice) {
+            alert('Insufficient amount received!');
+            return;
+        }
+
+        // Generate transaction ID
+        const transactionId = 'TXN-' + Math.floor(Math.random() * 1000000);
+        $('#transaction-id').text(transactionId);
+        $('#transaction-date').text(new Date().toLocaleString());
+
+        // Populate the receipt with product details
+        $('#product-list-receipt').empty();
+        for (let id in cart) {
+            const item = cart[id];
+            const itemTotal = item.price * item.quantity;
+            $('#product-list-receipt').append(`
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>₱${item.price.toFixed(2)}</td>
+                    <td>₱${(item.price * item.quantity).toFixed(2)}</td>
+                </tr>
+            `);
+        }
+
+        // Display the discount, amount received, and change
+        $('#discount-receipt').text(discount ? `${discount}%` : 'None');
+        $('#amount-received-receipt').text(amountReceived.toFixed(2));
+        $('#change-receipt').text((amountReceived - totalPrice).toFixed(2));
+
+        // Show the receipt modal using Bootstrap 5 modal method
+        var myModal = new bootstrap.Modal(document.getElementById('receipt-modal'), {
+            keyboard: false
+        });
+        myModal.show();
+    });
+
+    // Handle the confirm checkout button (submit the data to the server)
+    $('#confirm-checkout').click(function () {
+        let cartItems = [];
+        for (let id in cart) {
+        const item = cart[id];
+        cartItems.push({
+            id: id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+        });
+    }
+        const totalAmount = $('#total-price').text();
+        const discount = $('#discount').val();
+        const amountReceived = $('#amount-received').val();
+        const change = $('#change').text();
+        const paymentMethod = $('input[name="payment-method"]:checked').val();
+        const transactionId = Math.floor(Math.random() * 1000000); // Generate a unique transaction ID
+
+        $.ajax({
+            url: 'pos.php',
+            type: 'POST',
+            data: {
+                confirm_checkout: true,
+                cart_items: cartItems,
+                total_amount: totalAmount,
+                discount: discount,
+                amount_received: amountReceived,
+                change: change,
+                payment_method: paymentMethod,
+                transaction_id: transactionId
+            },
+            success: function (response) {
+                // Handle success
+                if (response === 'success') {
+                    alert('Transaction successful!');
+                    window.location.reload(); // Reload the page after success
+                } else {
+                    alert('Transaction failed!');
+                }
+            },
+            error: function (xhr, status, error) {
+                // Handle error
+                alert('An error occurred: ' + error);
+            }
+        });
     });
 });
-    </script>
+// console.log({
+//     cart_items: cartItems,
+//     total_amount: totalAmount,
+//     discount: discount,
+//     amount_received: amountReceived,
+//     change: change,
+//     payment_method: paymentMethod,
+//     transaction_id: transactionId
+// });
 
+</script>
+</body>
+</html>
 <?php include_once('vlayouts/footer.php'); ?>
 <?php include 'layouts/customizer.php'; ?>
 <?php include 'layouts/vendor-scripts.php'; ?>
-
-</body>
-</html>

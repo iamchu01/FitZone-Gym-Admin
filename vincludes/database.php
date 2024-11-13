@@ -110,7 +110,15 @@ class MySqli_DB {
     public function commit() {
         $this->con->commit();
     }
+    /*--------------------------------------------------------------*/
+/* Function for Rollback a transaction
+/*--------------------------------------------------------------*/
+public function rollback() {
+    $this->con->rollback();
 }
+
+}
+
 
 $db = new MySqli_DB();
 ?>
