@@ -336,6 +336,14 @@ if (isset($_POST['confirm_checkout'])) {
             $('#qty-' + id).val(availableQty); // Reset to max available quantity
             return; // Prevent adding to cart
         }
+        const existingQuantityInCart = cart[id] ? cart[id].quantity : 0;
+
+// Check if the requested quantity exceeds the available stock
+if (existingQuantityInCart + quantity > availableQty) {
+    alert(`Cannot add more than ${availableQty} units of this product to the cart.`);
+    $('#qty-' + id).val(availableQty - existingQuantityInCart); // Set to the remaining stock
+    return; // Prevent adding to cart
+}
 
         // Add to cart or update quantity if it exists
         if (cart[id]) {
@@ -459,32 +467,29 @@ if (isset($_POST['confirm_checkout'])) {
         const transactionId = Math.floor(Math.random() * 1000000); // Generate a unique transaction ID
 
         $.ajax({
-            url: 'pos.php',
-            type: 'POST',
-            data: {
-                confirm_checkout: true,
-                cart_items: cartItems,
-                total_amount: totalAmount,
-                discount: discount,
-                amount_received: amountReceived,
-                change: change,
-                payment_method: paymentMethod,
-                transaction_id: transactionId
-            },
-            success: function (response) {
-                // Handle success
-                if (response === 'success') {
-                    alert('Transaction successful!');
-                    window.location.reload(); // Reload the page after success
-                } else {
-                    alert('Transaction failed!');
-                }
-            },
-            error: function (xhr, status, error) {
-                // Handle error
-                alert('An error occurred: ' + error);
-            }
-        });
+    url: 'pos.php',
+    type: 'POST',
+    data: {
+        confirm_checkout: true,
+        cart_items: cartItems,
+        total_amount: totalAmount,
+        discount: discount,
+        amount_received: amountReceived,
+        change: change,
+        payment_method: paymentMethod,
+        transaction_id: transactionId
+    },
+    success: function (response) {
+        // Assuming the server response redirects to a confirmation or success page
+        alert('Transaction successful!');
+        window.location.href = 'pos.php';
+    },
+    error: function (error) {
+        alert('Failed to process transaction. Please try again.');
+        console.error(error);
+    }
+});
+
     });
 });
 // console.log({
