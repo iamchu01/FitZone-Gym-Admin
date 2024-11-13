@@ -117,6 +117,7 @@ function randString($length = 5)
   return $str;
 }
 
+// Fetch the discount options
 
 // function join_product_table1() {
 //   global $db; // Access the global database connection

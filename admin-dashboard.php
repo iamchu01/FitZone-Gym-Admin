@@ -2,12 +2,12 @@
 <?php include 'layouts/head-main.php'; ?>
 
     <head>
-        
+    <?php require_once('vincludes/load.php'); ?>
         <title>Dashboard - GYYMS admin</title>
         <?php include 'layouts/title-meta.php'; ?>
 
         <?php include 'layouts/head-css.php'; ?>
-
+        
     </head> 
 
     <?php include 'layouts/body.php'; ?>
@@ -16,7 +16,7 @@
         <div class="main-wrapper"> 
             <?php include 'layouts/menu.php'; ?> 
             <!-- Page Wrapper -->
-            <div class="page-wrapper">
+            <div class="page-wrapper" style="width: 100%">
             
                 <!-- Page Content -->
                 <div class="content container-fluid">
@@ -82,7 +82,7 @@
                     </div>
                     
                     <!-- Charts -->
-                    <div class="row">
+                    <!-- <div class="row">
                         <div class="col-md-12">
                             <div class="row">
                                 <div class="col-md-6 text-center">
@@ -103,10 +103,10 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     <!-- Charts -->
                     
-                    <div class="row">
+                    <!-- <div class="row">
                         <div class="col-md-12">
                             <div class="card-group m-b-30">
                                 <div class="card">
@@ -182,10 +182,10 @@
                                 </div>
                             </div>
                         </div>  
-                    </div>
+                    </div> -->
                     
                     <!-- Statistics Widget -->
-                    <div class="row">
+                    <!-- <div class="row">
                         <div class="col-md-12 col-lg-12 col-xl-4 d-flex">
                             <div class="card flex-fill dash-statistics">
                                 <div class="card-body">
@@ -308,10 +308,10 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     <!-- /Statistics Widget -->
                     
-                    <div class="row">
+                    <!-- <div class="row">
                         <div class="col-md-6 d-flex">
                             <div class="card card-table flex-fill">
                                 <div class="card-header">
@@ -426,9 +426,9 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     
-                    <div class="row">
+                    <!-- <div class="row">
                         <div class="col-md-6 d-flex">
                             <div class="card card-table flex-fill">
                                 <div class="card-header">
@@ -740,7 +740,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 
                 </div>
                 <!-- /Page Content -->
@@ -749,7 +749,7 @@
             <!-- /Page Wrapper -->
         </div>
         <!-- /Main Wrapper -->
-    
+   
         <?php include 'layouts/customizer.php'; ?>
 
         <?php include 'layouts/vendor-scripts.php'; ?>
