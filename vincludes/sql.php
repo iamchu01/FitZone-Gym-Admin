@@ -227,49 +227,55 @@ function tableExists($table){
    /* Function for Finding all product name
    /* JOIN with categorie  and media database table
    /*--------------------------------------------------------------*/
-   function join_product_table() {
-    global $db;
+//    function join_product_table() {
+//     global $db;
 
-    // SQL query to select product details and use category name as the product name
-    $sql  = "SELECT 
-                p.id, 
-                c.name AS name,  -- Use category name as product name
-                p.quantity, 
-                p.buy_price, 
-                p.sale_price, 
-                p.media_id, 
-                p.date, 
-                p.expiration_date,
-                p.description,  
-                p.is_perishable, 
-                c.name AS categorie, 
-                m.file_name AS image, 
-                p.item_code 
-             FROM 
-                products p 
-             LEFT JOIN 
-                categories c ON c.id = p.categorie_id 
-             LEFT JOIN 
-                media m ON m.id = p.media_id 
-             ORDER BY 
-                p.id ASC";
+//     // SQL query to select product details and use category name as the product name
+//     $sql  = "SELECT 
+//                 p.id, 
+//                 c.name AS name,  -- Use category name as product name
+//                 p.quantity, 
+//                 p.buy_price, 
+//                 p.sale_price, 
+//                 p.media_id, 
+//                 p.date, 
+//                 p.expiration_date,
+//                 p.description,  
+//                 p.is_perishable, 
+//                 c.name AS categorie, 
+//                 m.file_name AS image, 
+//                 p.item_code 
+//              FROM 
+//                 products p 
+//              LEFT JOIN 
+//                 categories c ON c.id = p.categorie_id 
+//              LEFT JOIN 
+//                 media m ON m.id = p.media_id 
+//              ORDER BY 
+//                 p.id ASC";
 
-    // Execute the query and return the result set
-    return find_by_sql($sql);
-}
-
-
-// function join_product_table1() {
-//   global $db; // Access the global database connection
-//   $sql = "SELECT p.id, c.name AS name, p.item_code, p.quantity, p.buy_price, p.sale_price, 
-//                  p.expiration_date, p.date, p.is_perishable, m.file_name AS image
-//           FROM products p
-//           LEFT JOIN categories c ON p.categorie_id = c.id
-//           LEFT JOIN media m ON m.id = p.media_id   ORDER BY 
-//                 p.id ASC"; // Join with media table to get the image
-//   return $db->query($sql);
+//     // Execute the query and return the result set
+//     return find_by_sql($sql);
 // }
 
+
+function join_product_table(){
+  global $db;
+  $sql  = "SELECT p.id, p.name, p.item_code, p.expiration_date, p.is_perishable, p.description, 
+                  p.quantity, p.buy_price, p.sale_price, p.media_id, p.date, 
+                  c.name AS categorie, 
+                  m.file_name AS image, 
+                  u.name AS uom_name, 
+                  u.abbreviation AS uom_abbreviation";
+  $sql .= " FROM products p";
+  $sql .= " LEFT JOIN categories c ON c.id = p.categorie_id";
+  $sql .= " LEFT JOIN media m ON m.id = p.media_id";
+  $sql .= " LEFT JOIN uom u ON u.id = p.uom_id"; // Join the uom table
+  $sql .= " ORDER BY p.id ASC";
+  return find_by_sql($sql);
+}
+
+/*----
   /*--------------------------------------------------------------*/
   /* Function for Finding all product name
   /* Request coming from ajax.php for auto suggest

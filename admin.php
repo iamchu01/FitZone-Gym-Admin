@@ -31,18 +31,18 @@ $low_stock_threshold = '10'; // Set your low stock threshold here
 $low_stock_data = get_low_stock_products($low_stock_threshold);
 
 // Fetch all categories
-$all_categories = find_all('categories');
+$qt_products = find_all('products');
 
 $low_stock_data_array = []; // Initialize an array to hold results
 
 
 
 // Loop through each category to calculate total quantity
-foreach ($all_categories as $category) {
+foreach ($qt_products as $category) {
     $categorie_id = $category['id'];
 
     // Get total quantity for this category
-    $query = "SELECT SUM(quantity) AS total_quantity FROM products WHERE categorie_id = '{$categorie_id}'";
+    $query = "SELECT SUM(quantity) AS total_quantity FROM products WHERE id = '{$categorie_id}'";
     $result = $db->query($query);
 
     // if ($result && $row = $result->fetch_assoc()) {
@@ -72,6 +72,19 @@ foreach ($all_categories as $category) {
     <h3 class="page-title">Inventory Management</h3>
    
         <div class="row">
+        <div class="col-md-3">
+                    <a href="product-list.php" style="color:black;">
+                        <div class="panel panel-box clearfix">
+                            <div class="panel-icon pull-left bg-success">
+                            <i class="fa fa-list-ol"></i>                            
+                            </div>
+                            <div class="panel-value pull-right">
+                                <h2 class="margin-top"><?php echo $c_product['total']; ?></h2>
+                                <p class="text-muted">Product Inventory</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
         
             <!-- Category Panel -->
             <div class="col-md-3">
@@ -82,7 +95,7 @@ foreach ($all_categories as $category) {
                         </div>
                         <div class="panel-value pull-right">
                             <h2 class="margin-top"><?php echo $c_categorie['total']; ?></h2>
-                            <p class="text-muted">Products</p>
+                            <p class="text-muted">Category</p>
                         </div>
                     </div>
                 </a>
@@ -97,7 +110,7 @@ foreach ($all_categories as $category) {
                         </div>
                         <div class="panel-value pull-right">
                             <h2 class="margin-top"><?php echo $c_product['total']; ?></h2>
-                            <p class="text-muted">In Stock Items</p>
+                            <p class="text-muted">Products</p>
                         </div>
                     </div>
                 </a>
@@ -121,19 +134,7 @@ foreach ($all_categories as $category) {
        
 
              <!-- gym equipmentPanel -->
-            <div class="col-md-3">
-                    <a href="gym_equipment.php" style="color:black;">
-                        <div class="panel panel-box clearfix">
-                            <div class="panel-icon pull-left bg-success">
-                            <i class="fa fa-cubes"></i>                            
-                            </div>
-                            <div class="panel-value pull-right">
-                                <h2 class="margin-top"><?php echo $c_gym['total']; ?></h2>
-                                <p class="text-muted">Gym Equipment</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
+        
  
         </div>
         
@@ -202,8 +203,8 @@ foreach ($all_categories as $category) {
                                     <tr>
                                         <td class="text-center"><?php echo $index + 1; ?></td>
                                         <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                            <a href="product.php?id=<?php echo $data['id']; ?>"> <!-- Link to the product page -->
-                                                <?php echo remove_junk(first_character($data['category_name'])); ?>
+                                            <a href="product.php?id=<?php echo $data['categorie_id']; ?>"> <!-- Link to the product page -->
+                                                <?php echo remove_junk(first_character($data['name'])); ?>
                                             </a>
                                         </td>
                                         <td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
@@ -244,12 +245,15 @@ foreach ($all_categories as $category) {
                                 <img class="img-avatar img-circle" src="uploads/products/<?php echo $recent_product['image']; ?>" alt="" style="width: 40px; height: 40px; margin-right: 10px;">
                             <?php endif; ?>
                             <span style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                <?php echo remove_junk(first_character($recent_product['categorie'])); ?>
+                            <?php echo remove_junk(first_character($recent_product['name']));?>
                             </span>
                             <span class="label label-primary pull-right" style="margin-left: auto;">
                             ₱<?php echo (int)$recent_product['sale_price']; ?>
                             </span>
                         </h4>
+                        <span class="list-group-item-text pull-right">
+                <?php echo remove_junk(first_character($recent_product['categorie'])); ?>
+              </span>
                         
                     </a>
                 <?php endforeach; ?>

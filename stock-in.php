@@ -53,13 +53,26 @@ function confirmEdit() {
             $('.expiration-date-feedback').text('Expiration date is required for perishable items.').show(); // Show validation message
         }
     });
-    $('#addProductModal').on('show.bs.modal', function(event) {
+    $(document).on('click', '.stock-in', function() {
+    var productName = $(this).data('product-name');   
+    var productQuantity = $(this).data('product-quantity'); 
+    var itemCode = $(this).data('product-item-code');
+    var productDescription = $(this).data('product-description')
+
+    $('#product_name').val(productName); 
+    $('#product_description').val(productDescription);
+    $('#product_id').val($(this).data('product-id')); 
+    $('#product_quantity').val(productQuantity); 
+    $('#item_code').val(itemCode); // Set the item code in the modal
+    $('#stock-in-modal').modal('show'); 
+});
+    $('#stock-in-modal').on('show.bs.modal', function(event) {
         var button = $(event.relatedTarget); // Button that triggered the modal
         var categoryId = button.data('category-id'); // Extract category ID
         var categoryName = button.data('category-name'); // Extract category name
 
         var modal = $(this);
-        modal.find('#addProductModalLabel').text('Stock in Product: ' + categoryName); // Set modal header
+        modal.find('#stock-in-modal').text('Stock in Product: ' + categoryName); // Set modal header
 
         // Reset dropdown
         var $dropdown = modal.find('#product-category');
@@ -87,6 +100,7 @@ function confirmEdit() {
 </script>
 
 <?php
+$products = join_product_table();
   $all_categories = find_all('categories');
   $p_qty   = remove_junk($db->escape($_POST['product-quantity']));
 // Handle category deletion via POST request
@@ -208,70 +222,91 @@ foreach ($all_categories as $cat) {
         </div>
 
         <div class="col-md-12">
-        <div class="panel panel-default">
-        <div class="panel-heading clearfix"> 
-             <div class="col">Search Product</div>     
-                    <div class="col-md-4">
-                        <div class="input-group">                                             
-                            <span class="input-group-addon"><i class="fa fa-search"></i></span>
-                            <input type="text" id="category-search" class="form-control" placeholder="Type Product name...">
-                        </div>
-                        
-                       
-                    </div>
-                    <!-- <div class="pull-right">
-                 <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#addProductModal">Stock in</a> -->
-            <!-- </div>
-                    <div class="pull-right">
-                 -->
-           
-                    </div>
+      <div class="panel panel-default">
+        
+        <div class="panel-heading clearfix">  
+            <div class="col">Search Product</div>     
+            <div class="col-md-4">
+                <div class="input-group">                                             
+                    <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                        <input type="text" id="category-search" class="form-control" placeholder="Type Product name...">                       
+                </div>           
+            </div>
+            <div class="pull-right" style="margin-right: 2%;">
+                <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#addProductModal">Add product</a>
+            </div>
+    </div>           
+        </div>
+        <div class="panel-body">
+    <div class="table-responsive">
+        <table class="table table-bordered datatable">
+            <thead>
+                <tr>
+                    <th class="text-center" style="width: 30px;">#</th>
+                    <th class="text-center" style="width: 30px;">ID</th>
+                    <th class="text-center" style="width: 10%;">Photo</th>
+                    <th class="text-center" style="width: 10%;">Categorie</th>
+                    <th class="text-center" style="width: 10%;">Name</th>                 
                    
-                  
-            <div class="panel-body">
-            <div class="table-responsive">
-            <table class="table table-bordered datatable">
-        <thead>
-            <tr>
-                <th class="text-center" style="width: 50px;">#</th>
-                <th>Products List</th>
-                <th class="text-center" style="width: 10%;">In-Stock</th>
-                <th class="text-center" style="width: 100px;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-    <?php foreach ($all_categories as $cat): ?>
-        <tr>
-    <td class="text-center"><?php echo count_id(); ?></td>
-    <td><?php echo remove_junk(ucfirst($cat['name'])); ?></td>
-    <td class="text-center"><?php echo $category_stock[$cat['id']]; ?></td> <!-- Display In-Stock quantity -->
-    <td class="text-center">
-            <a href="#" class="btn btn-success"  data-toggle="modal" data-target="#addProductModal"  aria-expanded="false"  onclick="setEditCategory(<?php echo $cat['id']; ?>, '<?php echo addslashes($cat['name']); ?>');">
-                <i class=" fa fa-gift text-primary"></i> Stock-in
-            </a>
+                    <th class="text-center" style="width: 10%;">Item Code</th>
+                    <th class="text-center" style="width: 10%;">Unit of Measure</th>
+                    <th class="text-center" style="width: 10%;">Buying Price</th>
+                    <th class="text-center" style="width: 10%;">Selling Price</th>
+                    <th class="text-center" style="width: 300%;">Description</th>
+                   
+     
+                    <th class="text-center" style="width: 100px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    <?php foreach ($products as $product): ?>
+        <tr class="<?php echo $rowClass; ?>">
+       
+            <td class="text-center"><?php echo count_id(); ?></td>
+            <td class="text-center"><?php echo remove_junk($product['id']); ?></td>
+            <td>
+                <?php if ($product['media_id'] === '0'): ?>
+                    <img class="img-avatar img-circle" src="uploads/products/no_image.png" alt="">
+                <?php else: ?>
+                    <img class="img-avatar img-circle" src="uploads/products/<?php echo $product['image']; ?>" alt="">
+                <?php endif; ?>
+            </td>
+            <td class="text-center"><?php echo remove_junk($product['categorie']); ?></td>
+            <td class="text-center"><?php echo remove_junk($product['name']); ?></td>           
+            
+            <td class="text-center"><?php echo remove_junk($product['item_code']); ?></td>
+            <td class="text-center"><?php echo remove_junk($product['uom_name']); ?></td>
+            <td class="text-center"><?php echo remove_junk($product['buy_price']); ?></td>
+            <td class="text-center"><?php echo remove_junk($product['sale_price']); ?></td>
+            <td class="text-center"><?php echo remove_junk($product['description']); ?></td>
+            <td class="text-center">
+    <button class="btn btn-success stock-in fa fa-list" 
+    data-product-id="<?php echo (int)$product['id']; ?>" 
+    data-product-name="<?php echo remove_junk($product['name']); ?>" 
+    data-product-description="<?php echo remove_junk($product['description']); ?>"  
+    data-product-quantity="<?php echo remove_junk($product['quantity']); ?>" 
+    data-product-uom="<?php echo remove_junk($product['uom_name']); ?>" 
+    data-product-batch="<?php echo remove_junk($product['date']); ?>"
+    data-product-item-code="<?php echo remove_junk($product['item_code']); ?>"> Stock in</button>
 
-    </td>
-</tr>
-
+                                            </td>
+        </tr>
     <?php endforeach; ?>
 </tbody>
-    </table>
-            </div>
-          
-        
-        </div>
-        </div>
-    
-            </div>
+
+        </table>
+    </div>
+</div>
+
+      </div>
             </div>
 </div>
 </div>
-                                    <!-- stock-in product modal -->
-                                    <div class="modal " id="addProductModal" tabindex="-1" role="dialog" aria-labelledby="addProductModalLabel" aria-hidden="true">
+<div class="modal " id="stock-in-Modal" tabindex="-1" role="dialog" aria-labelledby="stock-in-ModalLabel" aria-hidden="true">
                                         <div class="modal-dialog modal-lg" role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h5 class="modal-title" id="addProductModalLabel"></h5>
+                                                    <h5 class="modal-title" id="stock-in-ModalLabel"></h5>
                                                     <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close">
                                                     <span aria-hidden="true">&times;</span>
                                                         </button>
@@ -280,35 +315,37 @@ foreach ($all_categories as $cat) {
                                         <div class="row no-gutters">
                                             <div class="col-12">
                                                 <div class="panel panel-default">
-                                                    <div class="panel-heading">
+                                                    <div class="panel-heading bg-success">
                                                         <strong>
                                                             <span class="fa fa-th-large"></span>
-                                                            <span>Stock in Product</span>
+                                                            <span>Add Product</span>
                                                         </strong>
                                                     </div>
                                                     <div class="panel-body">
-                                                    <form method="post" action="stock-in.php" class="clearfix">
-                                                                        <!-- Hidden input for category ID -->
-                                                                        <input type="hidden" id="edit_cat_id" name="edit_cat_id" value="">
-
-                                                        <div class="form-group">
+                                                    <form method="post" action="product.php" class="clearfix">
+                                                    <div class="form-group">
+                                                        <div class="input-group">
+                                                       
+                                                            <span class="input-group-addon"><i class="fa fa-th-large"></i></span>
+                                                            <input type="text" class="form-control" name="product_name" id="product_name" disabled>
+                                                        </div>
+                                                        product-uom
+                                                    </div>
+                                        <div class="form-group">
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <select class="form-control" name="product-categorie" id="product-category" required>
-                                                    <option value=""></option>
-                                                    <?php foreach ($all_categories as $cat): ?>
-                                                        <option value="<?php echo (int)$cat['id']; ?>"><?php echo $cat['name']; ?></option>
-                                                    <?php endforeach; ?>
+                                                    
                                                 </select>
                                             </div>
-                                            <div class="col-md-6">
+                                            <!-- <div class="col-md-6">
                                                 <select class="form-control" name="product-photo">
                                                     <option value="">Select Product Photo</option>
                                                     <?php foreach ($all_photo as $photo): ?>
                                                         <option value="<?php echo (int)$photo['id'] ?>"><?php echo $photo['file_name'] ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
-                                            </div>
+                                            </div> -->
                                         </div>
                                     </div>
                                     <div class="form-group">
@@ -316,8 +353,15 @@ foreach ($all_categories as $cat) {
                                             <div class="col-md-4">
                                                 <div class="input-group">
                                                     <span class="input-group-addon"><i class="fa fa-shopping-cart"></i></span>
-                                                    <input type="number" class="form-control" name="product-quantity" placeholder="Product Quantity" required>
+                                                    <input type="number" class="form-control" name="product-quantity" placeholder="Product Quantity" disabled>
                                                 </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon"><i class="fa fa-puzzle-piece"></i></span>
+                                                    <input class="form-control" name="product-uom" id="product-uom" readonly>
+                                                <input/>
+                                                </div>                     
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="input-group">
@@ -326,6 +370,8 @@ foreach ($all_categories as $cat) {
                                                     <span class="input-group-addon">.00</span>
                                                 </div>
                                             </div>
+                                            
+                                       
                                             <div class="col-md-4">
                                                 <div class="input-group">
                                                     <span class="input-group-addon"><i class="fa fa-money"></i></span>
@@ -366,7 +412,7 @@ foreach ($all_categories as $cat) {
                                         <div class="expiration-date-feedback text-danger" style="display: none;"></div> <!-- Feedback message container -->
                                     </div>
 
-                                    <button type="submit" name="add_product" class="btn btn-primary">Add product</button>
+                                    <button type="submit" name="add_product" class="btn btn-primary pull-right " style="margin-right: 2%;">Add product</button>
                                 </form>
                             </div>
                         </div>
@@ -375,7 +421,8 @@ foreach ($all_categories as $cat) {
             </div>
         </div>
     </div>
-</div>
+</div>                                  <!-- stock-in product modal -->
+
 <?php include_once('vlayouts/footer.php'); ?>
 <?php include 'layouts/customizer.php'; ?>
 <?php include 'layouts/vendor-scripts.php'; ?>

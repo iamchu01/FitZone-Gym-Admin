@@ -80,7 +80,7 @@ $(document).ready(function() {
     $('#category-search').on('keyup', function() {
         var value = $(this).val().toLowerCase();
         $('tbody tr').filter(function() {
-            $(this).toggle($(this).find('td:nth-child(4)').text().toLowerCase().indexOf(value) > -1)
+            $(this).toggle($(this).find('td:nth-child(3)').text().toLowerCase().indexOf(value) > -1);
         });
     });
     
@@ -120,14 +120,13 @@ function is_about_to_expire($expiration_date) {
 }
 $products = join_product_table();
 $all_categories = find_all('categories');
-$p_uom = find_all('uom');
 
 $all_photo = find_all('media');
 $min_expiration_date = date('Y-m-d', strtotime('+5 months'));
 // Function to validate selling price
 
 if(isset($_POST['add_product'])){
-    $req_fields = array('product-title','product-categorie','buying-price', 'saleing-price', 'item-description', 'item-code', 'product-oum');
+    $req_fields = array('product-title','product-categorie','buying-price', 'saleing-price', 'item-description', 'item-code' );
     validate_fields($req_fields);
   
     if(empty($errors)){
@@ -137,8 +136,6 @@ if(isset($_POST['add_product'])){
       $p_item_code   = remove_junk($db->escape($_POST['item-code']));
       $p_sale  = remove_junk($db->escape($_POST['saleing-price']));
       $p_description  = remove_junk($db->escape($_POST['item-description']));
-      $p_per   = remove_junk($db->escape($_POST['product-oum']));
-     
       $is_perishable = isset($_POST['is-perishable']) ? 1 : 0;
   
       $expiration_date = $is_perishable ? remove_junk($db->escape($_POST['expiration-date'])) : NULL;
@@ -153,9 +150,9 @@ if(isset($_POST['add_product'])){
   
       // Insert query without ON DUPLICATE KEY UPDATE
       $query  = "INSERT INTO products (";
-      $query .= "name, buy_price, sale_price, categorie_id, media_id, date, is_perishable, expiration_date, description, item_code, uom_id";
+      $query .= "name, buy_price, sale_price, categorie_id, media_id, date, is_perishable, expiration_date, description, item_code";
       $query .= ") VALUES (";
-      $query .= " '{$p_name}', '{$p_buy}', '{$p_sale}', '{$p_cat}', '{$media_id}', '{$date}', '{$is_perishable}', '{$expiration_date}', '{$p_description}', '{$p_item_code}', '{$p_per}'";
+      $query .= " '{$p_name}', '{$p_buy}', '{$p_sale}', '{$p_cat}', '{$media_id}', '{$date}', '{$is_perishable}', '{$expiration_date}', '{$p_description}', '{$p_item_code}'";
       $query .= ")";
   
       if($db->query($query)){
@@ -230,16 +227,16 @@ if (isset($_POST['update_product'])) {
 
                   
                         <div class="col">
-                            <h3 class="page-title">Product Management</h3>
+                            <h3 class="page-title">Product Inventory</h3>
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="admin.php">Inventory Management</a></li>
-                                <li class="breadcrumb-item active">Products</li>
+                                <li class="breadcrumb-item active">Inventory Product</li>
                             </ul>
                         </div>
              
  
     <div class="col-md-12">
-     <?php echo display_msg($msg); ?>
+     <?php echo display_msg($msg); ?>   
      </div>
     <div class="col-md-12">
       <div class="panel panel-default">
@@ -249,13 +246,24 @@ if (isset($_POST['update_product'])) {
             <div class="col-md-4">
                 <div class="input-group">                                             
                     <span class="input-group-addon"><i class="fa fa-search"></i></span>
-                        <input type="text" id="category-search" class="form-control" placeholder="Type Product name...">                       
-                </div>           
+                        <input type="text" id="category-search" class="form-control" placeholder="Type Product name...">
+                </div>
             </div>
-            <div class="pull-right" style="margin-right: 2%;">
-                <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#addProductModal">Add product</a>
-            </div>
-    </div>           
+        <div class="col color-legend" style="margin-bottom: 15px;">
+        <div style="display: flex; align-items: center;">
+            <div style="width: 20px; height: 20px; background-color: #ffc107; margin-right: 5px; border-radius: 3px;"></div>
+            <span>In Stock: Low (below 10)</span>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <div style="width: 20px; height: 20px; background-color: #dc3545; margin-right: 5px; border-radius: 3px;"></div>
+            <span>Out of Stock</span>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <div class="bg-secondary" style="width: 20px; height: 20px; margin-right: 5px; border-radius: 3px;"></div>
+            <span>soon to expire items span 1month 31 days</span>
+        </div>
+        </div>
+    </div>
         </div>
         <div class="panel-body">
     <div class="table-responsive">
@@ -263,23 +271,39 @@ if (isset($_POST['update_product'])) {
             <thead>
                 <tr>
                     <th class="text-center" style="width: 30px;">#</th>
+                    <th class="text-center" style="width: 30px;">Product-ID</th>
                     <th class="text-center" style="width: 10%;">Photo</th>
                     <th class="text-center" style="width: 10%;">Categorie</th>
-                    <th class="text-center" style="width: 50%;">Name</th>                 
+                    <th class="text-center" style="width: 50%;">Product Name</th>
+                    
                     <th class="text-center" style="width: 10%;">Description</th>
                     <th class="text-center" style="width: 10%;">Item Code</th>
-                    <th class="text-center" style="width: 10%;">Unit of measure</th>
+                    <th class="text-center" style="width: 10%;">Quantity</th>
                     <th class="text-center" style="width: 10%;">Buying Price</th>
                     <th class="text-center" style="width: 10%;">Selling Price</th>
-                   
-     
-                    <th class="text-center" style="width: 100px;">Actions</th>
+                    <th class="text-center" style="width: 10%;">Expire Date</th>
+                    <th class="text-center" style="width: 10%;">Product Batch</th>
+                 
                 </tr>
             </thead>
             <tbody>
     <?php foreach ($products as $product): ?>
+        <?php 
+            // Determine the row class based on quantity and expiration
+            $rowClass = '';
+            if ($product['quantity'] == 0) {
+                $rowClass = 'bg-danger';
+            } elseif ($product['quantity'] < 10) {
+                $rowClass = 'bg-warning';
+            }
+            // Check if the product is about to expire within one year
+            if (isset($product['expiration_date']) && is_about_to_expire($product['expiration_date'])) {
+                $rowClass = 'bg-secondary'; // Override with secondary color if about to expire
+            }
+        ?>
         <tr class="<?php echo $rowClass; ?>">
             <td class="text-center"><?php echo count_id(); ?></td>
+            <td class="text-center"><?php echo remove_junk($product['id']); ?></td>
             <td>
                 <?php if ($product['media_id'] === '0'): ?>
                     <img class="img-avatar img-circle" src="uploads/products/no_image.png" alt="">
@@ -287,42 +311,28 @@ if (isset($_POST['update_product'])) {
                     <img class="img-avatar img-circle" src="uploads/products/<?php echo $product['image']; ?>" alt="">
                 <?php endif; ?>
             </td>
-
             <td class="text-center"><?php echo remove_junk($product['categorie']); ?></td>
             <td class="text-center"><?php echo remove_junk($product['name']); ?></td>           
             <td class="text-center"><?php echo remove_junk($product['description']); ?></td>
             <td class="text-center"><?php echo remove_junk($product['item_code']); ?></td>
-            <td class="text-center"><?php echo remove_junk($product['uom_name'] . ' - ' . $product['uom_abbreviation']); ?></td>
+            <td class="text-center"><?php echo remove_junk($product['quantity']); ?></td>
             <td class="text-center"><?php echo remove_junk($product['buy_price']); ?></td>
             <td class="text-center"><?php echo remove_junk($product['sale_price']); ?></td>
             <td class="text-center">
-                <div class="btn-group">
-                    <div class="dropdown action-label">
-                        <a href="#" class="btn btn-white btn-sm btn-rounded dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                            <i class="fa fa-dot-circle-o text-primary"></i> Actions
-                        </a>
-                        
-                        <div class="dropdown-menu dropdown-menu-right">
-                        <a href="product.php" data-toggle="modal" data-target="#editProductModal" aria-expanded="false"
-                            class="dropdown-item" 
-                            onclick="editProductModal(<?php echo $product['id']; ?>', 
-                            '<?php echo addslashes($product['name']); ?>', 
-                            '<?php echo addslashes($product['categorie']); ?>', 
-                            '<?php echo addslashes($product['description']); ?>', 
-                            '<?php echo addslashes($product['item_code']); ?>, '
-                            '<?php echo $product['buy_price']; ?>',
-                            '<?php echo $product['sale_price']; ?>', 
-                            '<?php echo $product['quantity']; ?>', 
-                            '<?php echo $product['expiration_date']; ?>', 
-                            <?php echo $product['is_perishable']; ?>)">
-                                <i class="fa fa-edit"></i> Edit
-                         </a>
-                            <a href="delete_product.php?id=<?php echo (int)$product['id'];?>" class="dropdown-item" title="Delete" data-toggle="tooltip" onclick="return confirm('Are you sure you want to delete this product batch?');">
-                                <i class="fa fa-trash"></i> Delete
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                <?php 
+                if (isset($product['is_perishable']) && $product['is_perishable'] == 0) {
+                    echo 'Non-Perishable';
+                } elseif (isset($product['expiration_date']) && !empty($product['expiration_date'])) {
+                    // Display the expiration date
+                    echo htmlspecialchars($product['expiration_date']);
+                } else {
+                    echo 'No expiration date available';
+                }
+                ?>
+            </td>
+            <td class="text-center"><?php echo read_date($product['date']); ?></td>
+            
+              
             </td>
         </tr>
     <?php endforeach; ?>
@@ -396,25 +406,11 @@ if (isset($_POST['update_product'])) {
                                             </div> -->
                                             <div class="col-md-4">
                                                 <div class="input-group">
-                                                    <span class="input-group-addon"><i class="fa fa-puzzle-piece"></i></span>
-                                                    <select class="form-control" name="product-oum" id="product-oum" required>
-                                                    <option value="">Unit of measure(UOM)</option>
-                                                    <?php foreach ($p_uom as $cat): ?>
-                                                        <option value="<?php echo (int)$cat['id']; ?>"><?php echo $cat['name'] . ' ' . $cat['abbreviation']; ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                                </div>                     
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="input-group">
                                                     <span class="input-group-addon"><i class="fa fa-money"></i></span>
                                                     <input type="number" class="form-control" name="buying-price" placeholder="Buying Price" required>
                                                     <span class="input-group-addon">.00</span>
                                                 </div>
                                             </div>
-                                            
-                                       
                                             <div class="col-md-4">
                                                 <div class="input-group">
                                                     <span class="input-group-addon"><i class="fa fa-money"></i></span>
@@ -527,7 +523,6 @@ if (isset($_POST['update_product'])) {
                     <span class="input-group-addon">.00</span>
                 </div>
             </div>
-            
             <div class="col-md-4">
             <label for="product-selling-price">Selling price</label>
                 <div class="input-group">
