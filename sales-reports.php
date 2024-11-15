@@ -7,27 +7,28 @@
     <?php include 'layouts/title-meta.php'; ?>
     <?php include 'layouts/head-css.php'; ?>
     <?php 
-    $transact = find_all('pos_transaction');
-    $products = find_by_id('pos_transaction_items', 'transaction_id');
-    if (isset($_GET['transaction_id'])) {
-        $transaction_id = $_GET['transaction_id'];
+
+if (isset($_GET['id'])) {
+    $transaction_id = $_GET['id'];
+
+    // Fetch the main transaction details
+    $transaction = find_by_id('pos_transaction', $transaction_id);
     
-        // Get the main transaction details
-        $transaction = find_by_id('pos_transaction', $transaction_id);
+    // Fetch items related to this transaction
+    $transaction_items = find_by_id('pos_transaction_items', $transaction_id);
+
+    // Send data as JSON
+    $response = [
+        'transaction' => $transaction,
+        'items' => $transaction_items
+    ];
     
-        // Get the items related to this transaction
-        $transaction_items = find_by_id('pos_transaction_items', 'transaction_id');
-    
-        // Prepare response data
-        $response = [
-            'transaction' => $transaction,
-            'items' => $transaction_items
-        ];
-    
-        // Send response as JSON
-        echo json_encode($response);
-    }
-    ?>
+    echo json_encode($response);
+    exit;
+}
+
+?>    
+   
 </head>
 
 <body>
@@ -161,7 +162,9 @@ if ($date_preset) {
 }
 
 // Get transactions from the database
-$transact = find_all('pos_transaction');
+$get_transact = find_all('pos_transaction');
+
+
 ?>
 
         <?php
@@ -184,31 +187,28 @@ $transact = find_all('pos_transaction');
         <tbody>
 
         <?php
+            foreach ($get_transact as $tr) {
+                $transaction_date = $tr['transaction_date'];
+                $discount = $tr['discount'];
 
-foreach ($transact as $tr) {
-    $transaction_date = $tr['transaction_date'];
-    $discount = $tr['discount'];
-
-    if ((!$date_from || $transaction_date >= $date_from) && (!$date_to || $transaction_date <= $date_to)) {
-        $discount_display = ($discount == '00.00') ? 'None' : remove_junk(ucfirst($discount));
-        
-        echo '<tr class="text-center">';
-        echo '<td>' . remove_junk(ucfirst($tr['id'])) . '</td>';
-        echo '<td>' . remove_junk(ucfirst($transaction_date)) . '</td>';
-        echo '<td>' . $discount_display . '</td>';
-        echo '<td>₱' . remove_junk(ucfirst($tr['total_amount'])) . '</td>';
-        
-        // View Button with transaction ID passed to viewTransaction function
-        echo '<td class="text-center">
-            <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#viewTransactionModal" onclick="viewTransaction(\'' . $tr['id'] . '\');">View</a>
-        </td>';
-        
-        echo '</tr>';
-    }
-}
-?>
-
-?>
+                if ((!$date_from || $transaction_date >= $date_from) && (!$date_to || $transaction_date <= $date_to)) {
+                    $discount_display = ($discount == '00.00') ? 'None' : remove_junk(ucfirst($discount));
+                    
+                    echo '<tr class="text-center">';
+                    echo '<td>' . remove_junk(ucfirst($tr['id'])) . '</td>';
+                    echo '<td>' . remove_junk(ucfirst($transaction_date)) . '</td>';
+                    echo '<td>' . $discount_display . '</td>';
+                    echo '<td>₱' . remove_junk(ucfirst($tr['total_amount'])) . '</td>';
+                    echo '<td class="text-center">
+                        <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#viewTransactionModal" 
+                        onclick="viewTransaction(\'' . $tr['id'] . '\')">
+                        View
+                        </a>
+                    </td>';             
+                    echo '</tr>';
+                }
+            } // Closing foreach loop
+        ?>
 
         </tbody>
     </table>
@@ -299,7 +299,7 @@ foreach ($transact as $tr) {
                 </table>
                 <p><strong>Discount:</strong> <span id="transactionDiscount"></span></p>
                 <p><strong>Total Amount Due:</strong> <span id="transactionTotalAmount"></span></p>
-                <p><strong>Amount received:</strong> <span id="transactionTotalAmount"></span></p>
+                
                 <p><strong>Change:</strong> <span id="transactionDetails"></span></p>
             </div>
             <div class="modal-footer">
@@ -310,39 +310,46 @@ foreach ($transact as $tr) {
 </div>
 
 <script>
-function viewTransaction(transactionId) {
-    // Use AJAX to fetch transaction details from the server
-    $.ajax({
-        url: 'sales-reports.php', // PHP script to handle fetching
-        type: 'GET',
-        data: { id: transactionId },
-        success: function(data) {
-            const transaction = JSON.parse(data); // assuming data is JSON formatted
-            // Populate modal fields
-            $('#transactionId').text(transaction.id);
-            $('#transactionDate').text(transaction.transaction_date);
-            $('#transactionDiscount').text(transaction.discount);
-            $('#transactionTotalAmount').text(`₱${transaction.total_amount}`);
-            $('#transactionDetails').text(transaction.change);
+function viewTransaction(transaction_id) {
+    // Show loading message in the modal while fetching data
+    document.getElementById('transactionId').textContent = 'Loading...';
+    document.getElementById('transactionDate').textContent = 'Loading...';
+    document.getElementById('transactionDiscount').textContent = 'Loading...';
+    document.getElementById('transactionTotalAmount').textContent = 'Loading...';
 
-            // Populate purchased products
-            let productRows = '';
-            transaction.items.forEach(item => {
-                productRows += `
-                    <tr>
-                        <td>${item.product_name}</td>
-                        <td>${item.quantity}</td>
-                        <td>₱${item.price}</td>
-                        <td>₱${item.total}</td>
-                    </tr>`;
+    const tbody = document.querySelector('#viewTransactionModal table tbody');
+    tbody.innerHTML = ''; // Clear any existing rows
+    const loadingRow = document.createElement('tr');
+    loadingRow.innerHTML = `<td colspan="4" class="text-center">Loading...</td>`;
+    tbody.appendChild(loadingRow);
+
+    // Use AJAX or fetch to get transaction details
+    fetch(`sales-reports.php?id=${transaction_id}`)
+        .then(response => response.json())
+        .then(data => {
+            // Populate the modal with data
+            document.getElementById('transactionId').textContent = data.transaction.id;
+            document.getElementById('transactionDate').textContent = data.transaction.transaction_date;
+            document.getElementById('transactionDiscount').textContent = data.transaction.discount;
+            document.getElementById('transactionTotalAmount').textContent = '₱' + data.transaction.total_amount;
+
+            // Populate the products purchased table
+            const tbody = document.querySelector('#viewTransactionModal table tbody');
+            tbody.innerHTML = ''; // Clear any existing rows
+            data.items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.product_name}</td>
+                    <td>${item.quantity}</td>
+                    <td>₱${item.price}</td>
+                    <td>₱${item.total}</td>
+                `;
+                tbody.appendChild(row);
             });
-            $('#viewTransactionModal tbody').html(productRows);
-        },
-        error: function() {
-            alert("Failed to load transaction details.");
-        }
-    });
+        })
+        .catch(error => console.error('Error fetching transaction details:', error));
 }
+
 </script>
 
 
