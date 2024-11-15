@@ -82,6 +82,7 @@ function count_by_id_ins($table){
      return($db->fetch_assoc($result));
   }
 }
+
 /*--------------------------------------------------------------*/
 /* Determine if database table exists
 /*--------------------------------------------------------------*/

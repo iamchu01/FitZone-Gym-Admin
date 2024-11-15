@@ -82,30 +82,43 @@ if (isset($_POST['confirm_checkout'])) {
     $db->begin_transaction();
     
     try {
-        // Loop through cart items to update product quantities and insert each item into transactions
+        // Insert the transaction details into the `pos_transaction` table
+        $transaction_sql = "INSERT INTO pos_transaction 
+                            (id, transaction_date, total_amount, discount, amount_received, change_cash, payment_method, created_at)
+                            VALUES 
+                            ('{$transaction_id}', NOW(), '{$total_amount}', '{$discount}', '{$amount_received}', '{$change_cash}', '{$payment_method}', NOW())";
+
+        $result = $db->query($transaction_sql);
+
+        if (!$result) {
+            throw new Exception("Error inserting transaction: " . $db->con);
+        }
+
+        // Loop through cart items to update product quantities and insert each item into the `pos_transaction_items` table
         foreach ($cart_items as $item) {
             $product_id = $item['id'];
             $product_quantity = $item['quantity'];
             $product_name = $item['name'];
+            $product_price = $item['price']; // Assuming price is passed for each item
 
             // Update the product quantity in the products table
             $update_quantity_sql = "UPDATE products SET quantity = quantity - {$product_quantity} WHERE id = '{$product_id}' AND quantity >= {$product_quantity}";
             $result = $db->query($update_quantity_sql);
 
             if (!$result) {
-                throw new Exception("Error updating product quantity: " . $db->error);
+                throw new Exception("Error updating product quantity: " . $db->con);
             }
 
-            // Insert transaction record for each product purchased
-            $transaction_sql = "INSERT INTO pos_transaction 
-                (id, transaction_date, total_amount, discount, amount_received, change_cash, payment_method, product_name, product_quantity, created_at)
-                VALUES 
-                ('{$transaction_id}', NOW(), '{$total_amount}', '{$discount}', '{$amount_received}', '{$change_cash}', '{$payment_method}', '{$product_name}', '{$product_quantity}', NOW())";
+            // Insert transaction record for each product purchased into `pos_transaction_items`
+            $transaction_item_sql = "INSERT INTO pos_transaction_items 
+                                    (transaction_id, product_name, product_quantity, price, created_at)
+                                    VALUES 
+                                    ('{$transaction_id}', '{$product_name}', {$product_quantity}, '{$product_price}', NOW())";
 
-            $result = $db->query($transaction_sql);
+            $result = $db->query($transaction_item_sql);
 
             if (!$result) {
-                throw new Exception("Error inserting transaction: " . $db->error);
+                throw new Exception("Error inserting transaction item: " . $db->con);
             }
         }
 
@@ -120,7 +133,6 @@ if (isset($_POST['confirm_checkout'])) {
         redirect('pos.php', false);
     }
 }
-
 
 ?>
 
@@ -237,9 +249,10 @@ if (isset($_POST['confirm_checkout'])) {
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-
-                                <div class="total-display">Total: ₱<span id="total-price">0.00</span></div>
-
+                                <div class="form-group">
+                                    <label for="total-price">Total Amount Due</label>
+                                    <div id="total-price" class="form-control" disabled>0.00</div>
+                                </div>               
                                 <div class="form-group">
                                     <label for="amount-received">Amount Received</label>
                                     <input type="number" id="amount-received" class="form-control" placeholder="Enter amount received">
@@ -247,7 +260,7 @@ if (isset($_POST['confirm_checkout'])) {
 
                                 <div class="form-group">
                                     <label for="change">Change</label>
-                                    <div id="change" class="form-control" disabled>₱0.00</div>
+                                    <div id="change" class="form-control" disabled>0.00</div>
                                 </div>
 
                                 <div class="form-group">    
@@ -258,7 +271,7 @@ if (isset($_POST['confirm_checkout'])) {
                                     <input type="radio" id="gcash" name="payment-method" value="gcash" class="form-check-input ml-3">
                                     <label for="gcash" class="form-check-label border-success p-2">GCash</label>
                                 </div>
-
+                                            
                                 <button class="btn btn-primary btn-block" id="checkout" data-toggle="modal">Checkout</button>
                             </div>
                         </div>
@@ -280,8 +293,8 @@ if (isset($_POST['confirm_checkout'])) {
                     <div class="d-flex flex-column align-items-center">
                         <img src="assets/img/fzlogo.png" alt="FITZONE Logo" class="mb-2" style="max-width: 100px;">
                     </div>
-                    <p><strong>Transaction ID:</strong> <span id="transaction-id"></span></p>
-                    <p><strong>Date:</strong> <span id="transaction-date"></span></p>
+                    <p><strong>Transaction ID:</strong> <span id="transaction-id" class="position-absolute end-0" style=" margin-right: 2%;"></span></p>
+                    <p><strong>Date:</strong> <span id="transaction-date" class="position-absolute end-0" style=" margin-right: 2%;"></span></p>
 
                     <h5>Products Purchased:</h5>
                     <table class="table">
@@ -298,9 +311,10 @@ if (isset($_POST['confirm_checkout'])) {
                         </tbody>
                     </table>
 
-                    <p><strong>Discount Applied:</strong> <span id="discount-receipt"></span></p>
-                    <p><strong>Amount Received:</strong> ₱<span id="amount-received-receipt"></span></p>
-                    <p><strong>Change:</strong> ₱<span id="change-receipt"></span></p>
+                    <p><strong>Discount Applied:</strong> <span id="discount-receipt" class="position-absolute end-0" style=" margin-right: 2%;"></span></p>
+                    <p><strong>Amount Received:</strong><span class="position-absolute end-0" style="margin-right: 2%;">₱<label for="amount-received-receipt"></label><span id="amount-received-receipt"></span></span></p>
+                    <p><strong>Change:</strong><span class="position-absolute end-0" style="margin-right: 2%;">₱<span id="change-receipt"></span></span></p>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
@@ -392,7 +406,7 @@ if (existingQuantityInCart + quantity > availableQty) {
         $('#amount-received').on('input', function () {
             amountReceived = parseFloat($(this).val()) || 0;
             const change = amountReceived - totalPrice;
-            $('#change').text(change < 0 ? '₱0.00' : '₱' + change.toFixed(2));
+            $('#change').text(change < 0 ? '0.00' : '' + change.toFixed(2));
         });
     }
 
@@ -436,9 +450,9 @@ if (existingQuantityInCart + quantity > availableQty) {
         }
 
         // Display the discount, amount received, and change
-        $('#discount-receipt').text(discount ? `${discount}%` : 'None');
+        $ ('#discount-receipt').text(discount ? `${discount}%` : 'None');
         $('#amount-received-receipt').text(amountReceived.toFixed(2));
-        $('#change-receipt').text((amountReceived - totalPrice).toFixed(2));
+        $('#change-receipt').text ((amountReceived - totalPrice).toFixed(2));
 
         // Show the receipt modal using Bootstrap 5 modal method
         var myModal = new bootstrap.Modal(document.getElementById('receipt-modal'), {
