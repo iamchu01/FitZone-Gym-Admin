@@ -431,5 +431,27 @@ function report_name($table, $id) {
   $result = $db->query($sql);
   return ($result->num_rows === 1) ? $result->fetch_assoc() : null;
 }
+function get_transactions_by_date_range($db, $date_from, $date_to) {
+  // Prepare the SQL query
+  $sql = "SELECT * FROM pos_transaction WHERE transaction_date BETWEEN ? AND ?";
+  
+  // Prepare the statement
+  $stmt = $db->prepare($sql);
+  
+  // Bind the parameters to the query (both date_from and date_to are strings)
+  $stmt->bind_param("ss", $date_from, $date_to);
+  
+  // Execute the query
+  $stmt->execute();
+  
+  // Get the result
+  $result = $stmt->get_result();
+  
+  // Fetch all the rows as an associative array
+  $transactions = $result->fetch_all(MYSQLI_ASSOC);
+  
+  // Return the transactions
+  return $transactions;
+}
 
 ?>
