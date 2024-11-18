@@ -6,21 +6,9 @@
     <?php require_once('vincludes/load.php'); ?>
     <?php include 'layouts/head-css.php'; ?>
     <script>
-     function editProductModal(id, categoryName, description, itemCode, buyPrice, salePrice, quantity, expirationDate, isPerishable) {
-    document.getElementById('edit_cat_id').value = id;  // Set the hidden product ID field
-    
-    // Display category name as product name
-    document.getElementById('product-name').value = categoryName;
-    document.getElementById('product-description').value = description;
-    document.getElementById('product-item-code').value = itemCode;
-    document.getElementById('product-buying-price').value = buyPrice;
-    document.getElementById('product-selling-price').value = salePrice;
-    document.getElementById('product-quantity').value = quantity;
-    document.getElementById('product-expiration-date').value = expirationDate;
-
-    // Handle perishable checkbox
-    document.getElementById('perishable-select').checked = isPerishable == 1;
-    $('#perishable-select').trigger('change');
+function editProductModal(id, name) {
+    document.getElementById('edit-product-id').value = id;
+    document.getElementById('edit-product-title').value = name;
 }
 
 
@@ -40,6 +28,7 @@ $(document).ready(function() {
             $('button[type="submit"]').prop('disabled', false);
         }
     }
+    
 
     // Trigger validation on input for buying and selling price fields
     $('#product-buying-price, #product-selling-price').on('input', function() {
@@ -303,7 +292,7 @@ if (isset($_POST['update_product'])) {
                         </a>
                         
                         <div class="dropdown-menu dropdown-menu-right">
-                        <a href="product.php" data-toggle="modal" data-target="#editProductModal" aria-expanded="false"
+                        <a href="#" data-toggle="modal" data-target="#editProductModal" aria-expanded="false"
                             class="dropdown-item" 
                             onclick="editProductModal(<?php echo $product['id']; ?>', 
                             '<?php echo addslashes($product['name']); ?>', 
@@ -466,7 +455,7 @@ if (isset($_POST['update_product'])) {
     </div>
 </div>
 <!-- Edit Product Modal -->
-<div class="modal" id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel" aria-hidden="true">
+<div class="modal " id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -479,103 +468,96 @@ if (isset($_POST['update_product'])) {
                 <div class="row no-gutters">
                     <div class="col-12">
                         <div class="panel panel-default">
-                            <div class="panel-heading">
+                            <div class="panel-heading bg-success">
                                 <strong>
-                                    <span class="fa fa-th-large"></span>
+                                    <span class="fa fa-edit"></span>
                                     <span>Edit Product</span>
                                 </strong>
                             </div>
                             <div class="panel-body">
-                            <form method="post" action="product.php" class="clearfix">
-    <input type="hidden" id="edit_cat_id" name="edit_cat_id" value="">
-
-    <div class="form-group">
-        <div class="row">
-            <div class="col-md-6">
-            
-            <input type="text" class="form-control" id="product-name" name="product-name" readonly>
-                    
-            </div>
-            <div class="col-md-6">
-                <select class="form-control" name="product-photo">
-                    <option value="">Select Product Photo</option>
-                    <?php foreach ($all_photo as $photo): ?>
-                        <option value="<?php echo $photo['id'] ?>"><?php echo $photo['file_name'] ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <!-- Other fields -->
-    <div class="form-group">
-        <div class="row">
-        
-            <div class="col-md-4">
-            <label for="product-quantity">Quantity</label>
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-shopping-cart"></i></span>
-                    <input type="number" class="form-control" name="product-quantity" id="product-quantity" disabled>
-                </div>
-            </div>
-           
-            <div class="col-md-4">
-            <label for="product-buying-price">Buying price</label>
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
-                    <input type="number" class="form-control" name="product-buying-price" id="product-buying-price" required>
-                    <span class="input-group-addon">.00</span>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-            <label for="product-selling-price">Selling price</label>
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
-                    <input type="number" class="form-control" name="product-selling-price" id="product-selling-price" required>
-                    <span class="input-group-addon">.00</span>
-                   
-                </div>
-                <div class="invalid-feedback selling-price-feedback" style="display:none;"></div>
-            </div>
-        </div>
-    </div>
-    <div class="form-group">
-    <label for="product-item-code">Item code</label>
-                                        <div class="input-group">
-                                           
-                                            <span class="input-group-addon"><i class="fa fa-barcode"></i></span>
-                                            <input type="text" class="form-control" name="product-item-code" id="product-item-code"  >
-                                        </div>
-                                        
-                                    </di>
+                                <form method="post" action="product.php" class="clearfix">
+                                    <!-- Hidden Field for Product ID -->
+                                    <input type="hidden" id="edit-product-id" name="product-id">
+                                    
                                     <div class="form-group">
-                                    <label for="product-description">Item description</label>
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fa fa-th-large"></i></span>
+                                            <input type="text" class="form-control" id="edit-product-title" name="product-title" placeholder="Product Name" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <select class="form-control" name="product-categorie" id="edit-product-category" required>
+                                                    <option value="">Select category</option>
+                                                    <?php foreach ($all_categories as $cat): ?>
+                                                        <option value="<?php echo (int)$cat['id']; ?>"><?php echo $cat['name']; ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <select class="form-control" name="product-photo" id="edit-product-photo">
+                                                    <option value="">Select Product Photo</option>
+                                                    <?php foreach ($all_photo as $photo): ?>
+                                                        <option value="<?php echo (int)$photo['id']; ?>"><?php echo $photo['file_name']; ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
+                                                    <input type="number" class="form-control" id="edit-buying-price" name="buying-price" placeholder="Buying Price" required>
+                                                    <span class="input-group-addon">.00</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
+                                                    <input type="number" class="form-control" id="edit-saleing-price" name="saleing-price" placeholder="Selling Price" required>
+                                                    <span class="input-group-addon">.00</span>
+                                                </div>
+                                                <div class="invalid-feedback selling-price-feedback" style="display:none;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fa fa-barcode"></i></span>
+                                            <input type="text" class="form-control" id="edit-item-code" name="item-code" placeholder="Item Code" required>
+                                        </div>
+                                        <div class="invalid-feedback item-code-feedback" style="display:none;"></div>
+                                    </div>
+
+                                    <div class="form-group">
                                         <div class="input-group">
                                             <span class="input-group-addon"><i class="fa fa-hashtag"></i></span>
-                                            <input type="text" class="form-control" name="product-description" id="product-description" required>
+                                            <input type="text" class="form-control" id="edit-item-description" name="item-description" placeholder="Item Description" required>
                                         </div>
                                     </div>
+
+                                    <!-- Checkbox for Perishable -->
                                     <div class="form-group">
                                         <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" id="is-perishable" name="is_perishable" value="1">
-                                            <label class="form-check-label" for="is-perishable">Is Perishable</label>
+                                            <input type="checkbox" class="form-check-input" id="edit-is-perishable" name="is_perishable" value="1">
+                                            <label class="form-check-label" for="edit-is-perishable">Is Perishable</label>
                                         </div>
                                     </div>
 
-                                    <div class="form-group" id="expiration-date-group" style="display: none;">
-                                        <label for="expiration-date">Expiration Date</label>
-                                        <input type="date" class="form-control" name="expiration-date" id="expiration-date" min="<?php echo $min_expiration_date; ?>">
-                                        <div class="expiration-date-feedback text-danger" style="display: none;"></div> <!-- Feedback message container -->
+                                    <div class="form-group" id="edit-expiration-date-group" style="display: none;">
+                                        <label for="edit-expiration-date">Expiration Date</label>
+                                        <input type="date" class="form-control" name="expiration-date" id="edit-expiration-date" min="<?php echo $min_expiration_date; ?>">
+                                        <div class="expiration-date-feedback text-danger" style="display: none;"></div>
                                     </div>
 
-   
-
-    <div class="form-group text-center">
-        <button type="submit" class="btn btn-primary" name="update_product">Save Changes</button>
-    </div>
-</form>
-
+                                    <button type="submit" name="edit_product" class="btn btn-success pull-right" style="margin-right: 2%;">Save Changes</button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -584,6 +566,7 @@ if (isset($_POST['update_product'])) {
         </div>
     </div>
 </div>
+
 <?php include_once('vlayouts/footer.php'); ?>
 <?php include 'layouts/customizer.php'; ?>
 <?php include 'layouts/vendor-scripts.php'; ?>
