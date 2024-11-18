@@ -132,7 +132,14 @@ if (isset($_POST['add_cat'])) {
 <div class="page-wrapper" style="padding-top:2%;">
     <div class="content container-fluid">
    <div class="row">
-      <div class="col"> <h3 class="page-title">Products</h3>
+      
+   <div class="col">
+                            <h3 class="page-title">Categories</h3>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="admin.php">Inventory Management</a></li>
+                                <li class="breadcrumb-item active">Inventory Product</li>
+                            </ul>
+                        </div>
     </div>  
         <div class="row">
             <div class="col-md-12">
@@ -145,7 +152,7 @@ if (isset($_POST['add_cat'])) {
                     <div class="panel-heading">
                         <strong>
                             <span class="fa fa-th"></span>
-                            <span>Add New Product</span>
+                            <span>Add New Category</span>
                         </strong>
                     </div>
                     <div class="panel-body">
@@ -153,30 +160,14 @@ if (isset($_POST['add_cat'])) {
                             <div class="form-group">
                                 <input type="text" class="form-control" name="categorie-name" placeholder="Product Name" required>
                             </div>
-                            <button type="submit" name="add_cat" class="btn btn-primary">Add Product</button>
+                            <button type="submit" name="add_cat" class="btn btn-primary">Add Category</button>
                         </form>
                     </div>
                 </div>
             </div>
           
             </div>
-            <div class="col">
-      <div class="dropdown position-absolute top-0 end-0">
-  <a class="btn btn-success dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false" title="Inventory management Navigation bar" data-toggle="tooltip">
-    <span class="fa fa-navicon"></span>
-  </a>
-
-  <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-  <li><a class="dropdown-item" href="admin.php"><span class="fa fa-home"></span> Inventory Overview</a></li>
-    <li><a class="dropdown-item" href="categorie.php"><span class="fa fa-th"></span> Add Product</a></li>
-    <li><a class="dropdown-item" href="product.php"><span class="fa fa-shopping-cart"></span> Product Stock List</a></li>
-    <li><a class="dropdown-item" href="gym_equipment.php"><span class="fa fa-cubes"></span> Gym equpment</a></li>
-    
-    <!-- Add more links as needed -->
-  </ul>
-</div>
-
-    </div>
+ 
         <div class="col-md-12">
         <div class="panel panel-default">
         <div class="panel-heading clearfix"> 

@@ -50,7 +50,7 @@ if (isset($_GET['id'])) {
                                 <li class="breadcrumb-item"><a href="admin-dashboard.php">Dashboard</a></li>
                                 <li class="breadcrumb-item active">Sales Reports</li>
                             </ul>
-                        </div>
+                        </div> 
                     </div>
                 </div>
 
@@ -196,7 +196,7 @@ $get_transact = find_all('pos_transaction');
                     
                     echo '<tr class="text-center">';
                     echo '<td>' . remove_junk(ucfirst($tr['id'])) . '</td>';
-                    echo '<td>' . remove_junk(ucfirst($transaction_date)) . '</td>';
+                    echo '<td>' . date('F j, Y h:i A', strtotime($transaction_date)) . '</td>';
                     echo '<td>' . $discount_display . '</td>';
                     echo '<td>₱' . remove_junk(ucfirst($tr['total_amount'])) . '</td>';
                     echo '<td class="text-center">

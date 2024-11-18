@@ -1,92 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fit Zone - Login</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css?family=Oswald:300,400,500,600,700&display=swap" rel="stylesheet" />
-    <!-- Css Styles -->
-    <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/style.css" type="text/css" />
-    <style>
-        
-      body {
-        background-color: rgba(0, 0, 0, 0.8);
-        font-family: 'Oswald', sans-serif;
-      }
-      .login-container {
-        width: 100%;
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .login-card {
-        background-color: rgba(0, 0, 0, 0.8);
-        padding: 30px;
-        border-radius: 10px;
-        width: 400px;
-        color: white;
-        position: relative;
-        z-index: 1000; 
-      }
-      .login-card h2 {
-        text-align: center;
-        color: #44d62c;
-      }
-      .login-card input {
-        margin-bottom: 15px;
-        border-radius: 5px;
-        background-color: rgba(255, 255, 255, 0.1);
-        border: none;
-        color: white;
-      }
-      .btn-login {
-        background-color: #44d62c;
-        color: white;
-        width: 100%;
-        font-weight: bold;
-      }
-      .login-link {
-        text-align: center;
-        margin-top: 20px;
-      }
-      .login-link a {
-        color: #44d62c;
-      }
-    </style>
-  </head>
-  <body>
+<html lang="zxx">
 
-    <?php include 'layouts/offcanvas-menu.php'; ?>
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Gym Template">
+    <meta name="keywords" content="Gym, unica, creative, html">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Gym | Template</title>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css?family=Muli:300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Oswald:300,400,500,600,700&display=swap" rel="stylesheet">
+
+    <!-- Css Styles -->
+    <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
+    <link rel="stylesheet" href="css/flaticon.css" type="text/css">
+    <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
+    <link rel="stylesheet" href="css/barfiller.css" type="text/css">
+    <link rel="stylesheet" href="css/magnific-popup.css" type="text/css">
+    <link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+</head>
+
+<body>
+    <!-- Page Preloder -->
+    <div id="preloder">
+        <div class="loader"></div>
+    </div>
+    <!-- Offcanvas Menu Section Begin -->
+    <div class="offcanvas-menu-overlay"></div>
+    <?php include('layouts/offcanvas-menu.php');?>
     <!-- Offcanvas Menu Section End -->
 
     <!-- Header Section Begin -->
-    <?php include 'layouts/header.php';?>
- 
+    <?php include('layouts/header.php');?>
     <!-- Header End -->
-    <div class="login-container">
-      <div class="login-card">
-        <h2>Login to Fit Zone</h2>
-        <form>
-          <div class="form-group">
-            <input type="email" class="form-control" placeholder="Email" required />
-          </div>
-          <div class="form-group">
-            <input type="password" class="form-control" placeholder="Password" required />
-          </div>
-          <button type="submit" class="btn btn-login">Login</button>
-        </form>
+
+
+    <!-- Breadcrumb Section Begin -->
+    <section class="breadcrumb-section set-bg" data-setbg="img/breadcrumb-bg.jpg">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <div class="breadcrumb-text">
+                        <h2>Log-in</h2>
+                        <div class="bt-option">
+                            <a href="./index.html">Home</a>
+                            <a href="#">Pages</a>
+                            <span>Log-in</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Breadcrumb Section End -->
+    <!-- Contact Section Begin -->
+    <section class="contact-section spad">
+      <div class="container">
+        <div class="d-flex flex-row " >
+        <div class="col-lg-6">
+      <div class="leave-comment">
+        <form action="#">
+                            <input type="text" placeholder="User name">
+                            <input type="password" placeholder="Password">
+                            <button type="submit">Log-in</button>
+                        </form>
         <div class="login-link">
           <p>Don't have an account? <a href="register.php">Register Here</a></p>
         </div>
       </div>
-    </div>
+     </div>
+        </div>
+ 
+      </div>
+    
 
+    </section>
+    <!-- Contact Section End -->
+
+   
+    <!-- Get In Touch Section End -->
+    <?php include('layouts/footer.php');?>
+   
     <!-- Js Plugins -->
     <script src="js/jquery-3.3.1.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
-  </body>
+    <script src="js/jquery.magnific-popup.min.js"></script>
+    <script src="js/masonry.pkgd.min.js"></script>
+    <script src="js/jquery.barfiller.js"></script>
+    <script src="js/jquery.slicknav.js"></script>
+    <script src="js/owl.carousel.min.js"></script>
+    <script src="js/main.js"></script>
+
+
+
+</body>
+
 </html>

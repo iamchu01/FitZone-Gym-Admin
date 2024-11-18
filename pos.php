@@ -460,6 +460,15 @@ if (existingQuantityInCart + quantity > availableQty) {
         });
         myModal.show();
     });
+    $('#product-search').on('keyup', function() {
+    var value = $(this).val().toLowerCase();
+    $('tbody tr').each(function() {
+        var match = $(this).find('td:nth-child(1)').text().toLowerCase().indexOf(value) > -1 ||
+                    $(this).find('td:nth-child(2)').text().toLowerCase().indexOf(value) > -1;
+        $(this).toggle(match);
+    });
+});
+
 
     // Handle the confirm checkout button (submit the data to the server)
     $('#confirm-checkout').click(function () {
@@ -505,6 +514,7 @@ if (existingQuantityInCart + quantity > availableQty) {
 });
 
     });
+    
 });
 // console.log({
 //     cart_items: cartItems,
@@ -516,6 +526,7 @@ if (existingQuantityInCart + quantity > availableQty) {
 //     transaction_id: transactionId
 // });
 
+    
 </script>
 </body>
 </html>
