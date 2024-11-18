@@ -3,6 +3,41 @@ include 'layouts/session.php';
 include 'layouts/head-main.php';
 include 'layouts/db-connection.php';
 
+// Include the necessary OTP classes
+require_once 'PHPMailer-OTP/classes/OTPVerification.php';
+require_once 'PHPMailer-OTP/classes/EmailSender.php';
+
+$message = ''; // Variable to display messages
+$otpSent = false;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $email = trim($_POST['email']);
+  $otp = isset($_POST['otp']) ? trim($_POST['otp']) : null;
+  $action = $_POST['action'] ?? '';
+
+  // Instantiate the OTP handler
+  $otpHandler = new OTPVerification($conn);
+
+  if ($action === 'send') {
+    // Generate and send OTP
+    $generatedOTP = $otpHandler->generateOTP($email);
+    $result = EmailSender::sendOTP($email, $generatedOTP);
+
+    if ($result === true) {
+      $message = 'OTP has been sent to your email! Please check your inbox.';
+      $otpSent = true;
+    } else {
+      $message = 'Failed to send OTP. ' . $result;
+    }
+  } elseif ($action === 'verify') {
+    // Verify OTP
+    if ($otpHandler->verifyOTP($email, $otp)) {
+      $message = 'Email verified successfully!';
+    } else {
+      $message = 'Invalid or expired OTP. Please try again.';
+    }
+  }
+}
 ?>
 
 <head>
@@ -47,7 +82,6 @@ include 'layouts/db-connection.php';
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
         <?php endif; ?>
-
 
         <!-- Search Bar -->
         <div class="row filter-row">
@@ -153,20 +187,9 @@ include 'layouts/db-connection.php';
                                   title="<?php echo ($status === 'Inactive') ? '' : 'Only inactive members can be archived'; ?>">
                                   <i class="fa fa-archive m-r-5"></i> Archive
                                 </a>
-                                <a class="dropdown-item" href="#"
-                                  onclick="renewMembership(<?php echo $row['member_id']; ?>)">
-                                  <i class="fa fa-refresh m-r-5"></i> Renew
-                                  Membership
-                                </a>
-                                <a class="dropdown-item" href="#"
-                                  onclick="cancelMembership(<?php echo $row['member_id']; ?>)">
-                                  <i class="fa fa-ban m-r-5"></i> Cancel
-                                  Membership
-                                </a>
                               </div>
                             </div>
                           </td>
-
                         </tr>
                         <?php
                       }
@@ -196,163 +219,212 @@ include 'layouts/db-connection.php';
               </button>
             </div>
             <div class="modal-body">
-              <div class="profile-img-wrap edit-img">
-                <img class="inline-block" src="assets/img/profiles/avatar-02.jpg" alt="user">
-                <div class="fileupload btn">
-                  <span class="btn-text">Add</span>
-                  <input class="upload" type="file" required>
+              <!-- Message Section -->
+              <?php if (!empty($message)): ?>
+                <div class="alert alert-<?php echo $otpSent ? 'success' : 'danger'; ?>">
+                  <?php echo $message; ?>
                 </div>
-              </div>
+              <?php endif; ?>
 
               <form id="addMemberForm" class="needs-validation member-info" method="POST"
                 action="backend-add-authenticate/process-add-member.php">
+
+                <input type="hidden" name="action" id="action" value=""> <!-- For Send/Verify Actions -->
+
                 <div class="row">
-                  <!-- Firstname -->
+                  <!-- Basic Info -->
+                  <!-- First Name -->
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label>First Name <span class="text-danger">*</span></label>
                       <input id="memberFirstname" class="form-control" type="text" name="firstname"
-                        placeholder="Enter First Name" required pattern="[A-Za-z\s]+">
-                      <div class="invalid-feedback">Please enter a valid first name.
-                      </div>
+                        placeholder="Enter First Name" required />
                     </div>
                   </div>
-                  <!-- Lastname -->
+                  <!-- Last Name -->
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label>Last Name <span class="text-danger">*</span></label>
                       <input id="memberLastname" class="form-control" type="text" name="lastname"
-                        placeholder="Enter Last Name" required pattern="[A-Za-z\s]+">
-                      <div class="invalid-feedback">Please enter a valid last name.
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Phone Number -->
-                  <div class="col-sm-6">
-                    <label>Mobile Number</label>
-                    <div class="form-group">
-                      <div class="input-group has-validation">
-                        <span class="input-group-text" id="inputGroupPrepend">+63</span>
-                        <input type="text" class="form-control" id="memberMobile" name="mobile"
-                          placeholder="ex. 9123456789" minlength="10" maxlength="10" pattern="9[0-9]{9}">
-                        <div class="invalid-feedback">Please enter a valid mobile
-                          number.</div>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- //* Gender -->
-                  <div class="col-sm-6">
-                    <div class="form-group mb-2">
-                      <label>Gender <span style="color:red;">*</span></label>
-                      <div class="position-relative">
-                        <select class="form-select py-2" name="Gender" id="gender-selector" required>
-                          <option value="" disabled selected>Select Gender
-                          </option>
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Others">Others</option>
-                          <!-- Ensure this option has the value "Others" -->
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Date of Birth -->
-                  <div class="col-sm-6">
-                    <div class="form-group mb-2">
-                      <label>Date of Birth </label>
-                      <div class="cal-icon">
-                        <input type="text" id="memberDateOfBirth" class="form-control datetimepicker" name="dateOfBirth"
-                          placeholder="Select Date of Birth">
-                        <small id="memberDateWarning" class="text-danger" style="display: none;">Please
-                          select a valid date of
-                          birth.</small>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Age -->
-                  <div class="col-sm-6">
-                    <div class="form-group mb-2">
-                      <label>Age</label>
-                      <input type="text" id="memberAge" name="member_age" class="form-control" placeholder="Age"
-                        readonly>
+                        placeholder="Enter Last Name" required />
                     </div>
                   </div>
                   <!-- Email -->
                   <div class="col-sm-6">
-                    <label>Email Address <span class="text-danger">*</span></label>
                     <div class="form-group">
+                      <label>Email Address <span class="text-danger">*</span></label>
                       <input type="email" class="form-control" id="memberEmail" name="email" placeholder="Enter Email"
-                        required>
-                      <div class="invalid-feedback">Please enter a valid email address.
-                      </div>
+                        required />
                     </div>
                   </div>
+
+                  <!-- Send OTP Button -->
+                  <div class="col-sm-6">
+                    <div class="form-group">
+                      <button type="button" id="sendOtpBtn" class="btn btn-outline-primary mt-4">
+                        Send OTP
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- OTP -->
+                  <div class="col-sm-6">
+                    <div class="form-group">
+                      <label>OTP</label>
+                      <input type="text" class="form-control" id="otp" name="otp" placeholder="Enter OTP" />
+                    </div>
+                  </div>
+
+                  <!-- Verify OTP Button -->
+                  <div class="col-sm-6">
+                    <div class="form-group">
+                      <button type="button" id="verifyOtpBtn" class="btn btn-outline-success mt-4">
+                        Verify OTP
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Alert Section -->
+                  <div class="col-12">
+                    <div id="alert-container" class="mt-3"></div>
+                  </div>
+
+
                   <!-- Password -->
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label>Password</label>
                       <div class="input-group">
                         <input id="memberPassword" class="form-control" type="password" name="password" value="12345"
-                          readonly>
+                          required>
                         <button class="btn btn-outline-secondary" type="button" id="toggleMemberPassword">
                           <i class="fa fa-eye-slash" id="passwordIcon"></i>
                         </button>
                       </div>
                     </div>
                   </div>
-                  <!-- Address Form -->
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="region">Region <span class="text-danger">*</span></label>
-                      <select id="region" class="form-select" name="region" required>
-                        <option value="" disabled selected>Select Region</option>
-                      </select>
-                      <input type="hidden" name="region_text" id="region-text">
-                      <div class="invalid-feedback">Please select a region.</div>
-                    </div>
-                  </div>
+                </div>
 
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="province">Province <span class="text-danger">*</span></label>
-                      <select id="province" class="form-select" name="province" required>
-                        <option value="" disabled selected>Select Province</option>
-                        <!-- Populate provinces dynamically -->
-                      </select>
-                      <input type="hidden" name="province_text" id="province-text">
-                      <div class="invalid-feedback">Please select a province.</div>
+                <!-- Hidden Additional Info Section -->
+                <div id="additionalInfoSection"
+                  style="overflow: hidden; max-height: 0; transition: max-height 0.5s ease;">
+                  <h5 style="text-align:center; font-size: 20px; margin-top: 20px;">Additional Information</h5>
+                  <div class="row">
+                    <!-- //* add field here -->
+                    <!-- Phone Number -->
+                    <div class="col-sm-6">
+                      <label>Mobile Number</label>
+                      <div class="form-group">
+                        <div class="input-group has-validation">
+                          <span class="input-group-text" id="inputGroupPrepend">+63</span>
+                          <input type="text" class="form-control" id="memberMobile" name="mobile"
+                            placeholder="ex. 9123456789" minlength="10" maxlength="10" pattern="9[0-9]{9}">
+                          <div class="invalid-feedback">Please enter a valid mobile
+                            number.</div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                    <!-- //* Gender -->
+                    <div class="col-sm-6">
+                      <div class="form-group mb-2">
+                        <label>Gender</label>
+                        <div class="position-relative">
+                          <select class="form-select py-2" name="Gender" id="gender-selector">
+                            <option value="" disabled selected>Select Gender
+                            </option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Others">Others</option>
+                            <!-- Ensure this option has the value "Others" -->
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Date of Birth -->
+                    <div class="col-sm-6">
+                      <div class="form-group mb-2">
+                        <label>Date of Birth </label>
+                        <div class="cal-icon">
+                          <input type="text" id="memberDateOfBirth" class="form-control datetimepicker"
+                            name="dateOfBirth" placeholder="Select Date of Birth">
+                          <small id="memberDateWarning" class="text-danger" style="display: none;">Please
+                            select a valid date of
+                            birth.</small>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Age -->
+                    <div class="col-sm-6">
+                      <div class="form-group mb-2">
+                        <label>Age</label>
+                        <input type="text" id="memberAge" name="member_age" class="form-control" placeholder="Age"
+                          readonly>
+                      </div>
+                    </div>
+                    <!-- Address Form -->
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label for="region">Region</label>
+                        <select id="region" class="form-select" name="region">
+                          <option value="" disabled selected>Select Region</option>
+                        </select>
+                        <input type="hidden" name="region_text" id="region-text">
+                        <div class="invalid-feedback">Please select a region.</div>
+                      </div>
+                    </div>
 
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="city">City/Municipality <span class="text-danger">*</span></label>
-                      <select id="city" class="form-select" name="city" required>
-                        <option value="" disabled selected>Select City/Municipality
-                        </option>
-                        <!-- Populate cities dynamically -->
-                      </select>
-                      <input type="hidden" name="city_text" id="city-text">
-                      <div class="invalid-feedback">Please select a city or
-                        municipality.</div>
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label for="province">Province</label>
+                        <select id="province" class="form-select" name="province">
+                          <option value="" disabled selected>Select Province</option>
+                          <!-- Populate provinces dynamically -->
+                        </select>
+                        <input type="hidden" name="province_text" id="province-text">
+                        <div class="invalid-feedback">Please select a province.</div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="barangay">Barangay <span class="text-danger">*</span></label>
-                      <select id="barangay" class="form-select" name="barangay" required>
-                        <option value="" disabled selected>Select Barangay</option>
-                        <!-- Populate barangays dynamically -->
-                      </select>
-                      <input type="hidden" name="barangay_text" id="barangay-text">
-                      <div class="invalid-feedback">Please select a barangay.</div>
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label for="city">City/Municipality </label>
+                        <select id="city" class="form-select" name="city">
+                          <option value="" disabled selected>Select City/Municipality
+                          </option>
+                          <!-- Populate cities dynamically -->
+                        </select>
+                        <input type="hidden" name="city_text" id="city-text">
+                        <div class="invalid-feedback">Please select a city or
+                          municipality.</div>
+                      </div>
                     </div>
+
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label for="barangay">Barangay</label>
+                        <select id="barangay" class="form-select" name="barangay">
+                          <option value="" disabled selected>Select Barangay</option>
+                          <!-- Populate barangays dynamically -->
+                        </select>
+                        <input type="hidden" name="barangay_text" id="barangay-text">
+                        <div class="invalid-feedback">Please select a barangay.</div>
+                      </div>
+                    </div>
+                    <!-- //* add field here -->
                   </div>
                 </div>
+
+                <!-- Toggle Button for Additional Info -->
+                <div class="col-sm-12 text-center m-t-20">
+                  <div class="add-info-toggle" style="float:right;">
+                    <a href="javascript:void(0);" onclick="toggleAdditionalInfoSection()">
+                      <i class="fa fa-plus-circle"></i> Add Additional Info
+                    </a>
+                  </div>
+                </div>
+
                 <div class="submit-section" style="margin-top: 10px;">
-                  <button class="btn btn-primary submit-btn" type="submit">Add
-                    Member</button>
+                  <button class="btn btn-primary submit-btn" type="submit">Add Member</button>
                 </div>
               </form>
             </div>
@@ -428,9 +500,6 @@ include 'layouts/db-connection.php';
 
     <script src="backend-add-authenticate/add-member.js"></script>
     <!-- Toastr JS -->
-
-
-
 
     <?php include 'layouts/customizer.php'; ?>
     <!-- JAVASCRIPT -->
@@ -551,6 +620,88 @@ include 'layouts/db-connection.php';
       });
     </script>
 
+    <!-- //* Dropdown more info -->
+    <script>
+      function toggleAdditionalInfoSection() {
+        var additionalInfoSection = document.getElementById('additionalInfoSection');
+
+        // Toggle max-height for smooth transition
+        if (additionalInfoSection.style.maxHeight === "0px" || additionalInfoSection.style.maxHeight === "") {
+          additionalInfoSection.style.maxHeight = additionalInfoSection.scrollHeight + "px";
+          additionalInfoSection.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          additionalInfoSection.style.maxHeight = "0px";
+        }
+      }
+
+    </script>
+
+    <script>
+      //* OTP
+      document.addEventListener("DOMContentLoaded", function () {
+        const alertContainer = document.getElementById("alert-container");
+
+        // Send OTP
+        document.querySelector("#sendOtpBtn").addEventListener("click", function () {
+          const email = document.getElementById("memberEmail").value;
+
+          if (!email) {
+            showAlert("danger", "Please enter an email.");
+            return;
+          }
+
+          // AJAX request to send OTP
+          fetch("PHPMailer-OTP/otp_backend.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ email: email, action: "send" }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              showAlert(data.status === "success" ? "success" : "danger", data.message);
+            })
+            .catch(() => {
+              showAlert("danger", "An error occurred while sending OTP. Please try again.");
+            });
+        });
+
+        // Verify OTP
+        document.querySelector("#verifyOtpBtn").addEventListener("click", function () {
+          const email = document.getElementById("memberEmail").value;
+          const otp = document.getElementById("otp").value;
+
+          if (!email || !otp) {
+            showAlert("danger", "Please fill in both email and OTP fields.");
+            return;
+          }
+
+          // AJAX request to verify OTP
+          fetch("PHPMailer-OTP/otp_backend.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ email: email, otp: otp, action: "verify" }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              showAlert(data.status === "success" ? "success" : "danger", data.message);
+            })
+            .catch(() => {
+              showAlert("danger", "An error occurred while verifying OTP. Please try again.");
+            });
+        });
+
+        // Utility function to display alerts
+        function showAlert(type, message) {
+          alertContainer.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        }
+      });
+      //* OTP
+    </script>
 
 </body>
 
