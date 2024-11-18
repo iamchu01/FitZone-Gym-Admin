@@ -55,10 +55,17 @@ class OTPVerification
     if ($result->num_rows > 0) {
       $update = $this->conn->prepare("UPDATE tbl_add_members SET is_verified = 1, otp_code = NULL, otp_expiry = NULL WHERE email = ?");
       $update->bind_param("s", $email);
-      $update->execute();
-      return true;
+      if ($update->execute()) {
+        error_log("is_verified updated successfully for email: " . $email);
+        return true;
+      } else {
+        error_log("Failed to update is_verified for email: " . $email);
+      }
+    } else {
+      error_log("OTP verification failed for email: " . $email);
     }
 
     return false;
   }
+
 }

@@ -99,10 +99,9 @@ include 'backend-add-authenticate/get_member_profile.php';
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Profile Info Tab -->
-      <!-- <div class="tab-content">
+        <!-- Profile Info Tab -->
+        <!-- <div class="tab-content">
                 <div id="emp_profile" class="pro-overview tab-pane fade show active">
                     <div class="row">
                         <div class="col-md-6 d-flex">
@@ -239,138 +238,138 @@ include 'backend-add-authenticate/get_member_profile.php';
                         </div>
                     </div>
                 </div> -->
-      <!-- /Profile Info Tab -->
+        <!-- /Profile Info Tab -->
 
 
+      </div>
     </div>
-  </div>
-  <!-- /Page Content -->
+    <!-- /Page Content -->
 
-  <!-- //* Profile Information Modal -->
-  <div id="profile_info" class="modal custom-modal fade" role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Profile Information</h5>
-          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <form>
-            <div class="row">
-              <div class="col-md-12">
-                <div class="profile-img-wrap edit-img">
-                  <img class="inline-block" src="assets/img/profiles/avatar-02.jpg" alt="user">
-                  <div class="fileupload btn">
-                    <span class="btn-text">edit</span>
-                    <input class="upload" type="file">
-                  </div>
-                </div>
-                <div class="row">
-                  <!-- //* firstname -->
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label>First Name <span class="text-danger">*</span></label>
-                      <input id="firstname" class="form-control" type="text" name="firstname"
-                        placeholder="Enter First Name" required pattern="[A-Za-z\s]+">
-                      <div class="invalid-feedback">Please enter a valid first name.</div>
+    <!-- //* Profile Information Modal -->
+    <div id="profile_info" class="modal custom-modal fade" role="dialog">
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Profile Information</h5>
+            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="profile-img-wrap edit-img">
+                    <img class="inline-block" src="assets/img/profiles/avatar-02.jpg" alt="user">
+                    <div class="fileupload btn">
+                      <span class="btn-text">edit</span>
+                      <input class="upload" type="file">
                     </div>
                   </div>
-
-                  <!-- //* middlename -->
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label>Middle Name <span style="color:gray;">(Optional)</span> </label>
-                      <input id="middlename" class="form-control" type="text" name="middlename"
-                        placeholder="Enter Middle Name" pattern="[A-Za-z\s]+">
-                      <div class="invalid-feedback">Please enter a valid middle name.</div>
+                  <div class="row">
+                    <!-- //* firstname -->
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label>First Name <span class="text-danger">*</span></label>
+                        <input id="firstname" class="form-control" type="text" name="firstname"
+                          placeholder="Enter First Name" required pattern="[A-Za-z\s]+">
+                        <div class="invalid-feedback">Please enter a valid first name.</div>
+                      </div>
                     </div>
-                  </div>
 
-                  <!-- //* lastname -->
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label>Last Name <span class="text-danger">*</span></label>
-                      <input id="lastname" class="form-control" type="text" name="lastname"
-                        placeholder="Enter Last Name" required pattern="[A-Za-z\s]+">
-                      <div class="invalid-feedback">Please enter a valid last name.</div>
+                    <!-- //* middlename -->
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label>Middle Name <span style="color:gray;">(Optional)</span> </label>
+                        <input id="middlename" class="form-control" type="text" name="middlename"
+                          placeholder="Enter Middle Name" pattern="[A-Za-z\s]+">
+                        <div class="invalid-feedback">Please enter a valid middle name.</div>
+                      </div>
                     </div>
-                  </div>
 
-                  <!-- //* date of birth -->
-                  <div class="col-sm-6">
-                    <div class="form-group mb-2">
-                      <label>Date of Birth <span class="text-danger">*</span></label>
-                      <div class="cal-icon">
-                        <input type="text" id="dateOfBirth" class="form-control datetimepicker"
-                          placeholder="Select Date of Birth" required>
-                        <small id="dateWarning" class="text-danger" style="display: none;">Please select a valid date
-                          of birth.</small>
+                    <!-- //* lastname -->
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label>Last Name <span class="text-danger">*</span></label>
+                        <input id="lastname" class="form-control" type="text" name="lastname"
+                          placeholder="Enter Last Name" required pattern="[A-Za-z\s]+">
+                        <div class="invalid-feedback">Please enter a valid last name.</div>
+                      </div>
+                    </div>
+
+                    <!-- //* date of birth -->
+                    <div class="col-sm-6">
+                      <div class="form-group mb-2">
+                        <label>Date of Birth <span class="text-danger">*</span></label>
+                        <div class="cal-icon">
+                          <input type="text" id="dateOfBirth" class="form-control datetimepicker"
+                            placeholder="Select Date of Birth" required>
+                          <small id="dateWarning" class="text-danger" style="display: none;">Please select a valid date
+                            of birth.</small>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- //* age -->
+                    <div class="col-sm-6">
+                      <div class="form-group mb-2">
+                        <label>Age</label>
+                        <input type="text" id="age" name="member_age" class="form-control" placeholder="Age" readonly>
+                      </div>
+                    </div>
+
+                    <!-- //* Gender -->
+                    <div class="col-sm-6">
+                      <div class="form-group mb-2">
+                        <label>Gender <span style="color:red;">*</span></label>
+                        <div class="position-relative">
+                          <select class="form-select py-2" name="Gender" required>
+                            <option value="" disabled selected>Select Gender</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                            <option>Others</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                  <!-- //* age -->
-                  <div class="col-sm-6">
-                    <div class="form-group mb-2">
-                      <label>Age</label>
-                      <input type="text" id="age" name="member_age" class="form-control" placeholder="Age" readonly>
-                    </div>
-                  </div>
-
-                  <!-- //* Gender -->
-                  <div class="col-sm-6">
-                    <div class="form-group mb-2">
-                      <label>Gender <span style="color:red;">*</span></label>
-                      <div class="position-relative">
-                        <select class="form-select py-2" name="Gender" required>
-                          <option value="" disabled selected>Select Gender</option>
-                          <option>Male</option>
-                          <option>Female</option>
-                          <option>Others</option>
-                        </select>
-                      </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-6 mb-3">
+                  <label>Address <span style="color:red;">*</span></label>
+                  <select name="location" class="form-control form-control-md" id="location-selector" required>
+                    <option selected="true" disabled>Choose Region</option>
+                  </select>
+                  <input type="hidden" id="location-text" name="location_text">
+                  <div class="invalid-feedback">Please select a valid location.</div>
+                </div>
+                <!-- //* phone number -->
+                <div class="col-sm-6">
+                  <label>Phone Number <span style="color:red;">*</span></label>
+                  <div class="form-group">
+                    <div class="input-group has-validation">
+                      <span class="input-group-text" id="inputGroupPrepend">+63</span>
+                      <input type="text" class="form-control" id="mobile" name="mobile" placeholder="ex. 9123456789"
+                        required minlength="10" maxlength="10" pattern="9[0-9]{9}">
+                      <div class="invalid-feedback">Please enter a valid mobile number.</div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="row">
-              <div class="col-sm-6 mb-3">
-                <label>Address <span style="color:red;">*</span></label>
-                <select name="location" class="form-control form-control-md" id="location-selector" required>
-                  <option selected="true" disabled>Choose Region</option>
-                </select>
-                <input type="hidden" id="location-text" name="location_text">
-                <div class="invalid-feedback">Please select a valid location.</div>
-              </div>
-              <!-- //* phone number -->
-              <div class="col-sm-6">
-                <label>Phone Number <span style="color:red;">*</span></label>
-                <div class="form-group">
-                  <div class="input-group has-validation">
-                    <span class="input-group-text" id="inputGroupPrepend">+63</span>
-                    <input type="text" class="form-control" id="mobile" name="mobile" placeholder="ex. 9123456789"
-                      required minlength="10" maxlength="10" pattern="9[0-9]{9}">
-                    <div class="invalid-feedback">Please enter a valid mobile number.</div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <div class="submit-section">
-              <button class="btn btn-primary submit-btn">Save Changes</button>
-            </div>
-          </form>
+              <div class="submit-section">
+                <button class="btn btn-primary submit-btn">Save Changes</button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-  <!-- /Profile Modal -->
+    <!-- /Profile Modal -->
 
-  <!-- Personal Info Modal -->
-  <!-- <div id="personal_info_modal" class="modal custom-modal fade" role="dialog">
+    <!-- Personal Info Modal -->
+    <!-- <div id="personal_info_modal" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -447,10 +446,10 @@ include 'backend-add-authenticate/get_member_profile.php';
                 </div>
             </div>
         </div> -->
-  <!-- /Personal Info Modal -->
+    <!-- /Personal Info Modal -->
 
-  <!-- Family Info Modal -->
-  <!-- <div id="family_info_modal" class="modal custom-modal fade" role="dialog">
+    <!-- Family Info Modal -->
+    <!-- <div id="family_info_modal" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -537,10 +536,10 @@ include 'backend-add-authenticate/get_member_profile.php';
                 </div>
             </div>
         </div> -->
-  <!-- /Family Info Modal -->
+    <!-- /Family Info Modal -->
 
-  <!-- Emergency Contact Modal -->
-  <!-- <div id="emergency_contact_modal" class="modal custom-modal fade" role="dialog">
+    <!-- Emergency Contact Modal -->
+    <!-- <div id="emergency_contact_modal" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -622,10 +621,10 @@ include 'backend-add-authenticate/get_member_profile.php';
                 </div>
             </div>
         </div> -->
-  <!-- /Emergency Contact Modal -->
+    <!-- /Emergency Contact Modal -->
 
-  <!-- Education Modal -->
-  <!-- <div id="education_info" class="modal custom-modal fade" role="dialog">
+    <!-- Education Modal -->
+    <!-- <div id="education_info" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -744,10 +743,10 @@ include 'backend-add-authenticate/get_member_profile.php';
                 </div>
             </div>
         </div> -->
-  <!-- /Education Modal -->
+    <!-- /Education Modal -->
 
-  <!-- Experience Modal -->
-  <!-- <div id="experience_info" class="modal custom-modal fade" role="dialog">
+    <!-- Experience Modal -->
+    <!-- <div id="experience_info" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -854,7 +853,7 @@ include 'backend-add-authenticate/get_member_profile.php';
                 </div>
             </div>
         </div> -->
-  <!-- /Experience Modal -->
+    <!-- /Experience Modal -->
 
   </div>
   <!-- /Page Wrapper -->

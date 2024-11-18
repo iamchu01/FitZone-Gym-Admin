@@ -229,7 +229,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <form id="addMemberForm" class="needs-validation member-info" method="POST"
                 action="backend-add-authenticate/process-add-member.php">
 
-                <input type="hidden" name="action" id="action" value=""> <!-- For Send/Verify Actions -->
+                <!-- Alert Section -->
+                <div class="col-12">
+                  <div id="alert-container" class="mt-3"></div>
+                </div>
 
                 <div class="row">
                   <!-- Basic Info -->
@@ -249,45 +252,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         placeholder="Enter Last Name" required />
                     </div>
                   </div>
+
                   <!-- Email -->
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label>Email Address <span class="text-danger">*</span></label>
-                      <input type="email" class="form-control" id="memberEmail" name="email" placeholder="Enter Email"
-                        required />
-                    </div>
-                  </div>
-
-                  <!-- Send OTP Button -->
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <button type="button" id="sendOtpBtn" class="btn btn-outline-primary mt-4">
-                        Send OTP
-                      </button>
+                      <div class="input-group">
+                        <input type="email" class="form-control" id="memberEmail" name="email" placeholder="Enter Email"
+                          required>
+                        <button type="button" id="sendOtpBtn" class="btn btn-outline-primary">Send OTP</button>
+                      </div>
                     </div>
                   </div>
 
                   <!-- OTP -->
-                  <div class="col-sm-6">
+                  <div class="col-sm-6 ">
                     <div class="form-group">
                       <label>OTP</label>
-                      <input type="text" class="form-control" id="otp" name="otp" placeholder="Enter OTP" />
+                      <div class="input-group">
+                        <input type="text" class="form-control" id="otp" name="otp" placeholder="Enter OTP">
+                        <button type="button" id="verifyOtpBtn" class="btn btn-outline-success">Verify OTP</button>
+                      </div>
                     </div>
                   </div>
 
-                  <!-- Verify OTP Button -->
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <button type="button" id="verifyOtpBtn" class="btn btn-outline-success mt-4">
-                        Verify OTP
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Alert Section -->
-                  <div class="col-12">
-                    <div id="alert-container" class="mt-3"></div>
-                  </div>
 
 
                   <!-- Password -->

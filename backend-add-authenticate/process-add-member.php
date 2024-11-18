@@ -40,11 +40,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Update member information for the verified email
   $updateQuery = "UPDATE tbl_add_members
-                    SET first_name = ?, last_name = ?, phone_number = ?, gender = ?, date_of_birth = ?, age = ?, address = ?, status = ?
-                    WHERE email = ? AND is_verified = '1'";
+                SET first_name = ?, last_name = ?, phone_number = ?, gender = ?, date_of_birth = ?, age = ?, address = ?, status = ?
+                WHERE email = ? AND is_verified = '1'";
   $stmt = $conn->prepare($updateQuery);
   $stmt->bind_param(
-    "ssssssss",
+    "sssssssss", // Corrected placeholders
     $first_name,
     $last_name,
     $phone_number,
@@ -53,8 +53,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $age,
     $address,
     $status,
-    $email
+    $email // Now included
   );
+
+  if ($stmt->execute()) {
+    // Success
+    header('Location: ../add-member.php?success=added');
+  } else {
+    // Log detailed error for debugging
+    error_log("Database error: " . $stmt->error);
+    header('Location: ../add-member.php?error=database_error');
+  }
+
+  // Close statement and connection
+  $stmt->close();
+  $conn->close();
+
 
   if ($stmt->execute()) {
     // Success
