@@ -140,13 +140,7 @@ function updateStatus(memberId, newStatus) {
 }
 
 // Password Toggle
-document.getElementById("toggleMemberPassword").addEventListener("click", function () {
-  const passwordField = document.getElementById("memberPassword");
-  const type = passwordField.getAttribute("type") === "password" ? "text" : "password";
-  passwordField.setAttribute("type", type);
-  this.innerHTML =
-    type === "password" ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
-});
+
 
 // Reset form fields when modal is closed
 document.getElementById("add_member").addEventListener("hidden.bs.modal", function () {
@@ -166,14 +160,3 @@ document.getElementById("searchMemberInput").addEventListener("input", function 
   };
   xhr.send();
 });
-
-//* Phone Number validation for Philippines
-// const mobileInput = document.getElementById("mobile");
-// mobileInput.addEventListener("input", () => {
-//   const philippineNumberPattern = /^9\d{9}$/;
-//   if (!philippineNumberPattern.test(mobileInput.value)) {
-//     mobileInput.classList.add("is-invalid");
-//   } else {
-//     mobileInput.classList.remove("is-invalid");
-//   }
-// });
