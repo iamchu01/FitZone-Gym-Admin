@@ -9,6 +9,20 @@ class OTPVerification
     $this->conn = $dbConnection;
   }
 
+  public function isEmailVerified($email)
+  {
+    $stmt = $this->conn->prepare("SELECT is_verified FROM tbl_add_members WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+      $row = $result->fetch_assoc();
+      return $row['is_verified'] == '1';
+    } else {
+      return false; // Email not found
+    }
+  }
+
   public function generateOTP($email)
   {
     $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
