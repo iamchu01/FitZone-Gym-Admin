@@ -7,25 +7,37 @@
     <?php include 'layouts/title-meta.php'; ?>
     <?php include 'layouts/head-css.php'; ?>
     <?php 
-
 if (isset($_GET['id'])) {
     $transaction_id = $_GET['id'];
 
-    // Fetch the main transaction details
-    $transaction = find_by_id('pos_transaction', $transaction_id);
+    $transaction = find_by_id('pos_transaction', 'id');
+    if (!$transaction) {
+        echo json_encode(["error" => "Transaction not found"]);
+        exit;
+    }
     
-    // Fetch items related to this transaction
-    $transaction_items = find_by_id('pos_transaction_items', $transaction_id);
+    $transaction_items = find_by_sql("SELECT * FROM pos_transaction_items WHERE transaction_id = '$transaction'");
+    if (!$transaction_items) {
+        echo json_encode(["error" => "Transaction items not found"]);
+        exit;
+    }
+    
 
-    // Send data as JSON
-    $response = [
-        'transaction' => $transaction,
-        'items' => $transaction_items
-    ];
-    
-    echo json_encode($response);
+    // Check if data is valid
+    if ($transaction && $transaction_items) {
+        // Send data as JSON
+        $response = [
+            "transaction" => $transaction[0],  // Assuming `find_by_id` returns an array with the first element
+            "items" => $transaction_items
+        ];
+        echo json_encode($response);
+    } else {
+        echo json_encode(["error" => "Transaction not found"]);
+    }echo json_encode($response);
     exit;
+    
 }
+
 
 ?>    
    
@@ -145,8 +157,9 @@ if ($date_preset) {
     switch ($date_preset) {
         case 'today':
             // Set both 'from' and 'to' dates to today
-            $date_from = date('Y-m-d');
-            $date_to = date('Y-m-d');
+            $date_from = date('Y-m-d', strtotime('today midnight'));
+
+            $date_to = date('Y-m-d', strtotime('tomorrow midnight'));
             break;
         case 'this_week':
             // Get the start and end of this week (Monday to Sunday)
@@ -180,7 +193,7 @@ $get_transact = find_all('pos_transaction');
                 <th class="text-center" style="width: 20%;">Transaction ID</th>
                 <th class="text-center" style="width: 10%;">Date</th>
                 <th class="text-center" style="width: 10%;">Discount</th>
-                <th class="text-center" style="width: 10%;">Total Amount</th>
+                <th class="text-center" style="width: 10%;">Total Sale</th>
                 <th class="text-center" style="width: 10%;">Action</th>
             </tr>
         </thead>
@@ -310,7 +323,7 @@ $get_transact = find_all('pos_transaction');
 </div>
 
 <script>
-function viewTransaction(transaction_id) {
+    function viewTransaction(transaction_id) {
     // Show loading message in the modal while fetching data
     document.getElementById('transactionId').textContent = 'Loading...';
     document.getElementById('transactionDate').textContent = 'Loading...';
@@ -323,10 +336,19 @@ function viewTransaction(transaction_id) {
     loadingRow.innerHTML = `<td colspan="4" class="text-center">Loading...</td>`;
     tbody.appendChild(loadingRow);
 
-    // Use AJAX or fetch to get transaction details
+    // Use fetch to get transaction details
     fetch(`sales-reports.php?id=${transaction_id}`)
         .then(response => response.json())
         .then(data => {
+            if (data.error) {
+                console.error("Error fetching data:", data.error);
+                document.getElementById('transactionId').textContent = 'Error';
+                document.getElementById('transactionDate').textContent = 'Error';
+                document.getElementById('transactionDiscount').textContent = 'Error';
+                document.getElementById('transactionTotalAmount').textContent = 'Error';
+                return;
+            }
+
             // Populate the modal with data
             document.getElementById('transactionId').textContent = data.transaction.id;
             document.getElementById('transactionDate').textContent = data.transaction.transaction_date;
@@ -334,24 +356,34 @@ function viewTransaction(transaction_id) {
             document.getElementById('transactionTotalAmount').textContent = '₱' + data.transaction.total_amount;
 
             // Populate the products purchased table
-            const tbody = document.querySelector('#viewTransactionModal table tbody');
             tbody.innerHTML = ''; // Clear any existing rows
-            data.items.forEach(item => {
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.product_name}</td>
+                        <td>${item.product_quantity}</td>
+                        <td>₱${item.price}</td>
+                        <td>₱${(item.price * item.product_quantity).toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.product_name}</td>
-                    <td>${item.quantity}</td>
-                    <td>₱${item.price}</td>
-                    <td>₱${item.total}</td>
-                `;
+                row.innerHTML = `<td colspan="4" class="text-center">No items found for this transaction.</td>`;
                 tbody.appendChild(row);
-            });
+            }
         })
-        .catch(error => console.error('Error fetching transaction details:', error));
+        .catch(error => {
+            console.error('Error fetching transaction details:', error);
+            document.getElementById('transactionId').textContent = 'Error';
+            document.getElementById('transactionDate').textContent = 'Error';
+            document.getElementById('transactionDiscount').textContent = 'Error';
+            document.getElementById('transactionTotalAmount').textContent = 'Error';
+        });
 }
 
 </script>
-
 
     <?php include_once('vlayouts/footer.php'); ?>
     <?php include 'layouts/customizer.php'; ?>

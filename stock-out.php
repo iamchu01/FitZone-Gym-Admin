@@ -22,19 +22,15 @@ function is_about_to_expire($expiration_date) {
     return ($interval->days <= 31 && $interval->invert == 0);
 }
 
-$products = join_product_table(); // Fetching product data
+$products = join_product_table1(); // Fetching product data
 $all_categories = find_all('categories');
 $all_photo = find_all('media');
 
-
-
-// Include your database connection fil
+// Handle POST request for stock out
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Initialize missing fields array
     $missingFields = [];
 
-    // Check for required fields
-    foreach (['product_id', 'stockOutQuantity', 'reason', 'product_description'] as $field) {
+    foreach (['product_id', 'stockOutQuantity', 'reason'] as $field) {
         if (empty($_POST[$field])) $missingFields[] = ucfirst(str_replace('_', ' ', $field));
     }
 
@@ -44,50 +40,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Sanitize and retrieve the inputs
     $product_id = $db->escape($_POST['product_id']);
     $quantity_out = (int)$_POST['stockOutQuantity'];
     $reason = $db->escape($_POST['reason']);
-    $date_out = date('Y-m-d');
-    
 
-    // Check product existence and quantity
-    $sql = "SELECT p.id, c.name, p.quantity, p.item_code, p.description FROM products p JOIN categories c ON p.categorie_id = c.id WHERE p.id = ? LIMIT 1";
+    $sql = "SELECT id, name, item_code, description FROM products WHERE id = ? LIMIT 1";
     $stmt = $db->con->prepare($sql);
-    $stmt->bind_param("s", $product_id);
+    $stmt->bind_param("i", $product_id);
     $stmt->execute();
     $product_result = $stmt->get_result();
 
     if ($product_result->num_rows > 0) {
         $product = $product_result->fetch_assoc();
-        
-        if ($product['quantity'] >= $quantity_out) {
-            // Start a transaction
+
+        // Fetch total available quantity from batches for the product
+        $batch_sql = "SELECT id, batch_quantity, expiration_date FROM batches WHERE product_id = ? AND batch_quantity > 0 ORDER BY id ASC";
+        $batch_stmt = $db->con->prepare($batch_sql);
+        $batch_stmt->bind_param("i", $product_id);
+        $batch_stmt->execute();
+        $batch_result = $batch_stmt->get_result();
+
+        // Sum up all batch quantities
+        $available_quantity = 0;
+        $batches_to_deduct = [];
+        while ($batch = $batch_result->fetch_assoc()) {
+            $available_quantity += $batch['batch_quantity'];
+            $batches_to_deduct[] = $batch;
+        }
+
+        // Check if the available quantity is sufficient for the stock out request
+        if ($available_quantity >= $quantity_out) {
             $db->con->begin_transaction();
             try {
-                // Insert stock-out record
-                $sql = "INSERT INTO stock_out (product_name, quantity, date, item_code, reason, description) VALUES (?, ?, NOW(), ?, ?, ?)";
-                $stmt = $db->con->prepare($sql);
-                $stmt->bind_param("sssss", $product['name'], $quantity_out, $product['item_code'], $reason, $product['description']);
-                if (!$stmt->execute()) {
-                    throw new Exception($stmt->error); // Throw an exception if execution fails
+                // Deduct from batches
+                $quantity_to_deduct = $quantity_out;
+                foreach ($batches_to_deduct as $batch) {
+                    if ($quantity_to_deduct <= 0) break; // No more quantity to deduct
+
+                    // Deduct from this batch
+                    $deduct_quantity = min($batch['batch_quantity'], $quantity_to_deduct);
+                    $updated_quantity = $batch['batch_quantity'] - $deduct_quantity;
+
+                    // Update batch quantity
+                    $update_batch_sql = "UPDATE batches SET batch_quantity = ? WHERE id = ?";
+                    $update_batch_stmt = $db->con->prepare($update_batch_sql);
+                    $update_batch_stmt->bind_param("ii", $updated_quantity, $batch['id']);
+                    $update_batch_stmt->execute();
+
+                    // Deduct the quantity from the remaining amount
+                    $quantity_to_deduct -= $deduct_quantity;
                 }
 
-                // Update the quantity in the products table
-                $new_quantity = $product['quantity'] - $quantity_out;
-                $sql = "UPDATE products SET quantity = ? WHERE id = ?";
-                $stmt = $db->con->prepare($sql);
-                $stmt->bind_param("is", $new_quantity, $product_id);
-                if (!$stmt->execute()) {
-                    throw new Exception($stmt->error); // Throw an exception if execution fails
-                }
+                // After deducting from batches, update product quantity
+                // $new_product_quantity = $available_quantity - $quantity_out;
+                // $update_product_sql = "UPDATE products SET quantity = ? WHERE id = ?";
+                // $update_product_stmt = $db->con->prepare($update_product_sql);
+                // $update_product_stmt->bind_param("ii", $new_product_quantity, $product_id);
+                // $update_product_stmt->execute();
 
-                // Commit transaction
+                // Insert record into stock_out table
+                $stock_out_sql = "INSERT INTO stock_out (product_name, quantity, date, item_code, reason, description) 
+                                  VALUES (?, ?, NOW(), ?, ?, ?)";
+                $stock_out_stmt = $db->con->prepare($stock_out_sql);
+                $stock_out_stmt->bind_param("sisss", $product['name'], $quantity_out, $product['item_code'], $reason, $product['description']);
+                $stock_out_stmt->execute();
+
+                // Commit the transaction
                 $db->con->commit();
-                $session->msg('s', "Stock out successful for product ID: {$product_id}");
+
+                $session->msg('s', "Stock out successful for product: {$product['name']}");
             } catch (Exception $e) {
                 $db->con->rollback();
-                $session->msg('d', 'Failed to register stock out! Error: ' . $e->getMessage());
+                $session->msg('d', 'Failed to process stock out: ' . $e->getMessage());
             }
         } else {
             $session->msg('d', 'Insufficient stock available!');
@@ -99,8 +123,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('stock-out.php', false);
 }
 
+?>
 
-?>   
 
 <?php include 'layouts/menu.php'; ?>
 <body>
@@ -148,8 +172,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <thead>
                                     <tr>
                                         <th class="text-center" style="width: 30px;">#</th>
+                                        <th class="text-center">Product ID</th>
                                         <th class="text-center" style="width: 10%;">Photo</th>
                                         <th class="text-center" style="width: 50%;">Name</th>
+                                        <th class="text-center" style="width: 10%;">Category</th>
+                                        <th class="text-center" style="width: 10%;">Unit of measure</th>
                                         <th class="text-center" style="width: 10%;">Item description</th>
                                         <th class="text-center" style="width: 10%;">Item Code</th>
                                         <th class="text-center" style="width: 10%;">In-Stock</th>
@@ -177,14 +204,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         ?>
                                         <tr class="<?php echo $rowClass; ?>">
                                             <td class="text-center"><?php echo count_id(); ?></td>
+                                            <td class="text-center"><?php echo remove_junk($product['id']); ?></td>
                                             <td>
-                                                <?php if ($product['media_id'] === '0'): ?>
-                                                    <img class="img-avatar img-circle" src="uploads/products/no_image.png" alt="">
-                                                <?php else: ?>
-                                                    <img class="img-avatar img-circle" src="uploads/products/<?php echo $product['media_id']; ?>" alt="">
-                                                <?php endif; ?>
-                                            </td>
+                                            <?php if ($product['media_id'] === '0'): ?>
+                                                <img class="img-avatar img-circle" src="uploads/products/no_image.png" alt="">
+                                            <?php else: ?>
+                                                <img class="img-avatar img-circle" src="uploads/products/<?php echo $product['image']; ?>" alt="">
+                                            <?php endif; ?>
+                                        </td>
+                                           
                                             <td class="text-center"><?php echo remove_junk($product['name']); ?></td>
+                                            <td class="text-center"><?php echo remove_junk($product['categorie']); ?></td>
+                                            <td class="text-center"><?php echo remove_junk($product['uom_name']); ?></td>
                                             <td><?php echo remove_junk($product['description']); ?></td>
                                             <td><?php echo remove_junk($product['item_code']); ?></td>
                                             <td class="text-center"><?php echo (int)$product['quantity']; ?></td>
@@ -192,23 +223,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <td><?php echo remove_junk($product['sale_price']); ?></td>
                                             <td class="text-center">
                                                 <?php 
-                                                if (isset($product['is_perishable']) && $product['is_perishable'] == 0) {
-                                                    echo 'Non-Perishable';
-                                                } else {
+                                                if (!empty($product['expiration_date']) && $product['expiration_date'] !== '0000-00-00') {
                                                     echo remove_junk($product['expiration_date']);
+                                                } else {
+                                                    echo 'Non-Perishable';
                                                 }
                                                 ?>
                                             </td>
-                                            <td class="text-center"><?php echo remove_junk($product['date']); ?></td>
+                                            <td class="text-center"><?php echo remove_junk(date('F j, Y h:i A', strtotime($product['product_batch']))); ?></td>
                                             <td class="text-center">
                                             <button class="btn btn-danger stock-out fa fa-trash" 
-    data-product-id="<?php echo (int)$product['id']; ?>" 
-    data-product-name="<?php echo remove_junk($product['name']); ?>" 
-    data-product-description="<?php echo remove_junk($product['description']); ?>"  
-    data-product-quantity="<?php echo remove_junk($product['quantity']); ?>" 
-    data-product-batch="<?php echo remove_junk($product['date']); ?>"
-    data-product-item-code="<?php echo remove_junk($product['item_code']); ?>"> Stock Out</button>
-
+                                                data-product-id="<?php echo (int)$product['id']; ?>" 
+                                                data-product-name="<?php echo remove_junk($product['name']); ?>"                                           
+                                                data-product-description="<?php echo remove_junk($product['description']); ?>"  
+                                                data-product-quantity="<?php echo remove_junk($product['quantity']); ?>" 
+                                                data-product-batch="<?php echo remove_junk($product['date']); ?>"
+                                                data-product-item-code="<?php echo remove_junk($product['item_code']); ?>"> Stock Out</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -231,7 +261,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" name="product_id" id="product_id" value="">
+                <input type="hidden" name="product_id" id="product_id">
+                <input type="hidden" class="form-control" name="product_batch" id="product_batch">
                     <div class="form-group">
                         <label for="item_code">Item Code</label>
                         <input type="text" class="form-control" name="item_code" id="item_code" readonly>
@@ -240,6 +271,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label for="product_name">Product Name</label>
                         <input type="text" class="form-control" name="product_name" id="product_name" readonly>
                     </div>
+                    <!-- <div class="form-group">
+                        <label for="uom_name">Unit of measure</label>
+                        <input type="text" class="form-control" name="uom_name" id="uom_name" readonly>
+                    </div> -->
                     <div class="form-group">
                         <label for="product_description">Product description</label>
                         <input type="text" class="form-control" name="product_description" id="product_description" readonly>
@@ -247,6 +282,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="form-group">
                         <label for="product_quantity">Available Quantity</label>
                         <input type="number" class="form-control" name="product_quantity" id="product_quantity" readonly>
+                       
+
                     </div>
                     
                     <div class="form-group">
@@ -273,19 +310,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include 'layouts/vendor-scripts.php'; ?>
 
 <script>
-    $(document).on('click', '.stock-out', function() {
-    var productName = $(this).data('product-name');   
-    var productQuantity = $(this).data('product-quantity'); 
+$(document).on('click', '.stock-out', function() {
+    // Get the data attributes from the clicked button
+    var productName = $(this).data('product-name');
+    var productQuantity = $(this).data('product-quantity');
     var itemCode = $(this).data('product-item-code');
-    var productDescription = $(this).data('product-description')
+    var productDescription = $(this).data('product-description');
+    var productId = $(this).data('product-id'); // Get the product ID
+    var productBatch = $(this).data('product-batch'); // Get product batch information
 
+    // Fill the modal fields with the data
     $('#product_name').val(productName); 
-    $('#product_description').val(productDescription);
-    $('#product_id').val($(this).data('product-id')); 
     $('#product_quantity').val(productQuantity); 
-    $('#item_code').val(itemCode); // Set the item code in the modal
-    $('#stockOutModal').modal('show'); 
+    $('#item_code').val(itemCode); 
+    $('#product_description').val(productDescription);
+    $('#product_id').val(productId); // Set product ID in the hidden field
+    $('#product_batch').val(productBatch); // Set the batch info if needed
+
+    // Optional: You could add a check to display a warning if the quantity is very low, or any other logic.
+    if (productQuantity <= 0) {
+        $('#error-message').text('This product is out of stock!').show();
+    } else {
+        $('#error-message').hide();
+    }
+
+    // Show the modal
+    $('#stockOutModal').modal('show');
 });
+
 
     $('#stockOutForm').on('submit', function(e) {
         var stockOutQuantity = parseInt($('#stockOutQuantity').val());

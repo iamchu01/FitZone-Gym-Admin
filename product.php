@@ -29,34 +29,30 @@ $(document).ready(function() {
         }
     }
     
+    $(document).ready(function () {
+    // Validate before form submission
+    $('form').on('submit', function (e) {
+        let isPerishable = $('#is-perishable').is(':checked'); // Check if checkbox is selected
+        if (isPerishable) {
+            $('#hidden-is-perishable').val('1'); // Set hidden field value to 1
+        } else {
+            $('#hidden-is-perishable').val('0'); // Set hidden field value to 0
+        }
+    });
+});
 
     // Trigger validation on input for buying and selling price fields
     $('#product-buying-price, #product-selling-price').on('input', function() {
         validatePrices();
     });
 
-    // Show or hide expiration date based on perishable checkbox status
-    $('#is-perishable').change(function() {
-        if ($(this).is(':checked')) {
-            $('#expiration-date-group').show();
-        } else {
-            $('#expiration-date-group').hide();
-        }
-    });
 
-    // Validate before form submission for expiration date if perishable
-    $('form').on('submit', function(e) {
-        if ($('#is-perishable').is(':checked') && !$('input[name="expiration-date"]').val()) {
-            e.preventDefault();
-            $('.expiration-date-feedback').text('Expiration date is required for perishable items.').show();
-        }
-    });
 
 
       // Validate before form submission
       $('form').on('submit', function(e) {
-        let isPerishable = $('#perishable-select').val() === 'perishable';
-        let expirationDate = $('input[name="expiration-date"]').val();
+        // let isPerishable = $('#perishable-select').val() === 'pereshable';
+        // let expirationDate = $('input[name="expiration-date"]').val();
 
         // Reset feedback messages
         $('.expiration-date-feedback').hide();
@@ -88,7 +84,7 @@ $('input[name="item-code"]').on('input', function() {
 
   </script>
   <style>
-    .modal-content {
+    .modal-content {    
     width: 100%;
     max-width: 100%;
 }
@@ -107,7 +103,9 @@ function is_about_to_expire($expiration_date) {
     // Check if the expiration date is within the next year (365 days)
     return ($interval->days <= 31 && $interval->invert == 0);
 }
+
 $products = join_product_table();
+
 $all_categories = find_all('categories');
 $p_uom = find_all('uom');
 
@@ -116,6 +114,8 @@ $min_expiration_date = date('Y-m-d', strtotime('+5 months'));
 // Function to validate selling price
 
 if(isset($_POST['add_product'])){
+    
+    
     $req_fields = array('product-title','product-categorie','buying-price', 'saleing-price', 'item-description', 'item-code', 'product-oum');
     validate_fields($req_fields);
   
@@ -128,23 +128,24 @@ if(isset($_POST['add_product'])){
       $p_description  = remove_junk($db->escape($_POST['item-description']));
       $p_per   = remove_junk($db->escape($_POST['product-oum']));
      
-      $is_perishable = isset($_POST['is-perishable']) ? 1 : 0;
+    
   
-      $expiration_date = $is_perishable ? remove_junk($db->escape($_POST['expiration-date'])) : NULL;
+    //   $expiration_date = $is_perishable ? remove_junk($db->escape($_POST['expiration-date'])) : NULL;
   
       if (is_null($_POST['product-photo']) || $_POST['product-photo'] === "") {
         $media_id = '0';
       } else {
         $media_id = remove_junk($db->escape($_POST['product-photo']));
       }
-  
+     
+
       $date = make_date(); // Assuming this generates the current date
-  
+      
       // Insert query without ON DUPLICATE KEY UPDATE
       $query  = "INSERT INTO products (";
-      $query .= "name, buy_price, sale_price, categorie_id, media_id, date, is_perishable, expiration_date, description, item_code, uom_id";
+      $query .= "name, buy_price, sale_price, categorie_id, media_id, date,  description, item_code, uom_id";
       $query .= ") VALUES (";
-      $query .= " '{$p_name}', '{$p_buy}', '{$p_sale}', '{$p_cat}', '{$media_id}', '{$date}', '{$is_perishable}', '{$expiration_date}', '{$p_description}', '{$p_item_code}', '{$p_per}'";
+      $query .= " '{$p_name}', '{$p_buy}', '{$p_sale}', '{$p_cat}', '{$media_id}', '{$date}',  '{$p_description}', '{$p_item_code}', '{$p_per}'";
       $query .= ")";
   
       if($db->query($query)){
@@ -189,7 +190,7 @@ if (isset($_POST['update_product'])) {
                 item_code = '{$product_item_code}',
                 buy_price = '{$product_buying_price}',
                 sale_price = '{$product_selling_price}',
-                expiration_date = '{$product_expiration_date}',
+               
                 is_perishable = '{$product_is_perishable}',
                 media_id = '{$product_photo}'
                 WHERE id = '{$edit_cat_id}'";
@@ -254,7 +255,8 @@ if (isset($_POST['update_product'])) {
                     <th class="text-center" style="width: 30px;">#</th>
                     <th class="text-center" style="width: 10%;">Photo</th>
                     <th class="text-center" style="width: 10%;">Categorie</th>
-                    <th class="text-center" style="width: 50%;">Name</th>                 
+                    <th class="text-center" style="width: 50%;">Name</th>  
+                    <th class="text-center" style="width: 10%;">Quantity</th>               
                     <th class="text-center" style="width: 10%;">Description</th>
                     <th class="text-center" style="width: 10%;">Item Code</th>
                     <th class="text-center" style="width: 10%;">Unit of measure</th>
@@ -278,10 +280,11 @@ if (isset($_POST['update_product'])) {
             </td>
 
             <td class="text-center"><?php echo remove_junk($product['categorie']); ?></td>
-            <td class="text-center"><?php echo remove_junk($product['name']); ?></td>           
+            <td class="text-center"><?php echo remove_junk($product['name']); ?></td>
+            <td class="text-center"><?php echo remove_junk($product['quantity']); ?></td>           
             <td class="text-center"><?php echo remove_junk($product['description']); ?></td>
             <td class="text-center"><?php echo remove_junk($product['item_code']); ?></td>
-            <td class="text-center"><?php echo remove_junk($product['uom_name'] . ' - ' . $product['uom_abbreviation']); ?></td>
+            <td class="text-center"><?php echo remove_junk($product['uom_name']); ?></td>
             <td class="text-center"><?php echo remove_junk($product['buy_price']); ?></td>
             <td class="text-center"><?php echo remove_junk($product['sale_price']); ?></td>
             <td class="text-center">
@@ -302,11 +305,11 @@ if (isset($_POST['update_product'])) {
                             '<?php echo $product['buy_price']; ?>',
                             '<?php echo $product['sale_price']; ?>', 
                             '<?php echo $product['quantity']; ?>', 
-                            '<?php echo $product['expiration_date']; ?>', 
+                            
                             <?php echo $product['is_perishable']; ?>)">
                                 <i class="fa fa-edit"></i> Edit
                          </a>
-                            <a href="delete_product.php?id=<?php echo (int)$product['id'];?>" class="dropdown-item" title="Delete" data-toggle="tooltip" onclick="return confirm('Are you sure you want to delete this product batch?');">
+                            <a href="delete_product.php?id=<?php echo (int)$product['id'];?>" class="dropdown-item" title="Delete" data-toggle="tooltip" onclick="return confirm('Are you sure you want to delete this product?');">
                                 <i class="fa fa-trash"></i> Delete
                             </a>
                         </div>
@@ -377,19 +380,14 @@ if (isset($_POST['update_product'])) {
                                     </div>
                                     <div class="form-group">
                                         <div class="row">
-                                            <!-- <div class="col-md-4">
-                                                <div class="input-group">
-                                                    <span class="input-group-addon"><i class="fa fa-shopping-cart"></i></span>
-                                                    <input type="number" class="form-control" name="product-quantity" placeholder="Product Quantity" disabled>
-                                                </div>
-                                            </div> -->
+                                           
                                             <div class="col-md-4">
                                                 <div class="input-group">
                                                     <span class="input-group-addon"><i class="fa fa-puzzle-piece"></i></span>
                                                     <select class="form-control" name="product-oum" id="product-oum" required>
                                                     <option value="">Unit of measure(UOM)</option>
                                                     <?php foreach ($p_uom as $cat): ?>
-                                                        <option value="<?php echo (int)$cat['id']; ?>"><?php echo $cat['name'] . ' ' . $cat['abbreviation']; ?>
+                                                        <option value="<?php echo (int)$cat['id']; ?>"><?php echo $cat['name']; ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
@@ -429,22 +427,9 @@ if (isset($_POST['update_product'])) {
                                             <input type="text" class="form-control" name="item-description" placeholder="Item description" required>
                                         </div>
                                     </div>
+                                    </div>  
 
-                                    <!-- Checkbox for Perishable -->
-                                    <div class="form-group">
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" id="is-perishable" name="is_perishable" value="1">
-                                            <label class="form-check-label" for="is-perishable">Is Perishable</label>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group" id="expiration-date-group" style="display: none;">
-                                        <label for="expiration-date">Expiration Date</label>
-                                        <input type="date" class="form-control" name="expiration-date" id="expiration-date" min="<?php echo $min_expiration_date; ?>">
-                                        <div class="expiration-date-feedback text-danger" style="display: none;"></div> <!-- Feedback message container -->
-                                    </div>
-
-                                    <button type="submit" name="add_product" class="btn btn-primary pull-right " style="margin-right: 2%;">Add product</button>
+                                    <button type="submit" name="add_product" class="btn btn-primary pull-right " style="margin-right: 2%; margin-top: 2%;">Add product</button>
                                 </form>
                             </div>
                         </div>
@@ -540,20 +525,6 @@ if (isset($_POST['update_product'])) {
                                             <span class="input-group-addon"><i class="fa fa-hashtag"></i></span>
                                             <input type="text" class="form-control" id="edit-item-description" name="item-description" placeholder="Item Description" required>
                                         </div>
-                                    </div>
-
-                                    <!-- Checkbox for Perishable -->
-                                    <div class="form-group">
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" id="edit-is-perishable" name="is_perishable" value="1">
-                                            <label class="form-check-label" for="edit-is-perishable">Is Perishable</label>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group" id="edit-expiration-date-group" style="display: none;">
-                                        <label for="edit-expiration-date">Expiration Date</label>
-                                        <input type="date" class="form-control" name="expiration-date" id="edit-expiration-date" min="<?php echo $min_expiration_date; ?>">
-                                        <div class="expiration-date-feedback text-danger" style="display: none;"></div>
                                     </div>
 
                                     <button type="submit" name="edit_product" class="btn btn-success pull-right" style="margin-right: 2%;">Save Changes</button>

@@ -258,22 +258,49 @@ function tableExists($table){
 //     return find_by_sql($sql);
 // }
 
-
 function join_product_table(){
   global $db;
-  $sql  = "SELECT p.id, p.name, p.item_code, p.expiration_date, p.is_perishable, p.description, 
-                  p.quantity, p.buy_price, p.sale_price, p.media_id, p.date, 
+  $sql  = "SELECT p.id, p.name, p.item_code, p.description, 
+                  p.buy_price, p.sale_price, p.media_id, p.date, 
                   c.name AS categorie, 
                   m.file_name AS image, 
                   u.name AS uom_name, 
-                  u.abbreviation AS uom_abbreviation";
+                  
+                  p.batch_number, 
+                  COALESCE(SUM(b.batch_quantity), 0) AS quantity";  // Calculate total quantity from batches
+  
   $sql .= " FROM products p";
   $sql .= " LEFT JOIN categories c ON c.id = p.categorie_id";
   $sql .= " LEFT JOIN media m ON m.id = p.media_id";
   $sql .= " LEFT JOIN uom u ON u.id = p.uom_id"; // Join the uom table
-  $sql .= " ORDER BY p.id ASC";
+  $sql .= " LEFT JOIN batches b ON b.product_id = p.id";  // Join the batches table to get total quantity
+  $sql .= " GROUP BY p.id, p.name, p.item_code, p.description, 
+                    p.buy_price, p.sale_price, p.media_id, p.date, c.name, m.file_name, u.name, p.batch_number"; // Group by necessary fields
+  $sql .= " ORDER BY p.id ASC, p.batch_number ASC";  // Order by batch_number to group batches together
+  
   return find_by_sql($sql);
 }
+
+function join_product_table1(){
+  global $db;
+  $sql  = "SELECT p.id, p.name, p.item_code, p.description, 
+                  b.batch_quantity AS quantity, b.expiration_date AS expiration_date, b.id AS batch_id, b.created_at AS product_batch, p.buy_price, p.sale_price, p.media_id, p.date, 
+                  c.name AS categorie, 
+                  m.file_name AS image, 
+                  u.name AS uom_name, 
+                  
+                  p.batch_number";  // Fetching quantity and expiration_date from batches table
+  
+  $sql .= " FROM products p"; 
+  $sql .= " LEFT JOIN categories c ON c.id = p.categorie_id";
+  $sql .= " LEFT JOIN media m ON m.id = p.media_id";
+  $sql .= " LEFT JOIN uom u ON u.id = p.uom_id"; // Join the uom table
+  $sql .= " LEFT JOIN batches b ON b.product_id = p.id"; // Join the batches table to get quantity and expiration_date
+  $sql .= " ORDER BY p.id ASC, p.batch_number ASC";  // Order by batch_number to group batches together
+  return find_by_sql($sql);
+}
+
+
 
 /*----
   /*--------------------------------------------------------------*/
@@ -411,25 +438,25 @@ function  monthlySales($year){
   $sql .= " ORDER BY date_format(s.date, '%c' ) ASC";
   return find_by_sql($sql);
 }
-function get_low_stock_products($threshold) {
-  global $db; // Assuming you have a global $db connection
-  $query = "SELECT products.*, categories.name AS category_name 
-            FROM products 
-            JOIN categories ON products.categorie_id = categories.id 
-            WHERE products.quantity <= " . (int)$threshold;
+// function get_low_stock_products($threshold) {
+//   global $db; // Assuming you have a global $db connection
+//   $query = "SELECT products.*, categories.name AS category_name 
+//             FROM products 
+//             JOIN categories ON products.categorie_id = categories.id 
+//             WHERE products.quantity <= " . (int)$threshold;
   
-  $result = $db->query($query);
-  $low_stock_data = [];
+//   $result = $db->query($query);
+//   $low_stock_data = [];
 
-  // Fetch each row as an associative array and add it to $low_stock_data
-  if ($result) {
-      while ($row = $result->fetch_assoc()) {
-          $low_stock_data[] = $row;
-      }
-  }
+//   // Fetch each row as an associative array and add it to $low_stock_data
+//   if ($result) {
+//       while ($row = $result->fetch_assoc()) {
+//           $low_stock_data[] = $row;
+//       }
+//   }
 
-  return $low_stock_data; // Return as an array of associative arrays
-}
+//   return $low_stock_data; // Return as an array of associative arrays
+// }
 function report_name($table, $id) {
   global $db; // Assuming you're using a global database connection
   $id = (int)$id;
@@ -437,27 +464,34 @@ function report_name($table, $id) {
   $result = $db->query($sql);
   return ($result->num_rows === 1) ? $result->fetch_assoc() : null;
 }
-function get_transactions_by_date_range($db, $date_from, $date_to) {
-  // Prepare the SQL query
-  $sql = "SELECT * FROM pos_transaction WHERE transaction_date BETWEEN ? AND ?";
+function get_total_quantity($product_id) {
+  global $db;
   
-  // Prepare the statement
-  $stmt = $db->prepare($sql);
-  
-  // Bind the parameters to the query (both date_from and date_to are strings)
-  $stmt->bind_param("ss", $date_from, $date_to);
+  // SQL query to sum the batch quantities for a specific product
+  $query = "SELECT SUM(batch_quantity) AS total_quantity FROM batches WHERE product_id = {$product_id}";
   
   // Execute the query
-  $stmt->execute();
+  $result = $db->query($query);
   
-  // Get the result
-  $result = $stmt->get_result();
-  
-  // Fetch all the rows as an associative array
-  $transactions = $result->fetch_all(MYSQLI_ASSOC);
-  
-  // Return the transactions
-  return $transactions;
+  // Check if the query was successful and return the total quantity
+  if ($result) {
+      $row = $result->fetch(PDO::FETCH_ASSOC);
+      return $row['total_quantity'] ? (int)$row['total_quantity'] : 0;
+  } else {
+      // In case of any error, return 0
+      return 0;
+  }
 }
+function get_first_available_batch($product_id, $quantity) {
+  global $db;
+  // Get the first batch that has stock
+  $sql = "SELECT b.id, b.batch_quantity 
+          FROM batches b
+          WHERE b.product_id = '{$product_id}' AND b.batch_quantity >= {$quantity}
+          ORDER BY b.created_at ASC 
+          LIMIT 1";  // Fetch the earliest batch with enough quantity
+  return find_by_sql($sql);
+}
+
 
 ?>
