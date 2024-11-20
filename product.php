@@ -6,10 +6,25 @@
     <?php require_once('vincludes/load.php'); ?>
     <?php include 'layouts/head-css.php'; ?>
     <script>
-function editProductModal(id, name) {
+function editProductModal(id, name, categorie, description, itemCode, buyPrice, salePrice, quantity) {
+    // Assign values to modal fields
     document.getElementById('edit-product-id').value = id;
     document.getElementById('edit-product-title').value = name;
+    document.getElementById('edit-product-category').value = categorie;
+    document.getElementById('edit-item-description').value = description;
+    document.getElementById('edit-item-code').value = itemCode;
+    document.getElementById('edit-buying-price').value = buyPrice;
+    document.getElementById('edit-saleing-price').value = salePrice;
+
+    // Optional: Set the quantity (if it's included in the modal)
+    if (document.getElementById('edit-product-quantity')) {
+        document.getElementById('edit-product-quantity').value = quantity;
+    }
+
+    // Open the modal (bootstrap handles this via data-target, so this is optional)
+    $('#editProductModal').modal('show');
 }
+
 
 
 $(document).ready(function() {
@@ -29,17 +44,17 @@ $(document).ready(function() {
         }
     }
     
-    $(document).ready(function () {
-    // Validate before form submission
-    $('form').on('submit', function (e) {
-        let isPerishable = $('#is-perishable').is(':checked'); // Check if checkbox is selected
-        if (isPerishable) {
-            $('#hidden-is-perishable').val('1'); // Set hidden field value to 1
-        } else {
-            $('#hidden-is-perishable').val('0'); // Set hidden field value to 0
-        }
-    });
-});
+//     $(document).ready(function () {
+//     // Validate before form submission
+//     $('form').on('submit', function (e) {
+//         let isPerishable = $('#is-perishable').is(':checked'); // Check if checkbox is selected
+//         if (isPerishable) {
+//             $('#hidden-is-perishable').val('1'); // Set hidden field value to 1
+//         } else {
+//             $('#hidden-is-perishable').val('0'); // Set hidden field value to 0
+//         }
+//     });
+// });
 
     // Trigger validation on input for buying and selling price fields
     $('#product-buying-price, #product-selling-price').on('input', function() {
@@ -95,14 +110,10 @@ $('input[name="item-code"]').on('input', function() {
   </style>
 </head> 
 <?php
-function is_about_to_expire($expiration_date) {
-    $current_date = new DateTime();
-    $expiration_date = new DateTime($expiration_date);
-    $interval = $current_date->diff($expiration_date);
+
     
     // Check if the expiration date is within the next year (365 days)
-    return ($interval->days <= 31 && $interval->invert == 0);
-}
+
 
 $products = join_product_table();
 
@@ -141,7 +152,6 @@ if(isset($_POST['add_product'])){
 
       $date = make_date(); // Assuming this generates the current date
       
-      // Insert query without ON DUPLICATE KEY UPDATE
       $query  = "INSERT INTO products (";
       $query .= "name, buy_price, sale_price, categorie_id, media_id, date,  description, item_code, uom_id";
       $query .= ") VALUES (";
@@ -150,14 +160,18 @@ if(isset($_POST['add_product'])){
   
       if($db->query($query)){
         $session->msg('s', "Product added ");
-        redirect('add_product.php', false);
+        echo "<script>
+        setTimeout(function(){
+            window.location.href = 'product.php';
+        }, 100);
+      </script>";
       } else {
         $session->msg('d', ' Sorry failed to add!');
         redirect('product.php', false);
       }
     } else{
       $session->msg("d", $errors);
-      redirect('add_product.php', false);
+      redirect('product.php.php', false);
     }
 }
 function validatePrices($buyPrice, $sellPrice) {
@@ -166,34 +180,33 @@ function validatePrices($buyPrice, $sellPrice) {
     }
     return true;
 }
-
-// Update Product
+?>
+<?php 
 if (isset($_POST['update_product'])) {
+    // Sanitize inputs to prevent SQL injection
     $edit_cat_id = (int)$_POST['edit_cat_id'];
-    $product_description = $_POST['product-description'];
-    $product_item_code = $_POST['product-item-code'];
+    $product_name = $db->escape($_POST['product-name']);
+    $product_description = $db->escape($_POST['product-description']);
+    $product_item_code = $db->escape($_POST['product-item-code']);
     $product_buying_price = (float)$_POST['product-buying-price'];
     $product_selling_price = (float)$_POST['product-selling-price'];
-    $product_expiration_date = isset($_POST['product-expiration-date']) ? $_POST['product-expiration-date'] : NULL;
-    $product_is_perishable = isset($_POST['perishable-select']) ? 1 : 0;
-    $product_photo = $_POST['product-photo']; // Assuming this is the photo URL or path
+    $product_photo = (int)$_POST['product-photo']; // Assuming it's an ID
 
     // Validate prices
-    if (!validatePrices($product_buying_price, $product_selling_price)) {
+    if ($product_selling_price < $product_buying_price) {
         $session->msg('d', "Selling price must be greater than or equal to buying price.");
-        redirect('inventory.php', false); // Redirect to the inventory page without changing the URL
+        redirect('inventory.php', false);
     }
 
-    // Update product in the database, excluding the name field
+    // Update product in the database
     $query = "UPDATE products SET 
+                name = '{$product_name}',  -- Add the name update here
                 description = '{$product_description}',
                 item_code = '{$product_item_code}',
                 buy_price = '{$product_buying_price}',
                 sale_price = '{$product_selling_price}',
-               
-                is_perishable = '{$product_is_perishable}',
                 media_id = '{$product_photo}'
-                WHERE id = '{$edit_cat_id}'";
+              WHERE id = '{$edit_cat_id}'";
 
     if ($db->query($query)) {
         $session->msg('s', "Product updated successfully.");
@@ -202,13 +215,16 @@ if (isset($_POST['update_product'])) {
                     window.location.href = 'product.php';
                 }, 100);
               </script>";
-       // redirect('product.php', false); // Redirect to the product page without changing the URL
     } else {
         $session->msg('d', "Sorry, failed to update product!");
-        redirect('product.php', false); // Redirect to the product page without changing the URL
+        redirect('product.php', false);
     }
 }
 
+// echo '<pre>';
+// print_r($_POST);
+// echo '</pre>';
+// exit;
 ?>
 
 <?php include 'layouts/menu.php'; ?> 
@@ -295,20 +311,19 @@ if (isset($_POST['update_product'])) {
                         </a>
                         
                         <div class="dropdown-menu dropdown-menu-right">
-                        <a href="#" data-toggle="modal" data-target="#editProductModal" aria-expanded="false"
-                            class="dropdown-item" 
-                            onclick="editProductModal(<?php echo $product['id']; ?>', 
-                            '<?php echo addslashes($product['name']); ?>', 
-                            '<?php echo addslashes($product['categorie']); ?>', 
-                            '<?php echo addslashes($product['description']); ?>', 
-                            '<?php echo addslashes($product['item_code']); ?>, '
-                            '<?php echo $product['buy_price']; ?>',
-                            '<?php echo $product['sale_price']; ?>', 
-                            '<?php echo $product['quantity']; ?>', 
-                            
-                            <?php echo $product['is_perishable']; ?>)">
+                            <a href="#" data-toggle="modal" data-target="#editProductModal" 
+                                class="dropdown-item" 
+                                onclick="editProductModal('<?php echo $product['id']; ?>', 
+                                '<?php echo addslashes($product['name']); ?>', 
+                                '<?php echo addslashes($product['categorie']); ?>', 
+                                '<?php echo addslashes($product['description']); ?>', 
+                                '<?php echo addslashes($product['item_code']); ?>', 
+                                '<?php echo $product['buy_price']; ?>', 
+                                '<?php echo $product['sale_price']; ?>', 
+                                '<?php echo $product['quantity']; ?>')">
                                 <i class="fa fa-edit"></i> Edit
-                         </a>
+                            </a>
+
                             <a href="delete_product.php?id=<?php echo (int)$product['id'];?>" class="dropdown-item" title="Delete" data-toggle="tooltip" onclick="return confirm('Are you sure you want to delete this product?');">
                                 <i class="fa fa-trash"></i> Delete
                             </a>
@@ -440,7 +455,7 @@ if (isset($_POST['update_product'])) {
     </div>
 </div>
 <!-- Edit Product Modal -->
-<div class="modal " id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel" aria-hidden="true">
+<div class="modal fade" id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
