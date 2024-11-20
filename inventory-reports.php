@@ -68,7 +68,105 @@ $all_photo = find_all('media');
             <div class="col-md-12">
                 <?php echo display_msg($msg); ?>
             </div>
+            
             <div class="col-md-12">
+                
+            <div class="panel panel-default">
+    <div class="panel-heading clearfix">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="panel-title">Products sold</h5>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#dateFilterModal">
+                Filter by Date
+            </button>
+        </div>
+       
+    </div>
+
+    <!-- Display the selected date range -->
+    <div class="panel-body">
+    <?php
+// Get date filter from URL if set
+$date_from = isset($_GET['date_from']) ? $_GET['date_from'] : '';
+$date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';
+$date_preset = isset($_GET['date_preset']) ? $_GET['date_preset'] : '';
+
+// Date presets logic
+if ($date_preset) {
+    switch ($date_preset) {
+        case 'today':
+            // Set both 'from' and 'to' dates to today
+            $date_from = date('Y-m-d', strtotime('today midnight'));
+
+            $date_to = date('Y-m-d', strtotime('tomorrow midnight'));
+            break;
+        case 'this_week':
+            // Get the start and end of this week (Monday to Sunday)
+            $date_from = date('Y-m-d', strtotime('monday this week'));
+            $date_to = date('Y-m-d', strtotime('sunday this week'));
+            break;
+        case 'this_month':
+            // Get the first and last day of the current month
+            $date_from = date('Y-m-01');
+            $date_to = date('Y-m-t');
+            break;
+    }
+}
+
+// Get transactions from the database
+$get_transact = find_all('pos_transaction_items');
+
+
+?>
+
+        <?php
+        // Display the date range if both 'from' and 'to' dates are provided
+        if (!empty($date_from) && !empty($date_to)) {
+            echo "<p class='text-center'>Showing POS transactions from <strong>" . htmlspecialchars($date_from) . "</strong> to <strong>" . htmlspecialchars($date_to) . "</strong>.</p>";
+        }
+        ?>
+        <div class="table-responsive">
+    <table class="table custom-table datatable">
+        <thead>
+            <tr>
+                <th class="text-center" style="width: 20%;">Transaction ID</th>
+                <th class="text-center" style="width: 10%;">Product name</th>
+                <th class="text-center" style="width: 10%;">Sold quantity</th>
+                <th class="text-center" style="width: 10%;">Total Sale</th>
+                <th class="text-center" style="width: 10%;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+
+        <?php
+            foreach ($get_transact as $tr) {
+                $transaction_date = $tr['created_at'];
+                $discount = $tr['discount'];
+
+                if ((!$date_from || $transaction_date >= $date_from) && (!$date_to || $transaction_date <= $date_to)) {
+                    $discount_display = ($discount == '00.00') ? 'None' : remove_junk(ucfirst($discount));
+                    
+                    echo '<tr class="text-center">';
+                    echo '<td>' . remove_junk(ucfirst($tr['transaction_id'])) . '</td>';
+                    echo '<td>' . date('F j, Y h:i A', strtotime($transaction_date)) . '</td>';
+                    echo '<td>' . $discount_display . '</td>';
+                    echo '<td>₱' . remove_junk(ucfirst($tr['total_amount'])) . '</td>';
+                    echo '<td class="text-center">
+                        <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#viewTransactionModal" 
+                        onclick="viewTransaction(\'' . $tr['id'] . '\')">
+                        View
+                        </a>
+                    </td>';             
+                    echo '</tr>';
+                }
+            } // Closing foreach loop
+        ?>
+
+        </tbody>
+    </table>
+</div>
+
+    </div>
+</div>
                 <div class="panel panel-default">
                     <div class="panel-heading clearfix">
                         <div class="col">Search Product</div>

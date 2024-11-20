@@ -101,24 +101,38 @@ if (isset($_POST['confirm_checkout'])) {
             $product_name = $item['name'];
             $product_price = $item['price']; // Assuming price is passed for each item
 
-            // Update the product quantity in the products table
-            $update_quantity_sql = "UPDATE products SET quantity = quantity - {$product_quantity} WHERE id = '{$product_id}' AND quantity >= {$product_quantity}";
-            $result = $db->query($update_quantity_sql);
+            // Fetch the first available batch for the product
+            $batch_sql = "SELECT b.id, b.batch_quantity 
+                          FROM batches b 
+                          WHERE b.product_id = '{$product_id}' AND b.batch_quantity >= {$product_quantity} 
+                          ORDER BY b.created_at ASC 
+                          LIMIT 1";  // Fetch the first available batch
+            $batch_result = $db->query($batch_sql);
+            $batch = $batch_result->fetch_assoc();
 
-            if (!$result) {
-                throw new Exception("Error updating product quantity: " . $db->con);
-            }
+            if ($batch) {
+                // Deduct the quantity from the batch
+                $new_batch_quantity = $batch['batch_quantity'] - $product_quantity;
+                $update_batch_sql = "UPDATE batches SET batch_quantity = '{$new_batch_quantity}' WHERE id = '{$batch['id']}'";
+                $update_batch_result = $db->query($update_batch_sql);
 
-            // Insert transaction record for each product purchased into `pos_transaction_items`
-            $transaction_item_sql = "INSERT INTO pos_transaction_items 
-                                    (transaction_id, product_name, product_quantity, price, created_at)
-                                    VALUES 
-                                    ('{$transaction_id}', '{$product_name}', {$product_quantity}, '{$product_price}', NOW())";
+                if (!$update_batch_result) {
+                    throw new Exception("Error updating batch quantity: " . $db->con);
+                }
 
-            $result = $db->query($transaction_item_sql);
+                // Insert transaction record for each product purchased into `pos_transaction_items`
+                $transaction_item_sql = "INSERT INTO pos_transaction_items 
+                                        (transaction_id, product_name, product_quantity, price, created_at)
+                                        VALUES 
+                                        ('{$transaction_id}', '{$product_name}', {$product_quantity}, '{$product_price}', NOW())";
 
-            if (!$result) {
-                throw new Exception("Error inserting transaction item: " . $db->con);
+                $transaction_item_result = $db->query($transaction_item_sql);
+
+                if (!$transaction_item_result) {
+                    throw new Exception("Error inserting transaction item: " . $db->con);
+                }
+            } else {
+                throw new Exception("Not enough stock available for product: {$product_name}");
             }
         }
 
@@ -134,7 +148,7 @@ if (isset($_POST['confirm_checkout'])) {
     }
 }
 
-?>
+?>  
 
     <?php 
     $products = join_product_table();
@@ -164,7 +178,7 @@ if (isset($_POST['confirm_checkout'])) {
                     <div class="col-md-8">
                         <!-- Product Selection -->
                         <div class="card">
-                            <div class="card-header">
+                            <div class="card-header bg-success">
                                 <h5>Select Products</h5>
                                 <input type="text" id="product-search" class="form-control" placeholder="Search Item code or Name...">
                             </div>
@@ -174,7 +188,8 @@ if (isset($_POST['confirm_checkout'])) {
                                         <tr>
                                             <th>Item code</th>  
                                             <th>Name</th>
-                                            <th>Description</th>
+                                            <th>Categorie</th>
+                                            <th>Unit of measure</th>
                                             <th>Available qty</th>
                                             <th>Price</th>
                                             <th>Quantity</th>
@@ -185,8 +200,9 @@ if (isset($_POST['confirm_checkout'])) {
                                         <?php foreach ($products as $product): ?>                                          
                                             <tr>
                                                 <td><?php echo $product['item_code']; ?></td>
+                                                <td><?php echo $product['name']; ?></td>
                                                 <td><?php echo $product['categorie']; ?></td>
-                                                <td><?php echo $product['description']; ?></td>
+                                                <td><?php echo $product['uom_name']; ?></td>
                                                 <td><?php echo $product['quantity'] > 0 ? $product['quantity'] : 'Out of Stock'; ?></td>
                                                 <td><?php echo number_format($product['sale_price'], 2); ?></td>
                                                 <td>
@@ -219,7 +235,7 @@ if (isset($_POST['confirm_checkout'])) {
                     <div class="col-md-4">
                         <!-- Cart Section -->
                         <div class="card" style="height: 100%">
-                            <div class="card-header">
+                            <div class="card-header bg-success">
                                 <h5>Cart</h5>
                             </div>
                             <div class="card-body">

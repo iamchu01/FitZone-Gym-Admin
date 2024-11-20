@@ -1,89 +1,56 @@
 <?php include 'layouts/session.php'; ?>
 <?php include 'layouts/head-main.php'; ?>
 <head>
-    <title>Dashboard - GYYMS admin</title>
+    <title>Dashboard - GYYMS Admin</title>
     <?php include 'layouts/title-meta.php'; ?>
     <?php require_once('vincludes/load.php'); ?>
     <?php include 'layouts/head-css.php'; ?>
 </head>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Event listener for opening the modal and populating fields
-    const stockInButtons = document.querySelectorAll('.stock-in');
-    stockInButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            // Extract data attributes
-            const productId = this.getAttribute('data-product-id');
-            const productName = this.getAttribute('data-product-name');
-            const productCategorie = this.getAttribute('data-product-categorie');
-            const productUom = this.getAttribute('data-product-uom');
-            const productItemCode = this.getAttribute('data-product-item-code');
-            const productDescription = this.getAttribute('data-product-description');
-
-            // Populate modal fields
-            document.getElementById('product_name').value = productName;
-            document.getElementById('product-uom').value = productUom;
-            document.getElementById('product-categorie').value = productCategorie;
-            document.getElementById('item-code').value = productItemCode;
-            document.querySelector('[name="item-description"]').value = productDescription;
-
-            // Set the form action to include the product ID
-            const form = document.querySelector('#stock-in-form');
-            form.setAttribute('action', `product.php?id=${productId}`);
-
-            // Show the modal
-            $('#stock-in-Modal').modal('show');
-        });
-    });
-
-    // Handle checkbox for perishable items
-    const isPerishableCheckbox = document.getElementById('is-perishable');
-    const expirationDateGroup = document.getElementById('expiration-date-group');
-    if (isPerishableCheckbox) {
-        isPerishableCheckbox.addEventListener('change', function () {
-            if (this.checked) {
-                expirationDateGroup.style.display = 'block';
-            } else {
-                expirationDateGroup.style.display = 'none';
-            }
-        });
-    }
-
-    // Validate quantity input
-    document.getElementById('add-quantity').addEventListener('input', function () {
-        const feedback = document.getElementById('quantity-feedback');
-        if (this.value <= 0) {
-            feedback.style.display = 'block';
-        } else {
-            feedback.style.display = 'none';
-        }
-    });
-});
-</script>
 
 <?php
-// PHP: Handle product stock update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_quantity'])) {
-    $add_quantity = (int)$_POST['add_quantity'];
-    $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+// Handle product stock update
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $product_id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
+    $add_quantity = isset($_POST['add_quantity']) ? (int)$_POST['add_quantity'] : 0;
+    $is_perishable = isset($_POST['is_perishable']) ? 1 : 0;
+    $expiration_date = isset($_POST['expiration_date']) ? $_POST['expiration_date'] : null;
 
-    if ($add_quantity > 0 && $product_id > 0) {
-        $query = "UPDATE products SET quantity = quantity + {$add_quantity} WHERE id = {$product_id}";
-        if ($db->query($query)) {
-            $session->msg('s', 'Stock updated successfully!');
-            redirect('stock-in.php');
-        } else {
-            $session->msg('d', 'Failed to update stock.');
+    if ($product_id > 0 && $add_quantity > 0) {
+        try {
+            // Begin transaction
+            // $db->beginTransaction();
+
+            // Insert into batches table
+            $insert_batch_query = "INSERT INTO batches (product_id, batch_quantity, expiration_date) 
+                                   VALUES ({$product_id}, {$add_quantity}, '{$expiration_date}')";
+
+            if ($db->query($insert_batch_query)) {
+                // Commit the transaction
+                $db->commit();
+                $session->msg('s', 'Stock added and batch recorded successfully!');
+            } else {
+                // Rollback if batch insertion fails
+                $db->rollBack();
+                $session->msg('d', 'Failed to insert batch data.');
+            }
+        } catch (Exception $e) {
+            // Rollback if any exception occurs
+            $db->rollBack();
+            $session->msg('d', 'An error occurred: ' . $e->getMessage());
         }
     } else {
-        $session->msg('d', 'Invalid quantity or product ID.');
+        $session->msg('d', 'Invalid product ID or quantity.');
     }
+
+    // Redirect to avoid form resubmission
     redirect('stock-in.php');
 }
 
+?>
+
+<?php
 // Fetch data for display
 $products = join_product_table();
-$all_categories = find_all('categories');
 ?>
 
 <?php include 'layouts/menu.php'; ?>
@@ -184,6 +151,7 @@ $all_categories = find_all('categories');
             </div>
             <div class="modal-body">
                 <form id="stock-in-form" method="POST">
+                    <input type="hidden" id="product-id" name="product_id">
                     <div class="form-group">
                         <label for="product-name">Product Name:</label>
                         <input type="text" class="form-control" id="product_name" disabled>
@@ -198,7 +166,7 @@ $all_categories = find_all('categories');
                     </div>
                     <div class="form-group">
                         <label for="product-uom">Unit of Measure (UOM):</label>
-                        <input type="text" class="form-control" id="product-uom" disabled>
+                        <input type="text" class="form-control" id="product-uom" >
                     </div>
                     <div class="form-group">
                         <label for="add-quantity">Add Quantity:</label>
@@ -219,6 +187,42 @@ $all_categories = find_all('categories');
         </div>
     </div>
 </div>
+
+<!-- Scripts -->
+<script>
+    // Pass product data to the modal
+    $('.stock-in').on('click', function() {
+        const button = $(this);
+        $('#product-id').val(button.data('product-id'));
+        $('#product_name').val(button.data('product-name'));
+        $('#product-categorie').val(button.data('product-categorie'));
+        $('#item-code').val(button.data('product-item-code'));
+        $('#product-uom').val(button.data('product-uom'));
+    });
+
+    // Toggle expiration date input
+    $('#is-perishable').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('#expiration-date-group').show();
+        } else {
+            $('#expiration-date-group').hide();
+        }
+    });
+
+    // Validation for stock quantity
+    $('#stock-in-form').on('submit', function(e) {
+        const quantity = $('#add-quantity').val();
+        if (quantity <= 0) {
+            e.preventDefault();
+            $('#quantity-feedback').show();
+        } else {
+            $('#quantity-feedback').hide();
+        }
+    });
+</script>
 <?php include_once('vlayouts/footer.php'); ?>
 <?php include 'layouts/customizer.php'; ?>
 <?php include 'layouts/vendor-scripts.php'; ?>
+
+</body>
+</html>

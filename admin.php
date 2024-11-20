@@ -19,16 +19,18 @@
 <?php
 $c_categorie = count_by_id('categories');
 $c_product = count_by_id('products');
+$c_bat = count_by_id('batches');
+
 // $c_sale = count_by_id('sales');
 // $c_user = count_by_id('users');
-$c_gym = count_by_id('gym_equipment');
+
 $products_sold = find_highest_selling_product('10');
 $recent_products = find_recent_product_added('5');
 $recent_sales = find_recent_sale_added('5');
 
 // Fetch low stock products
 $low_stock_threshold = '10'; // Set your low stock threshold here
-$low_stock_data = get_low_stock_products($low_stock_threshold);
+// $low_stock_data = get_low_stock_products($low_stock_threshold);
 
 // Fetch all categories
 $qt_products = find_all('products');
@@ -37,28 +39,28 @@ $low_stock_data_array = []; // Initialize an array to hold results
 
 
 
-// Loop through each category to calculate total quantity
-foreach ($qt_products as $category) {
-    $categorie_id = $category['id'];
+// // Loop through each category to calculate total quantity
+// foreach ($qt_products as $category) {
+//     $categorie_id = $category['id'];
 
-    // Get total quantity for this category
-    $query = "SELECT SUM(quantity) AS total_quantity FROM products WHERE id = '{$categorie_id}'";
-    $result = $db->query($query);
+//     // Get total quantity for this category
+//     $query = "SELECT SUM(quantity) AS total_quantity FROM products WHERE id = '{$categorie_id}'";
+//     $result = $db->query($query);
 
-    // if ($result && $row = $result->fetch_assoc()) {
-    //    // $total_quantity = $row['total_quantity'] ? (int)$row['total_quantity'] : 0;
+//     // if ($result && $row = $result->fetch_assoc()) {
+//     //    // $total_quantity = $row['total_quantity'] ? (int)$row['total_quantity'] : 0;
 
-    //     // Check if the total quantity is less than or equal to the threshold
-    //     if ($total_quantity <= $low_stock_threshold) {
-    //         // Add to low stock data if the condition is met
-    //         $low_stock_data[] = [
-    //             'category_name' => $category['name'],
-    //             'total_quantity' => $total_quantity,
-    //             'categorie_id' => $categorie_id // Keep track of the category ID for linking
-    //         ];
-    //     }
-    // }
-}
+//     //     // Check if the total quantity is less than or equal to the threshold
+//     //     if ($total_quantity <= $low_stock_threshold) {
+//     //         // Add to low stock data if the condition is met
+//     //         $low_stock_data[] = [
+//     //             'category_name' => $category['name'],
+//     //             'total_quantity' => $total_quantity,
+//     //             'categorie_id' => $categorie_id // Keep track of the category ID for linking
+//     //         ];
+//     //     }
+//     // }
+// }
 
 // Debugging output for low stock data
 // var_dump($low_stock_data); // Uncomment for debugging
@@ -79,7 +81,7 @@ foreach ($qt_products as $category) {
                             <i class="fa fa-list-ol"></i>                            
                             </div>
                             <div class="panel-value pull-right">
-                                <h2 class="margin-top"><?php echo $c_product['total']; ?></h2>
+                                <h2 class="margin-top"><?php echo $c_bat['total']; ?></h2>
                                 <p class="text-muted">Product Inventory</p>
                             </div>
                         </div>
