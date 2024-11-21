@@ -172,9 +172,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <thead>
                                     <tr>
                                         <th class="text-center" style="width: 30px;">#</th>
-                                        <th class="text-center">Product ID</th>
                                         <th class="text-center" style="width: 10%;">Photo</th>
-                                        <th class="text-center" style="width: 50%;">Name</th>
+                                        <th class="text-center" style="width: 10%;">Name</th>
                                         <th class="text-center" style="width: 10%;">Category</th>
                                         <th class="text-center" style="width: 10%;">Unit of measure</th>
                                         <th class="text-center" style="width: 10%;">Item description</th>
@@ -204,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         ?>
                                         <tr class="<?php echo $rowClass; ?>">
                                             <td class="text-center"><?php echo count_id(); ?></td>
-                                            <td class="text-center"><?php echo remove_junk($product['id']); ?></td>
+                                            
                                             <td>
                                             <?php if ($product['media_id'] === '0'): ?>
                                                 <img class="img-avatar img-circle" src="uploads/products/no_image.png" alt="">
@@ -232,13 +231,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             </td>
                                             <td class="text-center"><?php echo remove_junk(date('F j, Y h:i A', strtotime($product['product_batch']))); ?></td>
                                             <td class="text-center">
-                                            <button class="btn btn-danger stock-out fa fa-trash" 
-                                                data-product-id="<?php echo (int)$product['id']; ?>" 
-                                                data-product-name="<?php echo remove_junk($product['name']); ?>"                                           
-                                                data-product-description="<?php echo remove_junk($product['description']); ?>"  
-                                                data-product-quantity="<?php echo remove_junk($product['quantity']); ?>" 
-                                                data-product-batch="<?php echo remove_junk($product['date']); ?>"
-                                                data-product-item-code="<?php echo remove_junk($product['item_code']); ?>"> Stock Out</button>
+                                                <div class="btn-group">
+                                                    <a href="#" class="btn btn-white btn-sm btn-rounded dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                                        <i class="fa fa-dot-circle-o text-primary"></i> Actions
+                                                    </a>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a href="#" class="stock-out" 
+                                                            data-product-id="<?php echo (int)$product['id']; ?>" 
+                                                            data-product-name="<?php echo remove_junk($product['name']); ?>"                                           
+                                                            data-product-description="<?php echo remove_junk($product['description']); ?>"  
+                                                            data-product-quantity="<?php echo remove_junk($product['quantity']); ?>" 
+                                                            data-product-batch="<?php echo remove_junk($product['date']); ?>"
+                                                            data-product-item-code="<?php echo remove_junk($product['item_code']); ?>">
+                                                            <i class="fa fa-minus-circle text-warning"></i> Stock Out
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="#" class="delete-product" 
+                                                            data-product-id="<?php echo (int)$product['id']; ?>" 
+                                                            data-product-name="<?php echo remove_junk($product['name']); ?>">
+                                                            <i class="fa fa-trash text-danger"></i> Delete
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

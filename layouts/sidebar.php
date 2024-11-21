@@ -58,7 +58,7 @@ $page = $components[2];
                 href="admin.php">Inventory Management</a>
 
             </li>
-            <li><a class="<?php echo ($page == 'store.php') ? 'active' : ''; ?>" href="store.php">Store Management</a>
+            <li><a class="<?php echo ($page == 'store.php') ? 'active' : ''; ?>" href="store.php">E-Store Management</a>
             </li>
 
             <!-- <li><a class="<?php echo ($page == 'category-list.php') ? 'active' : ''; ?>" href="category-list.php">Category List</a></li>                  -->
