@@ -18,14 +18,14 @@
     
 </head>
 <body>
-    <div class="main-wrapper">
+ 
         <?php include 'layouts/menu.php'; ?>
-
+        <div class="main-wrapper" >
         <!-- Page Wrapper -->
-        <div class="page-wrapper">
+        <div class="page-wrapper" style="padding-top: 2%;">
 
             <!-- Page Content -->
-            <div class="content container-fluid">
+            <div class="content container-fluid" >
 
                 <!-- Page Header -->
                 <div class="page-header">
@@ -37,11 +37,7 @@
                                 <li class="breadcrumb-item active ">payments reports</li>
                             </ul>
                         </div>
-                        <div class="col-auto float-end ms-auto">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                            Add Product
-                        </button>
-                        </div>
+                       
                     </div>
                 </div>
 
