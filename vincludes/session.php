@@ -17,6 +17,8 @@ class Session {
   public function login($user_id){
     $_SESSION['user_id'] = $user_id;
   }
+
+
   private function userLoginSetup()
   {
     if(isset($_SESSION['user_id']))

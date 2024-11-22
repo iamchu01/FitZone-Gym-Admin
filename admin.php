@@ -3,9 +3,9 @@
 
 <head>
     <title>Dashboard - GYYMS admin</title>
-    <?php include 'layouts/title-meta.php'; ?>
-    <?php require_once('vincludes/load.php'); ?>
-    <?php include 'layouts/head-css.php'; ?>
+    <?php require_once('vincludes/load.php'); ?>    
+        <?php include 'layouts/title-meta.php'; ?>
+        <?php include 'layouts/head-css.php'; ?>
     <style>
         .panel-box:hover{
             transition: transform 0.3s ease;
@@ -67,9 +67,10 @@ $low_stock_data_array = []; // Initialize an array to hold results
 
 
 ?>
+
 <?php include 'layouts/menu.php'; ?> 
 
-<div class="page-wrapper" style="padding-top:2%;">
+<div class="page-wrapper" style="padding-top:2%;" >
     <div class="content container-fluid">
     <h3 class="page-title">Inventory Management</h3>
    
@@ -128,7 +129,7 @@ $low_stock_data_array = []; // Initialize an array to hold results
                         </div>
                         <div class="panel-value pull-right">
                             <h2 class="margin-top"><?php echo $c_product['total']; ?></h2>
-                            <p class="text-muted">E-Store Products</p>
+                            <p class="text-muted">E-Store</p>
                         </div>
                     </div>
                 </a>

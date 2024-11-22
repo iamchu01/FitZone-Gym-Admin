@@ -2,17 +2,23 @@
 <?php include 'layouts/head-main.php'; ?>
 
     <head>
-    <?php require_once('vincludes/load.php'); ?>
-        <title>Dashboard - GYYMS admin</title>
+    <title>Dashboard - GYYMS admin</title>
+        <?php require_once('vincludes/load.php'); ?>    
         <?php include 'layouts/title-meta.php'; ?>
-
         <?php include 'layouts/head-css.php'; ?>
         
+
     </head> 
 <?php
-$member = count_by_id_mem('tbl_add_members');
-$instructors = count_by_id_ins('tbl_add_instructors')
 
+
+$member = count_by_id_mem('tbl_add_members');
+$instructors = count_by_id_ins('tbl_add_instructors');
+// Check if user is logged in
+if (!$session->isUserLoggedIn()) {
+    header("Location: admin-login.php");
+    exit;
+}
  ?>
     <?php include 'layouts/body.php'; ?>
 

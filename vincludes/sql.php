@@ -21,6 +21,13 @@ function find_by_sql($sql)
   $result_set = $db->while_loop($result);
  return $result_set;
 }
+function require_login() {
+  global $session;
+  if (!$session->isUserLoggedIn()) {
+      header("Location: admin-login.php");
+      exit;
+  }
+}
 /*--------------------------------------------------------------*/
 /*  Function for Find data from table by id
 /*--------------------------------------------------------------*/
@@ -261,7 +268,8 @@ function tableExists($table){
 function join_product_table(){
   global $db;
   $sql  = "SELECT p.id, p.name, p.item_code, p.description, 
-                  p.buy_price, p.sale_price, p.media_id, p.date, 
+                  p.buy_price, p.sale_price, p.media_id, p.date,
+                  b.id AS batch_id, 
                   c.name AS categorie, 
                   m.file_name AS image, 
                   u.name AS uom_name, 

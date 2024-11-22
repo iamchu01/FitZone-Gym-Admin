@@ -21,6 +21,30 @@
                 });
             });
 
+            // Button to show the 'Add Product' modal with an icon
+            $('.btn-success').on('click', function() {
+                // Show the product table when the 'Add New Product' button is clicked
+                $('#productTable').removeClass('d-none');
+                // Optionally, you can also show the modal if it's part of the functionality
+                $('#addProductModal').modal('show');
+            });
+
+            // Button to show pending products in a modal
+            $('.btn-pending-products').on('click', function() {
+                $('#pendingProductsModal .modal-body').html(''); // Clear the modal content
+
+                // Fetch pending products via AJAX
+                $.ajax({
+                    url: 'fetch_pending_products.php', // Fetch pending products from a separate PHP file
+                    method: 'GET',
+                    success: function(response) {
+                        $('#pendingProductsModal .modal-body').html(response); // Insert the products in the modal
+                        $('#pendingProductsModal').modal('show'); // Show the modal
+                    }
+                });
+            });
+
+            // Button to select products for the online store
             $('.btn-select-category').on('click', function() {
                 var categoryId = $(this).data('category-id'); // Get the category ID
                 $('#selectItemsModal .modal-body').html(''); // Clear the modal content
@@ -31,8 +55,7 @@
                     method: 'GET',
                     data: { category_id: categoryId },
                     success: function(response) {
-                        // Insert the products in the modal body
-                        $('#selectItemsModal .modal-body').html(response);
+                        $('#selectItemsModal .modal-body').html(response); // Insert the products in the modal
                         $('#selectItemsModal').modal('show'); // Show the modal
                     }
                 });
@@ -41,12 +64,16 @@
     </script>
     
     <style>
-    .main-wrapper .modal-dialog {
-        max-width: 80%;
-        width: 100%; /* Ensures the modal takes the full width up to max-width */
-    }
-</style>
+        .main-wrapper .modal-dialog {
+            max-width: 80%;
+            width: 100%; /* Ensures the modal takes the full width up to max-width */
+        }
 
+        /* Ensures table is hidden initially */
+        #productTable {
+            display: none;
+        }
+    </style>
 
     <?php
     // Fetch all categories and their respective product quantities
@@ -89,76 +116,88 @@
                     </div>
                 </div>
 
-                <!-- Search and Products Table -->
-                <div class="col-md-12">
-                    <div class="panel panel-default">
-                        <div class="panel-heading clearfix">
-                            <div class="col">Search Product</div>
-                            <div class="col-md-4">
-                                <div class="input-group">
-                                    <span class="input-group-addon"><i class="fa fa-search"></i></span>
-                                    <input type="text" id="category-search" class="form-control" placeholder="Type Product name...">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="panel-body">
-                            <div class="table-responsive">
-                                <table class="table custom-table datatable">
-                                    <thead>
-                                        <tr>
-                                            <th class="text-center" style="width: 50px;">#</th>
-                                            <th>Products List</th>
-                                            <th class="text-center" style="width: 100px;">In-Stock</th>
-                                            <th class="text-center" style="width: 100px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($all_categories as $cat): ?>
-                                            <tr>
-                                                <!-- Product ID -->
-                                                <td class="text-center"><?php echo count_id(); ?></td>
+               <!-- Button to show the 'Add Product' modal with an icon -->
+                <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                    <i class="fa fa-plus-circle"></i> Add New Product
+                </button>
 
-                                                <!-- Product Name -->
-                                                <td><?php echo remove_junk(ucfirst($cat['name'])); ?></td>
+                <!-- Button to show pending products with an icon -->
+                <button class="btn btn-warning btn-pending-products">
+                    <i class="fa fa-clock"></i> Approval Pending Products
+                </button>
 
-                                                <!-- Display In-Stock quantity -->
-                                                <td class="text-center"><?php echo $category_stock[$cat['id']]; ?></td>
-
-                                                <td class="text-center">
-                                                    <button type="button" class="btn btn-success btn-select-category" data-category-id="<?php echo $cat['id']; ?>">Add to store</button>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Table to show all products (initially hidden) -->
+                <div class="table-responsive mt-4">
+                    <table class="table table-bordered table-striped" id="productTable">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Product Name</th>
+                                <th>Price</th>
+                                <th>Stock Quantity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            // Fetch products to display in the online store
+                            $products = join_product_table();
+                            foreach ($products as $product):
+                            ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($product['categorie']); ?></td>
+                                <td><?php echo htmlspecialchars($product['name']); ?></td>
+                                <td><?php echo '₱' . number_format($product['sale_price'], 2); ?></td>
+                                <td><?php echo htmlspecialchars($product['quantity']); ?></td>
+                                <td>
+                                    <button class="btn btn-primary btn-select-category" data-category-id="<?php echo $product['batch_id']; ?>">Select</button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
 
             </div> <!-- End Page Content -->
 
         </div> <!-- End Page Wrapper -->
-          <!-- Modal to Display Products Based on Category -->
-    <div class="modal " id="selectItemsModal" tabindex="-1" role="dialog" aria-labelledby="selectItemsModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="selectItemsModalLabel">Select Products</h5>
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <!-- Products will be dynamically loaded here via AJAX -->
+
+        <!-- Modal to Display Pending Products -->
+        <div class="modal" id="pendingProductsModal" tabindex="-1" role="dialog" aria-labelledby="pendingProductsModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="pendingProductsModalLabel">Pending Products</h5>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Pending products will be dynamically loaded here via AJAX -->
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Modal to Display Products Based on Category -->
+        <div class="modal" id="selectItemsModal" tabindex="-1" role="dialog" aria-labelledby="selectItemsModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="selectItemsModalLabel">Select Products</h5>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Products will be dynamically loaded here via AJAX -->
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </div> <!-- End Main Wrapper -->
 
-  
     <?php include_once('vlayouts/footer.php'); ?>
     <?php include 'layouts/customizer.php'; ?>
     <?php include 'layouts/vendor-scripts.php'; ?>

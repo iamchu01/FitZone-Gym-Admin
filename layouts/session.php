@@ -1,3 +1,4 @@
+
 <?php
  session_start();
 
@@ -8,8 +9,25 @@ class Session {
 
  function __construct(){
    $this->flash_msg();
- 
+   $this->userLoginSetup();
  }
+
+  public function isUserLoggedIn(){
+    return $this->user_is_logged_in;
+  }
+  public function login($user_id){
+    $_SESSION['user_id'] = $user_id;
+  }
+  private function userLoginSetup()
+  {
+    if(isset($_SESSION['user_id']))
+    {
+      $this->user_is_logged_in = true;
+    } else {
+      $this->user_is_logged_in = true;
+    }
+
+  }
   public function logout(){
     unset($_SESSION['user_id']);
   }
