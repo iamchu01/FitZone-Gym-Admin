@@ -5,40 +5,98 @@ include 'layouts/db-connection.php';
 
 // Include the necessary OTP classes
 require_once 'PHPMailer-OTP/classes/OTPVerification.php';
-require_once 'PHPMailer-OTP/classes/EmailSender.php';
 
 $message = ''; // Variable to display messages
-$otpSent = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $email = trim($_POST['email']);
-  $otp = isset($_POST['otp']) ? trim($_POST['otp']) : null;
-  $action = $_POST['action'] ?? '';
+    $email = trim($_POST['email']);
+    $otpHandler = new OTPVerification($conn);
 
-  // Instantiate the OTP handler
-  $otpHandler = new OTPVerification($conn);
+    // Check if email is verified
+    if ($otpHandler->isEmailVerified($email)) {
+        // Prepare data for moving to `tbl_add_members`
+        $data = [
+            'first_name' => $_POST['firstname'] ?? '',
+            'middle_name' => $_POST['middlename'] ?? '',
+            'last_name' => $_POST['lastname'] ?? '',
+            'phone_number' => $_POST['mobile'] ?? '',
+            'gender' => $_POST['Gender'] ?? 'Others',
+            'date_of_birth' => $_POST['dateOfBirth'] ?? '',
+            'age' => $_POST['member_age'] ?? '',
+            'address' => implode(', ', array_filter([
+                $_POST['region_text'] ?? '',
+                $_POST['province_text'] ?? '',
+                $_POST['city_text'] ?? '',
+                $_POST['barangay_text'] ?? ''
+            ])),
+            'password' => password_hash($_POST['password'] ?? '12345', PASSWORD_DEFAULT),
+        ];
 
-  if ($action === 'send') {
-    // Generate and send OTP
-    $generatedOTP = $otpHandler->generateOTP($email);
-    $result = EmailSender::sendOTP($email, $generatedOTP);
+        // Insert verified member into `tbl_add_members`
+        $stmt = $conn->prepare("
+            INSERT INTO tbl_add_members (first_name, middle_name, last_name, phone_number, gender, date_of_birth, age, address, email, password, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')
+        ");
 
-    if ($result === true) {
-      $message = 'OTP has been sent to your email! Please check your inbox.';
-      $otpSent = true;
+        if ($stmt) {
+            $stmt->bind_param(
+                "ssssssssss",
+                $data['first_name'],
+                $data['middle_name'],
+                $data['last_name'],
+                $data['phone_number'],
+                $data['gender'],
+                $data['date_of_birth'],
+                $data['age'],
+                $data['address'],
+                $email,
+                $data['password']
+            );
+
+            if ($stmt->execute()) {
+                $message = "Member added successfully!";
+                header('Location: add-member.php?success=added');
+                exit;
+            } else {
+                error_log("Database insertion failed: " . $stmt->error);
+                $message = "Failed to add member to the database.";
+            }
+        } else {
+            error_log("Statement preparation failed: " . $conn->error);
+            $message = "Failed to prepare database query.";
+        }
     } else {
-      $message = 'Failed to send OTP. ' . $result;
+        $message = "Email not verified. Please verify your email first.";
     }
-  } elseif ($action === 'verify') {
-    // Verify OTP
-    if ($otpHandler->verifyOTP($email, $otp)) {
-      $message = 'Email verified successfully!';
-    } else {
-      $message = 'Invalid or expired OTP. Please try again.';
-    }
-  }
 }
+
+if (isset($_POST['action']) && $_POST['action'] === 'check_email') {
+  error_log("check_email action called");
+  $email = trim($_POST['email']);
+
+  $stmt = $conn->prepare("SELECT COUNT(*) as count FROM tbl_add_members WHERE email = ?");
+  if (!$stmt) {
+      error_log("Failed to prepare statement: " . $conn->error);
+      echo json_encode(['status' => 'error', 'message' => 'Database query preparation failed.']);
+      exit;
+  }
+
+  $stmt->bind_param("s", $email);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $row = $result->fetch_assoc();
+
+  if ($row['count'] > 0) {
+      echo json_encode(['status' => 'exists', 'message' => 'Email already exists. Please use a different email.']);
+  } else {
+      echo json_encode(['status' => 'available', 'message' => 'Email is available.']);
+  }
+  exit;
+}
+
 ?>
+
+
 
 <head>
   <title>Members</title>
@@ -226,8 +284,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
               <?php endif; ?>
 
-              <form id="addMemberForm" class="needs-validation member-info" method="POST"
-                action="backend-add-authenticate/process-add-member.php">
+              <?php if (isset($_GET['error']) && $_GET['error'] === 'email_exists'): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    Email already exists. Please use a different email.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
+
+            <form id="addMemberForm" class="needs-validation member-info" method="POST" action="add-member.php">
+
 
                 <!-- Alert Section -->
                 <div class="col-12">
@@ -236,6 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="row">
                   <!-- Basic Info -->
+
                   <!-- First Name -->
                   <div class="col-sm-6">
                     <div class="form-group">
@@ -244,6 +311,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         placeholder="Enter First Name" required />
                     </div>
                   </div>
+
+                  <!-- Middle Name -->
+<div class="col-sm-6">
+    <div class="form-group">
+        <label>Middle Name</label>
+        <input id="memberMiddlename" class="form-control" type="text" name="middlename" placeholder="Enter Middle Name" />
+    </div>
+</div>
+
+
                   <!-- Last Name -->
                   <div class="col-sm-6">
                     <div class="form-group">
@@ -279,7 +356,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
                   <!-- Password -->
-                  <div class="col-sm-6">
+                  <!-- <div class="col-sm-6">
                     <div class="form-group">
                       <label>Password</label>
                       <div class="input-group">
@@ -291,7 +368,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> -->
 
                 <!-- Hidden Additional Info Section -->
                 <div id="additionalInfoSection"
@@ -422,7 +499,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <!-- //*Add Member Modal -->
 
       <!-- //* Add Member Success Modal -->
-      <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+      <div class="modal " id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
@@ -496,18 +573,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- //* handles Add Member Success Modal Trigger -->
     <script>
       document.addEventListener('DOMContentLoaded', function () {
-        // Show the success modal if the page has a query parameter indicating success
-        <?php if (isset($_GET['success']) && $_GET['success'] === 'added'): ?>
-          $('#successModal').modal('show');
-          if (history.pushState) {
-            var newUrl = window.location.href.split('?')[0];
-            window.history.pushState({
-              path: newUrl
-            }, '', newUrl);
-          }
-        <?php endif; ?>
+          <?php if (isset($_GET['success']) && $_GET['success'] === 'added'): ?>
+              $('#successModal').modal('show');
+              if (history.pushState) {
+                  var newUrl = window.location.href.split('?')[0];
+                  window.history.pushState({ path: newUrl }, '', newUrl);
+              }
+          <?php endif; ?>
       });
     </script>
+
 
     <!-- //* confirm archive modal pop up -->
     <script>
@@ -623,73 +698,131 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
     </script>
+<!-- //* OTP -->
+  <script>
+ document.addEventListener("DOMContentLoaded", function () {
+    const sendOtpBtn = document.querySelector("#sendOtpBtn");
+    const emailInput = document.querySelector("#memberEmail");
+    const alertContainer = document.querySelector("#alert-container");
 
-    <script>
-      //* OTP
-      document.addEventListener("DOMContentLoaded", function () {
-        const alertContainer = document.getElementById("alert-container");
+    sendOtpBtn.addEventListener("click", function () {
+        const email = emailInput.value.trim();
 
-        // Send OTP
-        document.querySelector("#sendOtpBtn").addEventListener("click", function () {
-          const email = document.getElementById("memberEmail").value;
-
-          if (!email) {
+        if (!email) {
             showAlert("danger", "Please enter an email.");
             return;
-          }
+        }
 
-          // AJAX request to send OTP
-          fetch("PHPMailer-OTP/otp_backend.php", {
+        console.log("Checking email:", email); // Debugging log
+
+        // Call check-email.php to verify if the email exists
+        fetch("backend-add-authenticate/check-email.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ email: email }),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then((data) => {
+                console.log("Response data:", data); // Debugging log
+
+                if (data.exists) {
+                    // Email already exists
+                    showAlert("danger", data.message);
+                } else {
+                    // Email is available, proceed to send OTP
+                    sendOtp(email);
+                }
+            })
+            .catch((error) => {
+                console.error("Error during email check:", error);
+                showAlert("danger", "An error occurred while checking the email. Please try again.");
+            });
+    });
+
+    function sendOtp(email) {
+        fetch("PHPMailer-OTP/otp_backend.php", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({ email: email, action: "send" }),
-          })
+        })
             .then((response) => response.json())
             .then((data) => {
-              showAlert(data.status === "success" ? "success" : "danger", data.message);
+                showAlert(data.status === "success" ? "success" : "danger", data.message);
             })
             .catch(() => {
-              showAlert("danger", "An error occurred while sending OTP. Please try again.");
+                showAlert("danger", "An error occurred while sending OTP. Please try again.");
             });
-        });
+    }
 
-        // Verify OTP
-        document.querySelector("#verifyOtpBtn").addEventListener("click", function () {
-          const email = document.getElementById("memberEmail").value;
-          const otp = document.getElementById("otp").value;
-
-          if (!email || !otp) {
-            showAlert("danger", "Please fill in both email and OTP fields.");
-            return;
-          }
-
-          // AJAX request to verify OTP
-          fetch("PHPMailer-OTP/otp_backend.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ email: email, otp: otp, action: "verify" }),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              showAlert(data.status === "success" ? "success" : "danger", data.message);
-            })
-            .catch(() => {
-              showAlert("danger", "An error occurred while verifying OTP. Please try again.");
-            });
-        });
-
-        // Utility function to display alerts
-        function showAlert(type, message) {
-          alertContainer.innerHTML = `
+    function showAlert(type, message) {
+        alertContainer.innerHTML = `
             <div class="alert alert-${type} alert-dismissible fade show" role="alert">
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         `;
-        }
-      });
-      //* OTP
-    </script>
+    }
+});
+
+
+</script>
+
+
+<script>
+  document.querySelector("#verifyOtpBtn").addEventListener("click", function () {
+    const email = document.querySelector("#memberEmail").value.trim();
+    const otp = document.querySelector("#otp").value.trim();
+
+    if (!email || !otp) {
+        showAlert("danger", "Please fill in both email and OTP fields.");
+        return;
+    }
+
+    // AJAX request to verify OTP
+    fetch("PHPMailer-OTP/otp_backend.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ email: email, otp: otp, action: "verify" }),
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            return response.json();
+        })
+        .then((data) => {
+            console.log("Verify OTP response:", data); // Debugging log
+            if (data.status === "success") {
+                showAlert("success", "OTP verified successfully!");
+            } else {
+                showAlert("danger", data.message || "Invalid or expired OTP.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error during OTP verification:", error);
+            showAlert("danger", "An error occurred while verifying OTP. Please try again.");
+        });
+});
+
+function showAlert(type, message) {
+    const alertContainer = document.getElementById("alert-container");
+    alertContainer.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+}
+
+</script>
+
+
+
 
 </body>
 
