@@ -60,14 +60,27 @@ $all_photo = find_all('media');
             <!-- Page Header -->
             <div class="page-header">
                 <div class="row">
-                    <div class="col-sm-12">
-                        <h3 class="page-title">Inventory Reports</h3>
-                    </div>
+                   
+                <div class="col">
+                            <h3 class="page-title">Inventory Reports</h3>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="admin-dashboard.php">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Inventory Reports</li>
+                            </ul>
+                        </div>
                 </div>
             </div>
             <div class="col-md-12">
                 <?php echo display_msg($msg); ?>
             </div>
+            <div>
+            <button type="button" id="showProductsSold" class="btn btn-primary">
+                Products Sold
+            </button>
+            <button type="button" id="showStockOut" class="btn btn-secondary">
+                Stock Out
+            </button>
+        </div>
             
             <div class="col-md-12">
                 
@@ -132,7 +145,7 @@ $get_transact = find_all('pos_transaction_items');
                 <th class="text-center" style="width: 10%;">Product name</th>
                 <th class="text-center" style="width: 10%;">Sold quantity</th>
                 <th class="text-center" style="width: 10%;">Total Sale</th>
-                <th class="text-center" style="width: 10%;">Action</th>
+                <th class="text-center" style="width: 10%;">Date</th>
             </tr>
         </thead>
         <tbody>
@@ -140,22 +153,16 @@ $get_transact = find_all('pos_transaction_items');
         <?php
             foreach ($get_transact as $tr) {
                 $transaction_date = $tr['created_at'];
-                $discount = $tr['discount'];
+         
 
                 if ((!$date_from || $transaction_date >= $date_from) && (!$date_to || $transaction_date <= $date_to)) {
-                    $discount_display = ($discount == '00.00') ? 'None' : remove_junk(ucfirst($discount));
                     
                     echo '<tr class="text-center">';
                     echo '<td>' . remove_junk(ucfirst($tr['transaction_id'])) . '</td>';
+                    echo '<td>' . remove_junk(ucfirst($tr['product_name'])) . '</td>';
+                    echo '<td>' . remove_junk(ucfirst($tr['product_quantity'])) . '</td>';
+                    echo '<td>₱' . remove_junk(ucfirst($tr['price'])) . '</td>';
                     echo '<td>' . date('F j, Y h:i A', strtotime($transaction_date)) . '</td>';
-                    echo '<td>' . $discount_display . '</td>';
-                    echo '<td>₱' . remove_junk(ucfirst($tr['total_amount'])) . '</td>';
-                    echo '<td class="text-center">
-                        <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#viewTransactionModal" 
-                        onclick="viewTransaction(\'' . $tr['id'] . '\')">
-                        View
-                        </a>
-                    </td>';             
                     echo '</tr>';
                 }
             } // Closing foreach loop

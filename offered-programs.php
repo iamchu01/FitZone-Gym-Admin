@@ -4,8 +4,13 @@
 
 <head>
     <title>Product Category List - GYYMS Admin</title>
+  
     <?php include 'layouts/title-meta.php'; ?>
+    <?php require_once('vincludes/load.php'); ?>
     <?php include 'layouts/head-css.php'; ?>
+    <?php 
+    $trainers = find_all('tbl_add_instructors');
+    ?>
 </head>
 
 <body>
@@ -61,12 +66,12 @@
                                     <div class="form-group row">
                                         <label class="col-form-label col-md-2">Select Trainer</label>
                                         <div class="col-md-10">
-                                            <select class="form-control" required>
-                                                <option value="">Select a trainer</option>
-                                                <option value="trainer1">Trainer 1</option>
-                                                <option value="trainer2">Trainer 2</option>
-                                                <option value="trainer3">Trainer 3</option>
-                                            </select>
+                                        <select class="form-control" required>
+                                        <option value="">Select a trainer</option>
+                                        <?php foreach ($trainers as $trainer): ?>
+                                            <option value="<?php echo $trainer['instructor_id']; ?>"><?php echo $trainer['first_name'];echo ' '; echo $trainer['last_name'];  ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
                                         </div>
                                     </div>
                                     <div class="form-group row">
