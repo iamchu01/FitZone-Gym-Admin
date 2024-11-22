@@ -3,6 +3,7 @@
 <?php include 'layouts/db-connection.php'; ?>
 
 <head>
+<?php require_once('vincludes/load.php'); ?>
     <title>Discount List - GYYMS Admin</title>
     <?php include 'layouts/title-meta.php'; ?>
     <?php include 'layouts/head-css.php'; ?>

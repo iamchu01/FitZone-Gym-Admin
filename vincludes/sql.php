@@ -71,6 +71,7 @@ function count_by_id($table){
      return($db->fetch_assoc($result));
   }
 }
+
 function count_by_id_mem($table){
   global $db;
   if(tableExists($table))
@@ -153,7 +154,7 @@ function tableExists($table){
       if(!$current_user){
          if(isset($_SESSION['user_id'])):
              $user_id = intval($_SESSION['user_id']);
-             $current_user = find_by_id('users',$user_id);
+             $current_user = find_by_id('tbl_users',$user_id);
         endif;
       }
     return $current_user;
@@ -500,6 +501,36 @@ function get_first_available_batch($product_id, $quantity) {
           LIMIT 1";  // Fetch the earliest batch with enough quantity
   return find_by_sql($sql);
 }
+function join_sp_program() {
+  global $db;
+  
+  // SQL query to join tbl_special_program with tbl_add_instructors
+  $sql = "SELECT sp.special_program_id AS program_id, 
+                  sp.program_title, 
+                  sp.program_description, 
+                  sp.start_date, 
+                  sp.end_date, 
+                  sp.trainer_id, 
+                  CONCAT(i.first_name, ' ', i.last_name) AS instructor_name
+          FROM tbl_special_programs sp 
+          LEFT JOIN tbl_add_instructors i ON i.instructor_id = sp.trainer_id";  // Join tbl_add_instructors to get instructor details
 
+  $sql .= " ORDER BY sp.start_date ASC";  // Order by start date of the program
 
+  return find_by_sql($sql);  // Assuming find_by_sql() is a function that executes the query and returns the result
+}
+function join_pr_program() {
+  global $db;
+
+  // SQL query to join tbl_special_programs with tbl_add_instructors
+  $sql = "SELECT p.program_id AS program_id, 
+                   p.program_title, 
+                   p.program_description, 
+                   p.trainer_id, 
+                   CONCAT(i.first_name, ' ', i.last_name) AS instructor_name
+            FROM tbl_programs p
+            LEFT JOIN tbl_add_instructors i ON i.instructor_id = p.trainer_id"; 
+  $sql .= " ORDER BY  p.program_title ASC"; 
+  return find_by_sql($sql);
+}
 ?>

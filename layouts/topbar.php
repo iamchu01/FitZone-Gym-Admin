@@ -1,4 +1,4 @@
-<?php require_once('vincludes/load.php'); ?>
+
 <?php 
 
 // Check if user is logged in, otherwise redirect to login page
@@ -8,11 +8,7 @@ if (!$session->isUserLoggedIn()) {
 }
 
 // Check if logout is requested
-if (isset($_GET['logout'])) {
-    $session->logout();  // Call the logout method to unset the session variable
-    header("Location: admin-login.php"); // Redirect to login page after logging out
-    exit;
-}
+
 
 // Retrieve logged-in user details
 $user_id = $_SESSION['user_id'] ?? null;

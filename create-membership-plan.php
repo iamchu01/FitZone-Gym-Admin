@@ -7,7 +7,7 @@
   <title>Membership Plan</title>
 
   <?php include 'layouts/title-meta.php'; ?>
-
+  <?php require_once('vincludes/load.php'); ?>  
   <?php include 'layouts/head-css.php'; ?>
 
   <style>

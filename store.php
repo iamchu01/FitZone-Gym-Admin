@@ -91,6 +91,13 @@
         }
     }
     ?>
+     <style>
+        .panel-box:hover{
+            transition: transform 0.3s ease;
+            transform: scale(1.05);
+            background-color: #bff7d3;
+        }
+    </style>
 </head>
 
 <body>
@@ -116,19 +123,56 @@
                     </div>
                 </div>
 
-               <!-- Button to show the 'Add Product' modal with an icon -->
-                <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                    <i class="fa fa-plus-circle"></i> Add New Product
-                </button>
+                <div class="row">
+        <div class="col-md-3">
+                    <a href="#" style="color:black;">
+                        <div class="panel panel-box clearfix">
+                            <div class="panel-icon pull-left bg-success">
+                            <i class="fa fa-list-ol"></i>                            
+                            </div>
+                            <div class="panel-value pull-right">
+                                <h2 class="margin-top"></h2>
+                                <p class="text-title">Add Product</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+        
+            <!-- Category Panel -->
+            <div class="col-md-3">
+                <a href="#" style="color:black;">
+                    <div class="panel panel-box clearfix">
+                        <div class="panel-icon pull-left bg-red">
+                            <i class="fa fa-eye"></i>
+                        </div>
+                        <div class="panel-value pull-right">
+                            <h2 class="margin-top"></h2>
+                            <p class="text-title">View in store Product</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
 
-                <!-- Button to show pending products with an icon -->
-                <button class="btn btn-warning btn-pending-products">
-                    <i class="fa fa-clock"></i> Approval Pending Products
-                </button>
+            <!-- Product Panel -->
+            <div class="col-md-3">
+                <a href="#" style="color:black;">
+                    <div class="panel panel-box clearfix">
+                        <div class="panel-icon pull-left bg-blue2">
+                            <i class="fa fa-eye"></i>
+                        </div>
+                        <div class="panel-value pull-right">
+                            <h2 class="margin-top"></h2>
+                            <p class="text-title">View Track Order </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            </div>
+                
 
                 <!-- Table to show all products (initially hidden) -->
                 <div class="table-responsive mt-4">
-                    <table class="table table-bordered table-striped" id="productTable">
+                    <table class="table table-bordered table-striped" id="productTable1">
                         <thead>
                             <tr>
                                 <th>Category</th>

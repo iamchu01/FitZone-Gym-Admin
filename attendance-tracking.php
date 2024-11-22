@@ -1,6 +1,6 @@
 <?php include 'layouts/session.php'; ?>
 <?php include 'layouts/head-main.php'; ?>
-
+<?php require_once('vincludes/load.php'); ?>
 <head>
     <title>Attendance Tracking - Fit Zone</title>
 
@@ -188,7 +188,27 @@
     </style>
 
 </head>
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get submitted data
+    $member_id = $_POST['member_id'];
+    $status = $_POST['status'];
+    $date = $_POST['date'];
+    
+    // Insert into attendance table (assuming table `tbl_attendance`)
+    $query = "INSERT INTO tbl_attendance (member_id, status, date) VALUES ('$member_id', '$status', '$date')";
+    $result = mysqli_query($db, $query);
+    
+    if ($result) {
+        $msg = "Attendance recorded successfully!";
+    } else {
+        $msg = "Failed to record attendance.";
+    }
+}
 
+$total_members = count_by_id_mem('tbl_add_members');
+$a_memebers = find_all('tbl_add_members');
+ ?>
 <body>
      <div class="main-wrapper">
     <?php include 'layouts/menu.php'; ?>
@@ -212,6 +232,11 @@
                 </div>
             </div>
             <!-- /Page Header -->
+            <div class="row">
+            <div class="col-md-12">
+                <?php echo display_msg($msg); ?>
+            </div>
+        </div>
 
             <!-- Attendance Summary -->
             <div class="row">
@@ -220,7 +245,7 @@
                                 <div class="card-body">
                                     <span class="dash-widget-icon dash-widget-icon-user"> <i class="fas fa-users"></i></span>
                                     <div class="dash-widget-info"> 
-                                        <h3>112</h3>
+                                        <h3><?php echo $total_members['total'];?></h3>
                                         <span>Total Active Members</span>
                                     </div>
                                 </div>
@@ -321,7 +346,7 @@
             <!-- /Search Filter -->
 
             <!-- Attendance Table -->
-            <div class="table-responsive table-attendance">
+            <!-- <div class="table-responsive table-attendance">
                 <table class="table table-hover">
                     <thead>
                         <tr>
@@ -343,8 +368,47 @@
                         </tr>
                     </tbody>
                 </table>
-            </div>
-            <!-- /Attendance Table -->
+            </div> -->
+           <!-- Attendance Table -->
+           <div class="panel panel-default">
+    <div class="panel-heading clearfix">
+    </div>
+    <div class="panel-body">
+        <div class="table-responsive table-attendance">
+            <table class="table custom-table datatable table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Member Name</th>
+                        <th>Membership Status</th>
+                        <th>Action</th> <!-- Changed from Status to Action -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($a_memebers as $cat): ?>
+                        <tr>
+                            <!-- Member ID -->
+                            <td class="text-center"><?php echo count_id(); ?></td>
+                            
+                            <!-- Member Name -->
+                            <td><?php echo remove_junk(ucfirst($cat['first_name'])); ?> <?php echo remove_junk(ucfirst($cat['last_name'])); ?></td>
+                            
+                            <!-- Membership Status -->
+                            <td><?php echo remove_junk(ucfirst($cat['membership'])); ?></td>
+
+                            <!-- Check-in Button -->
+                            <td>
+                                <button class="btn btn-success btn-sm">Check In</button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- /Attendance Table -->
 
         </div>
         <!-- /Page Content -->

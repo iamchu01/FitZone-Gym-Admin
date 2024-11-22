@@ -1,6 +1,6 @@
 <?php include 'layouts/session.php'; ?>
 <?php include 'layouts/head-main.php'; ?>
-
+<?php require_once('vincludes/load.php'); ?>
 <head>
 
     <title>Attendance Report - HRMS admin template</title>

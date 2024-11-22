@@ -1,6 +1,6 @@
 <?php include 'layouts/session.php'; ?>
 <?php include 'layouts/head-main.php'; ?>
-
+<?php require_once('vincludes/load.php'); ?>
 <head>
     <title>Dashboard - GYYMS admin</title>
     <?php include 'layouts/title-meta.php'; ?>
