@@ -26,6 +26,32 @@ function editProductModal(id, name, categorie, description, itemCode, buyPrice, 
 }
 
 
+document.addEventListener("DOMContentLoaded", () => {
+    const buyingPriceInput = document.querySelector('input[name="buying-price"]');
+    const sellingPriceInput = document.querySelector('input[name="saleing-price"]');
+    const sellingPriceFeedback = document.querySelector('.selling-price-feedback');
+
+    function validatePrices() {
+        const buyingPrice = parseFloat(buyingPriceInput.value) || 0;
+        const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
+
+        if (sellingPrice < buyingPrice) {
+            sellingPriceInput.style.borderColor = "red";
+            sellingPriceInput.style.backgroundColor = "#ffcccc";
+            sellingPriceFeedback.style.display = "block";
+            sellingPriceFeedback.textContent =
+                "Selling price should not be less than buying price.";
+        } else {
+            sellingPriceInput.style.borderColor = "";
+            sellingPriceInput.style.backgroundColor = "";
+            sellingPriceFeedback.style.display = "none";
+            sellingPriceFeedback.textContent = "";
+        }
+    }
+
+    buyingPriceInput.addEventListener("input", validatePrices);
+    sellingPriceInput.addEventListener("input", validatePrices);
+});
 
 $(document).ready(function() {
     // Function to validate selling price against buying price
