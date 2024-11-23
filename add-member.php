@@ -104,8 +104,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_email') {
   <?php include 'layouts/head-css.php'; ?>
   <!-- Toastr CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+
 </head>
 
 <body>
@@ -418,7 +417,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_email') {
       </div>
     </div>
 
-    <!-- Date of Birth -->
+    <!-- Date of Birth --> 
     <div class="col-sm-6">
       <div class="form-group mb-2">
         <label>Date of Birth</label>
@@ -569,19 +568,15 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_email') {
 
     <script src="backend-add-authenticate/add-member.js"></script>
     <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
-    <?php include 'layouts/customizer.php'; ?>
-    <!-- JAVASCRIPT -->
-    <?php include 'layouts/vendor-scripts.php'; ?>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="backend-add-authenticate/add-member.js"></script>
+<?php include 'layouts/customizer.php'; ?>
+<!-- JAVASCRIPT -->
+<?php include 'layouts/vendor-scripts.php'; ?>
 
 <!-- Include Bootstrap Datepicker CSS and JS -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
 </body>
 
