@@ -16,18 +16,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       $data = [
         'first_name' => $_POST['firstname'] ?? '',
-        'middle_name' => $_POST['middlename'] ?? 'Not Provided',
+        'middle_name' => $_POST['middlename'] ?? '',
         'last_name' => $_POST['lastname'] ?? '',
         'phone_number' => $_POST['mobile'] ?? 'Not Provided',
-        'gender' => $_POST['Gender'] ?? 'Not Provided',
+        'gender' => $_POST['Gender'] ?? '',
         'date_of_birth' => $_POST['dateOfBirth'] ?? 'Not Provided',
         'age' => $_POST['member_age'] ?? 'Not Provided',
         'address' => implode(', ', array_filter([
-            $_POST['region_text'] ?? 'Not Provided',
-            $_POST['province_text'] ?? 'Not Provided',
-            $_POST['city_text'] ?? 'Not Provided',
-            $_POST['barangay_text'] ?? 'Not Provided',
-        ])) ?: 'Not Provided',
+          $_POST['region_text'] ?? 'Not Provided',
+          $_POST['province_text'] ?? 'Not Provided',
+          $_POST['city_text'] ?? 'Not Provided',
+          $_POST['barangay_text'] ?? 'Not Provided',
+      ])) ?: 'Not Provided',
+
         'password' => password_hash($_POST['password'] ?? '12345', PASSWORD_DEFAULT),
     ];
     
@@ -48,13 +49,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $data['middle_name'],
           $data['last_name'],
           $data['phone_number'],
-          $data['gender'], // Use $data['gender']
+          $data['gender'],
           $data['date_of_birth'],
           $data['age'],
-          $address, // Can be null
+          $data['address'], // Correctly use $data['address']
           $email,
           $data['password']
       );
+      
 
           if ($stmt->execute()) {
               header('Location: add-member.php?success=added');
@@ -182,7 +184,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_email') {
                     if ($result->num_rows > 0) {
                       while ($row = $result->fetch_assoc()) {
                         // Concatenate first and last name for full name display
-                        $full_name = htmlspecialchars($row['first_name'] . ' ' . $row['last_name']);
+                        $full_name = htmlspecialchars($row['first_name'] . ' ' . $row['middle_name'] . ' ' . $row['last_name'] );
                         $email = htmlspecialchars($row['email']);
                         $membership = htmlspecialchars($row['membership']);
                         $membership_status = htmlspecialchars($row['membership_status']);
