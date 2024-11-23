@@ -213,53 +213,56 @@ document.addEventListener("DOMContentLoaded", function () {
 
 console.log("add-member.js is loaded and executing.");
 
-
 document.addEventListener("DOMContentLoaded", function () {
-  const firstName = document.getElementById("memberFirstname");
-  const middleName = document.getElementById("memberMiddlename");
-  const lastName = document.getElementById("memberLastname");
-  const email = document.getElementById("memberEmail");
+    const firstName = document.getElementById("memberFirstname");
+    const lastName = document.getElementById("memberLastname");
+    const email = document.getElementById("memberEmail");
+    const otp = document.getElementById("otp");
 
-  const validateField = (field, pattern) => {
-    if (!pattern.test(field.value)) {
-      field.setCustomValidity(field.title);
-    } else {
-      field.setCustomValidity("");
-    }
-  };
+    const validateField = (field, pattern) => {
+        if (!pattern.test(field.value.trim())) {
+            field.setCustomValidity(field.title);
+        } else {
+            field.setCustomValidity("");
+        }
+    };
 
-  // Validate First Name
-  firstName.addEventListener("input", () => validateField(firstName, /^[A-Za-z\s]+$/));
+    // Validate First Name
+    firstName.addEventListener("input", () => validateField(firstName, /^[A-Za-z\s]+$/));
 
-  // Validate Middle Name
-  middleName.addEventListener("input", () => validateField(middleName, /^[A-Za-z\s]*$/));
+    // Validate Last Name
+    lastName.addEventListener("input", () => validateField(lastName, /^[A-Za-z\s]+$/));
 
-  // Validate Last Name
-  lastName.addEventListener("input", () => validateField(lastName, /^[A-Za-z\s]+$/));
+    // Email Validation
+    email.addEventListener("input", () => {
+        if (!email.validity.valid) {
+            email.setCustomValidity("Please enter a valid email address.");
+        } else {
+            email.setCustomValidity("");
+        }
+    });
 
-  // Email Validation (Native HTML5 will suffice)
-  email.addEventListener("input", () => {
-    if (!email.validity.valid) {
-      email.setCustomValidity("Please enter a valid email address.");
-    } else {
-      email.setCustomValidity("");
-    }
-  });
-});
+    // OTP Validation
+    otp.addEventListener("input", () => {
+        if (!otp.value.trim()) {
+            otp.setCustomValidity("Please enter the OTP.");
+        } else {
+            otp.setCustomValidity("");
+        }
+    });
 
-document.addEventListener("DOMContentLoaded", function () {
     // Initialize Datepicker
     $('.datetimepicker').datepicker({
-        format: 'yyyy-mm-dd', // Date format (adjust as needed)
-        autoclose: true, // Close after selecting
-        endDate: new Date(), // Prevent selecting future dates
-        todayHighlight: true // Highlight today's date
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        endDate: new Date(),
+        todayHighlight: true,
     });
 
     // Calculate Age Dynamically
     $('#dateOfBirth').on('change', function () {
-        const selectedDate = $(this).val(); // Get selected date
-        const dateOfBirth = new Date(selectedDate); // Convert to Date object
+        const selectedDate = $(this).val();
+        const dateOfBirth = new Date(selectedDate);
         const today = new Date();
 
         if (dateOfBirth > today) {
@@ -273,12 +276,10 @@ document.addEventListener("DOMContentLoaded", function () {
         let age = today.getFullYear() - dateOfBirth.getFullYear();
         const monthDifference = today.getMonth() - dateOfBirth.getMonth();
 
-        // Adjust age if birth date hasn't occurred yet this year
         if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < dateOfBirth.getDate())) {
             age--;
         }
 
-        // Display calculated age
         if (age >= 0) {
             $('#age').val(age + ' years old');
         } else {

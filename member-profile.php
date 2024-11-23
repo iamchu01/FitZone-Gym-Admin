@@ -115,73 +115,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <!-- /Page Header -->
 
-        <!-- //* First Card Profile -->
-            <div class="card mb-0">
-              <div class="card-body">
-                  <div class="row">
-                      <div class="col-md-12">
-                          <div class="profile-view">
-                                    <div class="profile-img-wrap mt-4">
-                                  <div class="profile-img">
-                                  <a href="#"><img alt="" src="assets/img/profiles/avatar-02.jpg"></a>
-                                  </div>
+        <div class="card mb-0">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="profile-view">
+                    <div class="profile-img-wrap mt-4">
+                        <div class="profile-img">
+                            <a href="#"><img alt="" src="assets/img/profiles/avatar-02.jpg"></a>
+                        </div>
+                    </div>
+                    <div class="profile-basic">
+                        <div class="row">
+                            <div class="col-md-5 mt-3">
+                                <div class="profile-info-left mx-4">
+                                    <h3 class="user-name mt-4">
+                                        <?php 
+                                            echo htmlspecialchars($member['first_name']) . ' ' .
+                                                 (!empty($member['middle_name']) ? htmlspecialchars($member['middle_name']) : '') . ' ' .
+                                                 htmlspecialchars($member['last_name']);
+                                        ?>
+                                    </h3>
+                                    <div class="staff-id">
+                                        Member ID: <?php echo htmlspecialchars($member['member_id']); ?>
+                                    </div>
+                                    <div class="small doj text-muted">
+                                        Date of Join: <?php echo (!empty($member['member_join_date']) ? date("d M Y", strtotime($member['member_join_date'])) : ''); ?>
+                                    </div>
+                                </div>
                             </div>
-                              <div class="profile-basic">
-                                  <div class="row">
-                                      <div class="col-md-5  mt-3">
-                                          <div class="profile-info-left mx-4">
-                                              <h3 class="user-name mt-4">
-                                                  <?php echo $member['first_name'] . ' ' . $member['middle_name'] . ' ' . $member['last_name']; ?>
-                                              </h3>
-                                              <div class="staff-id">Member ID: <?php echo $member['member_id']; ?></div>
-                                              <div class="small doj text-muted">
-                                                  Date of Join: <?php echo date("d M Y", strtotime($member['member_join_date'])); ?>
-                                              </div>
-                                          </div>
-                                      </div>
-                                      <div class="col-md-7">
-                                      <ul class="personal-info">
-                                        <li class="d-flex align-items-center">
-                                            <span class="title">Phone:</span>
-                                            <span class="text ms-2"><?php echo $member['phone_number']; ?></span>
-                                        </li>
-                                        <li class="d-flex align-items-center">
-                                            <span class="title">Email:</span>
-                                            <span class="text ms-2"><?php echo $member['email']; ?></span>
-                                        </li>
-                                        <li class="d-flex align-items-center">
-                                            <span class="title">Birthday:</span>
-                                            <span class="text ms-2"><?php echo date("d M Y", strtotime($member['date_of_birth'])); ?></span>
-                                        </li>
-                                        <li class="d-flex align-items-center">
-                                            <span class="title">Age:</span>
-                                            <span class="text ms-2"><?php echo htmlspecialchars($member['age']); ?> years old</span>
-                                        </li>
-                                        <li class="d-flex align-items-center">
-                                            <span class="title">Gender:</span>
-                                            <span class="text ms-2"><?php echo $member['gender']; ?></span>
-                                        </li>
-                                        <li class="d-flex align-items-center">
-                                            <span class="title">Address:</span>
-                                            <span class="text ms-2"><?php echo $member['address']; ?></span>
-                                        </li>
-                                    </ul>
+                            <div class="col-md-7">
+                                <ul class="personal-info">
+                                    <li class="d-flex align-items-center">
+                                        <span class="title">Phone:</span>
+                                        <span class="text ms-2">
+                                            <?php echo (!empty($member['phone_number']) ? htmlspecialchars($member['phone_number']) : ''); ?>
+                                        </span>
+                                    </li>
+                                    <li class="d-flex align-items-center">
+                                        <span class="title">Email:</span>
+                                        <span class="text ms-2">
+                                            <?php echo htmlspecialchars($member['email']); ?>
+                                        </span>
+                                    </li>
+                                    <li class="d-flex align-items-center">
+                                        <span class="title">Birthday:</span>
+                                        <span class="text ms-2">
+                                            <?php 
+                                            echo (!empty($member['date_of_birth']) ? date("d M Y", strtotime($member['date_of_birth'])) : ''); 
+                                            ?>
+                                        </span>
+                                    </li>
+                                    <li class="d-flex align-items-center">
+                                        <span class="title">Age:</span>
+                                        <span class="text ms-2">
+                                            <?php 
+                                            echo (!empty($member['age']) ? htmlspecialchars($member['age'] . ' years old') : ''); 
+                                            ?>
+                                        </span>
+                                    </li>
+                                    <li class="d-flex align-items-center">
+    <span class="title">Gender:</span>
+    <span class="text ms-2">
+        <?php echo !empty($member['gender']) ? htmlspecialchars($member['gender']) : ''; ?>
+    </span>
+</li>
 
-                                      </div>
-                                  </div>
-                              </div>
-                              <div class="pro-edit">
-                                <a data-bs-target="#profile_info" data-bs-toggle="modal" class="edit-icon" href="#">
-                                    <i class="fa fa-pencil"></i>
-                                </a>
+<li class="d-flex align-items-center">
+    <span class="title">Address:</span>
+    <span class="text ms-2">
+        <?php echo !empty($member['address']) ? htmlspecialchars($member['address']) : ''; ?>
+    </span>
+</li>
+
+                                </ul>
                             </div>
+                        </div>
+                    </div>
+                    <div class="pro-edit">
+                        <a data-bs-target="#profile_info" data-bs-toggle="modal" class="edit-icon" href="#">
+                            <i class="fa fa-pencil"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div>
-          <!-- //* First Card Profile -->
 
 
             
@@ -304,8 +325,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- /Page Content -->
         
         <!-- //* Edit Profile Modal -->
-         <!-- Profile Modal -->
-<div id="profile_info" class="modal custom-modal fade" role="dialog">
+        <div id="profile_info" class="modal custom-modal fade" role="dialog">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -317,13 +337,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="modal-body">
                 <!-- Update Member Form -->
                 <form id="updateMemberForm">
-                    <input type="hidden" name="member_id" value="<?php echo $member['member_id']; ?>">
+                    <input type="hidden" name="member_id" value="<?php echo htmlspecialchars($member['member_id']); ?>">
 
                     <div class="row">
                         <!-- First Name -->
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>First Name</label>
+                                <label>First Name <span class="text-danger">*</span></label>
                                 <input type="text" name="first_name" class="form-control"
                                     value="<?php echo htmlspecialchars($member['first_name']); ?>" required>
                             </div>
@@ -334,14 +354,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="form-group">
                                 <label>Middle Name</label>
                                 <input type="text" name="middle_name" class="form-control"
-                                    value="<?php echo htmlspecialchars($member['middle_name']); ?>">
+                                    value="<?php echo !empty($member['middle_name']) ? htmlspecialchars($member['middle_name']) : ''; ?>">
                             </div>
                         </div>
 
                         <!-- Last Name -->
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Last Name</label>
+                                <label>Last Name <span class="text-danger">*</span></label>
                                 <input type="text" name="last_name" class="form-control"
                                     value="<?php echo htmlspecialchars($member['last_name']); ?>" required>
                             </div>
@@ -350,7 +370,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <!-- Email -->
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Email</label>
+                                <label>Email <span class="text-danger">*</span></label>
                                 <input type="email" name="email" class="form-control"
                                     value="<?php echo htmlspecialchars($member['email']); ?>" required>
                             </div>
@@ -361,7 +381,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="form-group">
                                 <label>Phone Number</label>
                                 <input type="text" name="phone_number" class="form-control"
-                                    value="<?php echo htmlspecialchars($member['phone_number']); ?>" required>
+                                    value="<?php echo !empty($member['phone_number']) ? htmlspecialchars($member['phone_number']) : ''; ?>">
+                            </div>
+                        </div>
+
+                        <!-- Date of Birth -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Birthday</label>
+                                <input type="text" name="date_of_birth" class="form-control datetimepicker"
+                                    value="<?php echo !empty($member['date_of_birth']) ? htmlspecialchars($member['date_of_birth']) : ''; ?>">
                             </div>
                         </div>
 
@@ -369,13 +398,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Gender</label>
-                                <select name="gender" class="form-control" required>
-                                    <option value="Male" <?php echo ($member['gender'] === 'Male') ? 'selected' : ''; ?>>
-                                        Male
-                                    </option>
-                                    <option value="Female" <?php echo ($member['gender'] === 'Female') ? 'selected' : ''; ?>>
-                                        Female
-                                    </option>
+                                <select name="gender" class="form-control">
+                                    <option value="" <?php echo empty($member['gender']) ? 'selected' : ''; ?>>Select Gender</option>
+                                    <option value="Male" <?php echo ($member['gender'] === 'Male') ? 'selected' : ''; ?>>Male</option>
+                                    <option value="Female" <?php echo ($member['gender'] === 'Female') ? 'selected' : ''; ?>>Female</option>
                                 </select>
                             </div>
                         </div>
@@ -384,15 +410,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="col-md-12">
                             <div class="form-group">
                                 <label>Address</label>
-                                <input type="text" name="address" class="form-control"
-                                    value="<?php echo htmlspecialchars($member['address']); ?>" required>
+                                <textarea name="address" class="form-control" rows="3"><?php echo !empty($member['address']) ? htmlspecialchars($member['address']) : ''; ?></textarea>
                             </div>
                         </div>
                     </div>
 
                     <!-- Submit Button -->
                     <div class="submit-section">
-                        <button type="button" id="updateMemberBtn" class="btn btn-primary submit-btn">Update</button>
+                        <button type="button" id="updateMemberBtn" class="btn btn-primary submit-btn">Update Member</button>
                     </div>
                 </form>
             </div>
@@ -620,54 +645,37 @@ function populateBarangays(city, callback) {
 </script>
 
 
-  <script>
-    document.getElementById("updateMemberBtn").addEventListener("click", function () {
-        const form = document.getElementById("updateMemberForm");
-        const formData = new FormData(form);
+  
 
-       fetch("backend-add-authenticate/update-member.php", {
-    method: "POST",
-    body: formData,
-})
-    .then((response) => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
+<script>
+document.getElementById("updateMemberBtn").addEventListener("click", function () {
+    const form = document.getElementById("updateMemberForm");
+    const formData = new FormData(form);
+
+    fetch("backend-add-authenticate/update-member.php", {
+        method: "POST",
+        body: formData,
     })
-    .then((data) => {
-        if (data.success) {
-            // Update the visible profile data dynamically
-            document.querySelector(".user-name").textContent =
-                formData.get("first_name") +
-                " " +
-                formData.get("middle_name") +
-                " " +
-                formData.get("last_name");
+        .then((response) => response.json())
+        .then((data) => {
+            console.log("Response:", data); // Debug the response in the console
+            if (data.success) {
+                // Update the DOM
+                alert(data.message || "Profile updated successfully!");
+                $("#profile_info").modal("hide");
+                location.reload(); // Reload the page to reflect updates
+            } else {
+                alert("Failed to update profile: " + (data.error || "Unknown error."));
+            }
+        })
+        .catch((error) => {
+            console.error("Fetch error:", error); // Log fetch errors
+            alert("An error occurred. Please try again.");
+        });
+});
 
-            document.querySelector(".staff-id").textContent =
-                "Member ID: " + formData.get("member_id");
 
-            document.querySelector(".personal-info .text:nth-child(2)").textContent =
-                formData.get("email");
-
-            document.querySelector(".personal-info .text:nth-child(6)").textContent =
-                formData.get("address");
-
-            // Success feedback
-            alert("Profile updated successfully!");
-        } else {
-            alert("Error updating profile: " + (data.error || "Unknown error"));
-        }
-    })
-    .catch((error) => {
-        console.error("Error:", error);
-        alert("Failed to update profile. See console for details.");
-    });
-
-    });
 </script>
-
 
 
 </body>
