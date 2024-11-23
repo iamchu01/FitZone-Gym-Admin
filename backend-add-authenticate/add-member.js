@@ -251,39 +251,62 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Initialize Datepicker
-    $('.datetimepicker').datepicker({
-        format: 'yyyy-mm-dd',
-        autoclose: true,
-        endDate: new Date(),
-        todayHighlight: true,
-    });
-
-    // Calculate Age Dynamically
-    $('#dateOfBirth').on('change', function () {
-        const selectedDate = $(this).val();
-        const dateOfBirth = new Date(selectedDate);
-        const today = new Date();
-
-        if (dateOfBirth > today) {
-            $('#age').val('');
-            $('#dateWarning').show();
-            return;
-        }
-
-        $('#dateWarning').hide();
-
-        let age = today.getFullYear() - dateOfBirth.getFullYear();
-        const monthDifference = today.getMonth() - dateOfBirth.getMonth();
-
-        if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < dateOfBirth.getDate())) {
-            age--;
-        }
-
-        if (age >= 0) {
-            $('#age').val(age + ' years old');
-        } else {
-            $('#age').val('');
-        }
-    });
 });
+
+
+
+// Initialize datepicker and handle age calculation
+$(document).ready(function () {
+    // Initialize datepicker with minDate and maxDate
+    $(".datetimepicker").datetimepicker({
+      format: "YYYY-MM-DD",
+      maxDate: new Date(), // Restrict future dates
+      minDate: "1924-01-01", // Restrict dates before 1924
+    });
+  
+    function calculateAge(birthdate) {
+      const birthDate = new Date(birthdate);
+      const today = new Date();
+  
+      let age = today.getFullYear() - birthDate.getFullYear();
+  
+      // Adjust if birthdate hasn't occurred this year yet
+      if (
+        today.getMonth() < birthDate.getMonth() ||
+        (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+  
+      return `${age} year${age > 1 ? "s" : ""} old`;
+    }
+  
+    $(".datetimepicker").on("dp.change", function (e) {
+      if (e.date) {
+        const selectedDate = e.date.toDate();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+  
+        const minDate = new Date("1924-01-01");
+  
+        if (selectedDate.getFullYear() === today.getFullYear()) {
+          $("#dateWarning").text("Please select a valid date of birth.").show();
+          $(this).data("DateTimePicker").clear();
+          $("#age").val("");
+          return;
+        } else if (selectedDate > today || selectedDate < minDate) {
+          $("#dateWarning").text("Please select a valid date of birth.").show();
+          $(this).data("DateTimePicker").clear();
+          $("#age").val("");
+          return;
+        } else {
+          $("#dateWarning").hide();
+        }
+  
+        const age = calculateAge(e.date.format("YYYY-MM-DD"));
+        $("#age").val(age);
+      } else {
+        $("#age").val("");
+      }
+    });
+  });
