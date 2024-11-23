@@ -3,43 +3,95 @@
 include 'layouts/session.php';
 include 'layouts/head-main.php';
 include 'layouts/db-connection.php';
-
-// Include the necessary OTP classes
 require_once 'PHPMailer-OTP/classes/OTPVerification.php';
-require_once 'PHPMailer-OTP/classes/EmailSender.php';
 
 $message = ''; // Variable to display messages
-$otpSent = false;
+$otpVerified = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $email = trim($_POST['email']);
-  $otp = isset($_POST['otp']) ? trim($_POST['otp']) : null;
-  $action = $_POST['action'] ?? '';
+    $email = trim($_POST['email']);
+    $otpHandler = new OTPVerification($conn);
 
-  // Instantiate the OTP handler
-  $otpHandler = new OTPVerification($conn);
+    // Check if email is verified
+    if ($otpHandler->isEmailVerified($email)) {
+        $otpVerified = true; // Set OTP verified flag
 
-  if ($action === 'send') {
-    // Generate and send OTP
-    $generatedOTP = $otpHandler->generateOTP($email);
-    $result = EmailSender::sendOTP($email, $generatedOTP);
+        // Prepare data for moving to `tbl_add_members`
+        $data = [
+            'first_name' => $_POST['firstname'] ?? '',
+            'middle_name' => $_POST['middlename'] ?? '',
+            'last_name' => $_POST['lastname'] ?? '',
+            'phone_number' => $_POST['mobile'] ?? '',
+            'gender' => $_POST['Gender'] ?? 'Others',
+            'date_of_birth' => $_POST['dateOfBirth'] ?? '',
+            'age' => $_POST['member_age'] ?? '',
+            'address' => implode(', ', array_filter([
+                $_POST['region_text'] ?? '',
+                $_POST['province_text'] ?? '',
+                $_POST['city_text'] ?? '',
+                $_POST['barangay_text'] ?? ''
+            ])),
+            'password' => password_hash($_POST['password'] ?? '12345', PASSWORD_DEFAULT),
+        ];
 
-    if ($result === true) {
-      $message = 'OTP has been sent to your email! Please check your inbox.';
-      $otpSent = true;
+        // Insert verified member into `tbl_add_members`
+        $stmt = $conn->prepare("
+            INSERT INTO tbl_add_members (first_name, middle_name, last_name, phone_number, gender, date_of_birth, age, address, email, password, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')
+        ");
+
+        if ($stmt) {
+            $stmt->bind_param(
+                "ssssssssss",
+                $data['first_name'],
+                $data['middle_name'],
+                $data['last_name'],
+                $data['phone_number'],
+                $data['gender'],
+                $data['date_of_birth'],
+                $data['age'],
+                $data['address'],
+                $email,
+                $data['password']
+            );
+
+            if ($stmt->execute()) {
+              header('Location: add-member.php?success=added');
+              exit;
+          }else {
+                error_log("Database insertion failed: " . $stmt->error);
+                $message = "Failed to add member to the database.";
+            }
+        } else {
+          error_log("Database insertion failed: " . $stmt->error);
+          $message = "Failed to add member to the database.";
+        }
     } else {
-      $message = 'Failed to send OTP. ' . $result;
+        $message = "Email not verified. Please verify your email first.";
     }
-  } elseif ($action === 'verify') {
-    // Verify OTP
-    if ($otpHandler->verifyOTP($email, $otp)) {
-      $message = 'Email verified successfully!';
-    } else {
-      $message = 'Invalid or expired OTP. Please try again.';
-    }
-  }
+}
+
+// AJAX handler for checking email existence
+if (isset($_POST['action']) && $_POST['action'] === 'check_email') {
+    $email = trim($_POST['email']);
+
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM tbl_add_members WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+
+    echo json_encode([
+        'exists' => $row['count'] > 0,
+        'status' => $row['count'] > 0 ? 'exists' : 'available',
+        'message' => $row['count'] > 0 ? 'Email already exists.' : 'Email is available.'
+    ]);
+    exit;
 }
 ?>
+
+
+
 
 <head>
   <title>Members</title>
@@ -47,6 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php include 'layouts/head-css.php'; ?>
   <!-- Toastr CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
 </head>
 
 <body>
@@ -77,13 +131,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <!-- /Page Header -->
 
-        <?php if (isset($_GET['error']) && $_GET['error'] === 'email_exists'): ?>
-          <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            Email already exists. Please use a different email.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
+
+        <!-- //*success message after adding member -->
+        <?php if (isset($_GET['success']) && $_GET['success'] === 'added'): ?>
+            <div id="successAlert" class="alert alert-success alert-dismissible fade show" role="alert">
+                Member added successfully!
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         <?php endif; ?>
 
+
+
+      
         <!-- Search Bar -->
         <div class="row filter-row">
           <div class="col-md-6 col-md-3">
@@ -178,9 +237,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown"
                                 aria-expanded="false"><i class="material-icons">more_vert</i></a>
                               <div class="dropdown-menu dropdown-menu-right">
-                                <a class="dropdown-item" href="member-profile.php?id=<?php echo $row['member_id']; ?>">
-                                  <i class="fa fa-eye m-r-5"></i> View Profile
+                              <a href="member-profile.php?member_id=<?php echo $row['member_id']; ?>" class="dropdown-item">
+                                    <i class="fa fa-eye"></i> View Profile
                                 </a>
+
                                 <a id="archive-link-<?php echo $row['member_id']; ?>"
                                   class="dropdown-item <?php echo ($status === 'Inactive') ? '' : 'disabled'; ?>" href="#"
                                   data-bs-toggle="modal" data-bs-target="#archive_member"
@@ -221,14 +281,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="modal-body">
               <!-- Message Section -->
-              <?php if (!empty($message)): ?>
-                <div class="alert alert-<?php echo $otpSent ? 'success' : 'danger'; ?>">
-                  <?php echo $message; ?>
-                </div>
-              <?php endif; ?>
+              
 
-              <form id="addMemberForm" class="needs-validation member-info" method="POST"
-                action="backend-add-authenticate/process-add-member.php">
+              <!-- //*Email exist message -->
+              <?php if (isset($_GET['error']) && $_GET['error'] === 'email_exists'): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    Email already exists. Please use a different email.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
+
+            <form id="addMemberForm" class="needs-validation member-info" method="POST" action="add-member.php">
+
 
                 <!-- Alert Section -->
                 <div class="col-12">
@@ -237,20 +302,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="row">
                   <!-- Basic Info -->
+
                   <!-- First Name -->
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label>First Name <span class="text-danger">*</span></label>
-                      <input id="memberFirstname" class="form-control" type="text" name="firstname"
-                        placeholder="Enter First Name" required />
+                      <input id="memberFirstname" class="form-control" type="text" name="firstname" 
+                        placeholder="Enter First Name" 
+                        pattern="[A-Za-z\s]+" 
+                        title="First name should only contain letters and spaces." 
+                        required />
                     </div>
                   </div>
+
+                  <!-- Middle Name -->
+                  <div class="col-sm-6">
+                    <div class="form-group">
+                      <label>Middle Name</label>
+                      <input id="memberMiddlename" class="form-control" type="text" name="middlename" 
+                        placeholder="Enter Middle Name" 
+                        pattern="[A-Za-z\s]*" 
+                        title="Middle name should only contain letters and spaces." />
+                    </div>
+                  </div>
+
                   <!-- Last Name -->
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label>Last Name <span class="text-danger">*</span></label>
-                      <input id="memberLastname" class="form-control" type="text" name="lastname"
-                        placeholder="Enter Last Name" required />
+                      <input id="memberLastname" class="form-control" type="text" name="lastname" 
+                        placeholder="Enter Last Name" 
+                        pattern="[A-Za-z\s]+" 
+                        title="Last name should only contain letters and spaces." 
+                        required />
                     </div>
                   </div>
 
@@ -259,12 +343,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="form-group">
                       <label>Email Address <span class="text-danger">*</span></label>
                       <div class="input-group">
-                        <input type="email" class="form-control" id="memberEmail" name="email" placeholder="Enter Email"
+                        <input type="email" class="form-control" id="memberEmail" name="email" 
+                          placeholder="Enter Email" 
+                          title="Please enter a valid email address." 
                           required>
                         <button type="button" id="sendOtpBtn" class="btn btn-outline-primary">Send OTP</button>
                       </div>
                     </div>
                   </div>
+
 
                   <!-- OTP -->
                   <div class="col-sm-6 ">
@@ -280,7 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
                   <!-- Password -->
-                  <div class="col-sm-6">
+                  <!-- <div class="col-sm-6">
                     <div class="form-group">
                       <label>Password</label>
                       <div class="input-group">
@@ -292,7 +379,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> -->
 
                 <!-- Hidden Additional Info Section -->
                 <div id="additionalInfoSection"
@@ -329,27 +416,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                       </div>
                     </div>
-                    <!-- Date of Birth -->
+
                     <div class="col-sm-6">
-                      <div class="form-group mb-2">
-                        <label>Date of Birth </label>
-                        <div class="cal-icon">
-                          <input type="text" id="memberDateOfBirth" class="form-control datetimepicker"
-                            name="dateOfBirth" placeholder="Select Date of Birth">
-                          <small id="memberDateWarning" class="text-danger" style="display: none;">Please
-                            select a valid date of
-                            birth.</small>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Age -->
-                    <div class="col-sm-6">
-                      <div class="form-group mb-2">
-                        <label>Age</label>
-                        <input type="text" id="memberAge" name="member_age" class="form-control" placeholder="Age"
-                          readonly>
-                      </div>
-                    </div>
+        <div class="form-group mb-2">
+            <label>Date of Birth <span class="text-danger">*</span></label>
+            <div class="cal-icon">
+                <input type="text" id="dateOfBirth" class="form-control datetimepicker" name="dateOfBirth"
+                    placeholder="Select Date of Birth" required>
+                <small id="dateWarning" class="text-danger" style="display: none;">Please select a valid date of birth.</small>
+            </div>
+        </div>
+          </div>
+          <div class="col-sm-6">
+              <div class="form-group mb-2">
+                  <label>Age</label>
+                  <input type="text" id="age" name="member_age" class="form-control" placeholder="Age" readonly>
+              </div>
+      </div>
+
+
                     <!-- Address Form -->
                     <div class="col-sm-6">
                       <div class="form-group">
@@ -422,24 +507,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <!-- //*Add Member Modal -->
 
-      <!-- //* Add Member Success Modal -->
-      <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="successModalLabel">Success</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              Member added successfully!
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- //* Add Member  Success Modal -->
+      
+
 
 
       <!-- //*Confirm Archive Member Modal -->
@@ -484,6 +553,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
 
+      <!-- //*success add modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="successModalLabel">Success</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Member has been successfully added!
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
     </div>
     <!-- end main wrapper-->
 
@@ -494,203 +581,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- JAVASCRIPT -->
     <?php include 'layouts/vendor-scripts.php'; ?>
 
-    <!-- //* handles Add Member Success Modal Trigger -->
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        // Show the success modal if the page has a query parameter indicating success
-        <?php if (isset($_GET['success']) && $_GET['success'] === 'added'): ?>
-          $('#successModal').modal('show');
-          if (history.pushState) {
-            var newUrl = window.location.href.split('?')[0];
-            window.history.pushState({
-              path: newUrl
-            }, '', newUrl);
-          }
-        <?php endif; ?>
-      });
-    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="backend-add-authenticate/add-member.js"></script>
 
-    <!-- //* confirm archive modal pop up -->
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        $('#archive_member').on('show.bs.modal', function (event) {
-          var button = $(event.relatedTarget);
-          var memberId = button.data('id');
-          $('#memberIdToArchive').val(memberId);
-        });
-      });
+<!-- Include Bootstrap Datepicker CSS and JS -->
 
-      function confirmArchiveMember() {
-        var memberId = document.getElementById('memberIdToArchive').value;
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 
-        if (memberId) {
-          var xhr = new XMLHttpRequest();
-          xhr.open("POST", "backend-add-authenticate/archive-member.php", true);
-          xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-          xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-              var response = xhr.responseText.trim();
-              if (response === "success") {
-                // Close the archive confirmation modal
-                $('#archive_member').modal('hide');
-
-                // Show the success modal
-                setTimeout(function () {
-                  $('#archiveSuccessModal').modal('show');
-                }, 500);
-
-                // Optionally, refresh or update the table after the modal closes
-                $('#archiveSuccessModal').on('hidden.bs.modal', function () {
-                  location.reload();
-                });
-              } else {
-                console.error("Error archiving member: " + response);
-              }
-            }
-          };
-
-          xhr.send("id=" + memberId);
-        }
-      }
-    </script>
-
-
-    <!-- //* handle update status for active and inactive -->
-    <script>
-      function updateStatus(memberId, newStatus) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "backend-add-authenticate/member-update-status.php", true);
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState === 4 && xhr.status === 200) {
-            if (xhr.responseText.trim() === "success") {
-              // Update the status text and icon dynamically
-              document.querySelector(`#status-text-${memberId}`).textContent = newStatus;
-              document.querySelector(`#status-${memberId}`).className =
-                `fa fa-dot-circle-o ${newStatus === "Active" ? "text-success" : "text-danger"}`;
-
-              // Enable or disable the archive option based on the new status
-              var archiveLink = document.querySelector(`#archive-link-${memberId}`);
-              if (newStatus === "Inactive") {
-                archiveLink.classList.remove('disabled');
-                archiveLink.title = '';
-              } else {
-                archiveLink.classList.add('disabled');
-                archiveLink.title = 'Only inactive members can be archived';
-              }
-            } else {
-              console.error("Failed to update status.");
-              alert("An error occurred while updating the status. Please try again.");
-            }
-          }
-        };
-
-        xhr.send("id=" + memberId + "&status=" + newStatus);
-      }
-    </script>
-
-    <!-- //* Toggle Password -->
-    <script>
-      document.getElementById("toggleMemberPassword").addEventListener("click", function () {
-        const passwordInput = document.getElementById("memberPassword");
-        const passwordIcon = document.getElementById("passwordIcon");
-
-        if (passwordInput.type === "password") {
-          passwordInput.type = "text";
-          passwordIcon.classList.remove("fa-eye-slash");
-          passwordIcon.classList.add("fa-eye");
-        } else {
-          passwordInput.type = "password";
-          passwordIcon.classList.remove("fa-eye");
-          passwordIcon.classList.add("fa-eye-slash");
-        }
-      });
-    </script>
-
-    <!-- //* Dropdown more info -->
-    <script>
-      function toggleAdditionalInfoSection() {
-        var additionalInfoSection = document.getElementById('additionalInfoSection');
-
-        // Toggle max-height for smooth transition
-        if (additionalInfoSection.style.maxHeight === "0px" || additionalInfoSection.style.maxHeight === "") {
-          additionalInfoSection.style.maxHeight = additionalInfoSection.scrollHeight + "px";
-          additionalInfoSection.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          additionalInfoSection.style.maxHeight = "0px";
-        }
-      }
-
-    </script>
-
-    <script>
-      //* OTP
-      document.addEventListener("DOMContentLoaded", function () {
-        const alertContainer = document.getElementById("alert-container");
-
-        // Send OTP
-        document.querySelector("#sendOtpBtn").addEventListener("click", function () {
-          const email = document.getElementById("memberEmail").value;
-
-          if (!email) {
-            showAlert("danger", "Please enter an email.");
-            return;
-          }
-
-          // AJAX request to send OTP
-          fetch("PHPMailer-OTP/otp_backend.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ email: email, action: "send" }),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              showAlert(data.status === "success" ? "success" : "danger", data.message);
-            })
-            .catch(() => {
-              showAlert("danger", "An error occurred while sending OTP. Please try again.");
-            });
-        });
-
-        // Verify OTP
-        document.querySelector("#verifyOtpBtn").addEventListener("click", function () {
-          const email = document.getElementById("memberEmail").value;
-          const otp = document.getElementById("otp").value;
-
-          if (!email || !otp) {
-            showAlert("danger", "Please fill in both email and OTP fields.");
-            return;
-          }
-
-          // AJAX request to verify OTP
-          fetch("PHPMailer-OTP/otp_backend.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ email: email, otp: otp, action: "verify" }),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              showAlert(data.status === "success" ? "success" : "danger", data.message);
-            })
-            .catch(() => {
-              showAlert("danger", "An error occurred while verifying OTP. Please try again.");
-            });
-        });
-
-        // Utility function to display alerts
-        function showAlert(type, message) {
-          alertContainer.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
-        }
-      });
-      //* OTP
-    </script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
 </body>
 
