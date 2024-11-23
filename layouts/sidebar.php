@@ -117,8 +117,15 @@ $page = $components[2];
             <li><a class="<?php echo ($page == 'media.php') ? 'active' : ''; ?>" href="media.php">Media</a></li>
             
             <li><a class="<?php echo ($page == 'archive.php') ? 'active' : ''; ?>" href="archive.php">Archive</a></li>
+
             <li><a class="<?php echo ($page == 'renewal-and-cancellation.php') ? 'active' : ''; ?>"
-                href="renewal-and-cancellation.php">Renewal & Cancellations</a></li>
+                href="renewal-and-cancellation.php">Renewal & Cancellations</a>
+            </li>
+
+            <li><a class="<?php echo ($page == '#') ? 'active' : ''; ?>"
+                href="#">Membership Settings</a>
+            </li>
+
           </ul>
         </li>
         <hr style="border: 0; border-top: 1px solid #A0A0A0; margin: 10px 0;">

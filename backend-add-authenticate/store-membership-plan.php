@@ -1,34 +1,36 @@
 <?php
-include '../layouts/db-connection.php';
+include '../layouts/db-connection.php'; // Ensure this path is correct
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $plan_type = $_POST['plan_type'] ?? '';
+  $duration_days = (int) ($_POST['duration_days'] ?? 0);
+  $price = (float) ($_POST['price'] ?? 0.00);
+  $rate_type = $_POST['rate_type'] === 'Regular' ? 'Regular' : 'Student'; // Default to Student
+  $description = $_POST['description'] ?? '';
+  $status = 'active';
 
+  // Prepare the statement
+  $stmt = $conn->prepare("
+      INSERT INTO tbl_membership_plan (plan_type, duration_days, price, rate_type, description, status)
+      VALUES (?, ?, ?, ?, ?, ?)
+  ");
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  // Retrieve form data
-  $plan_name = $_POST['plan_name'];
-  $plan_type = $_POST['plan_type'];
-  $price = $_POST['price'];
-  $duration_days = $_POST['duration_days'];
-  // Convert selected payment methods to a comma-separated string
-  $payment_method = isset($_POST['payment_method']) ? implode(',', $_POST['payment_method']) : '';
-  $description = $_POST['description'];
+  if ($stmt) {
+      // Correct bind_param with 6 placeholders: `sids` for types and strings
+      $stmt->bind_param('sidsss', $plan_type, $duration_days, $price, $rate_type, $description, $status);
 
-  // Prepare SQL query to insert membership plan with multiple payment methods as a comma-separated string
-  $query = "INSERT INTO tbl_membership_plan (plan_name, plan_type, price, duration_days, payment_method, description, status)
-              VALUES (?, ?, ?, ?, ?, ?, 'inactive')";
+      if ($stmt->execute()) {
+          header('Location: ../create-membership-plan.php?success=added');
+          exit;
+      } else {
+          echo "Database insertion failed: " . $stmt->error;
+      }
 
-  if ($stmt = $conn->prepare($query)) {
-    $stmt->bind_param("ssisss", $plan_name, $plan_type, $price, $duration_days, $payment_method, $description);
-
-    if ($stmt->execute()) {
-      header("Location: ../create-membership-plan.php?success=1"); // Redirect on success
-    } else {
-      header("Location: ../create-membership-plan.php?error=" . urlencode($stmt->error)); // Redirect with error
-    }
-    $stmt->close();
+      $stmt->close();
   } else {
-    header("Location: ../create-membership-plan.php?error=" . urlencode($conn->error));
+      echo "Failed to prepare the database statement: " . $conn->error;
   }
-
-  $conn->close();
 }
+
+
+$conn->close();
 ?>
