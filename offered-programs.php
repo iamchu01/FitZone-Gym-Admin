@@ -81,11 +81,11 @@ if (isset($_POST['create_program'])) {
         // Execute the query and check for success
         if ($db->query($query)) {
             $session->msg('s', "Program created successfully!");
-            echo "<script>
-            setTimeout(function(){
-                window.location.href = 'offered-programs.php';
-            }, 100);
-            </script>";
+            // echo "<script>
+            // setTimeout(function(){
+            //     window.location.href = 'offered-programs.php';
+            // }, 100);
+            // </script>";
         } else {
             $session->msg('d', 'Sorry, failed to create program!');
             redirect('offered-programs.php', false);
@@ -128,6 +128,26 @@ if (isset($_POST['create_program'])) {
     }
 
     </style>
+   <?php
+// Include your database connection file
+
+// Check if the POST request is for deleting a special program
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_special_program'])) {
+    $program_id = (int)$_POST['id'];
+
+    // Validate the program ID and call delete_by_id
+    if ($program_id > 0 && delete_by_id_sp('tbl_special_programs', 'special_program_id', $program_id)) {
+        $session->msg('s', "Program Deleted successfully!");
+    } else {
+        $_SESSION['error'] = "Failed to delete the Special Program.";
+    }
+
+    // Redirect to avoid form resubmission
+    header("Location: offered-programs.php");
+    exit;
+}
+?>
+
 </head>
 
 <body>
@@ -151,6 +171,12 @@ if (isset($_POST['create_program'])) {
                             </ul>
                         </div>
                      
+                    </div>
+                </div>
+                <!-- Display messages -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <?php echo display_msg($msg); ?>
                     </div>
                 </div>
                 <!-- /Page Header -->
@@ -206,7 +232,7 @@ if (isset($_POST['create_program'])) {
                                                 onclick="setEditProgram(<?php echo $program['program_id']; ?>, '<?php echo remove_junk(ucfirst($program['program_title'])); ?>')">
                                                 <i class="fa fa-edit"></i> Edit
                                             </a>
-                                            <form action="programs.php" method="post" style="display:inline;">
+                                            <form action="offered-programs.php" method="post" style="display:inline;">
                                                 <input type="hidden" name="id" value="<?php echo (int)$program['program_id']; ?>">
                                                 <button type="submit" name="delete_program" class="dropdown-item" onclick="return confirm('Are you sure you want to delete this Program?');">
                                                     <i class="fa fa-trash"></i> Delete
@@ -245,6 +271,7 @@ if (isset($_POST['create_program'])) {
                 <th class="text-center" style="width: 50px;">#</th>
                 <th>Special Programs List</th>
                 <th class="text-center" style="width: 100px;">Trainor</th>
+                <th class="text-center" style="width: 100px;">Discription</th>
                 <th class="text-center" style="width: 100px;">Enrolled</th>
             </tr>
         </thead>
@@ -254,6 +281,8 @@ if (isset($_POST['create_program'])) {
                     <td class="text-center"><?php echo count_id(); ?></td>
                     <td><?php echo remove_junk(ucfirst($special['program_title'])); ?></td>
                     <!-- Display the instructor's name -->
+                    <td><?php echo remove_junk(ucfirst($special['program_description'])); ?></td>
+
                     <td><?php echo remove_junk(ucfirst($special['instructor_name'])); ?></td>
                     <td class="text-center">
                         <div class="dropdown action-label">
@@ -265,7 +294,7 @@ if (isset($_POST['create_program'])) {
                                    onclick="setEditSpecialProgram(<?php echo $special['program_id']; ?>, '<?php echo remove_junk(ucfirst($special['program_title'])); ?>')">
                                     <i class="fa fa-edit"></i> Edit
                                 </a>
-                                <form action="programs.php" method="post" style="display:inline;">
+                                <form action="offered-programs.php" method="post" style="display:inline;">
                                     <input type="hidden" name="id" value="<?php echo (int)$special['program_id']; ?>">
                                     <button type="submit" name="delete_special_program" class="dropdown-item" onclick="return confirm('Are you sure you want to delete this Special Program?');">
                                         <i class="fa fa-trash"></i> Delete

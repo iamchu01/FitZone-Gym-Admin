@@ -76,6 +76,19 @@ function delete_by_id($table,$id)
     return ($db->affected_rows() === 1) ? true : false;
    }
 }
+
+function delete_by_id_sp($table, $column, $id) {
+  global $db;
+  if (tableExists($table)) {
+      $sql = "DELETE FROM " . $db->escape($table);
+      $sql .= " WHERE " . $db->escape($column) . "=" . $db->escape($id);
+      $sql .= " LIMIT 1";
+      $db->query($sql);
+      return ($db->affected_rows() === 1) ? true : false;
+  }
+  return false;
+}
+
 /*--------------------------------------------------------------*/
 /* Function for Count id  By table name
 /*--------------------------------------------------------------*/
@@ -248,41 +261,6 @@ function tableExists($table){
         endif;
 
      }
-   /*--------------------------------------------------------------*/
-   /* Function for Finding all product name
-   /* JOIN with categorie  and media database table
-   /*--------------------------------------------------------------*/
-//    function join_product_table() {
-//     global $db;
-
-//     // SQL query to select product details and use category name as the product name
-//     $sql  = "SELECT 
-//                 p.id, 
-//                 c.name AS name,  -- Use category name as product name
-//                 p.quantity, 
-//                 p.buy_price, 
-//                 p.sale_price, 
-//                 p.media_id, 
-//                 p.date, 
-//                 p.expiration_date,
-//                 p.description,  
-//                 p.is_perishable, 
-//                 c.name AS categorie, 
-//                 m.file_name AS image, 
-//                 p.item_code 
-//              FROM 
-//                 products p 
-//              LEFT JOIN 
-//                 categories c ON c.id = p.categorie_id 
-//              LEFT JOIN 
-//                 media m ON m.id = p.media_id 
-//              ORDER BY 
-//                 p.id ASC";
-
-//     // Execute the query and return the result set
-//     return find_by_sql($sql);
-// }
-
 function join_product_table(){
   global $db;
   $sql  = "SELECT p.id, p.name, p.item_code, p.description, 
@@ -346,26 +324,10 @@ function join_product_table1(){
   /* Function for Finding all product info by product title
   /* Request coming from ajax.php
   /*--------------------------------------------------------------*/
-  function find_all_product_info_by_title($title){
-    global $db;
-    $sql  = "SELECT * FROM products ";
-    $sql .= " WHERE name ='{$title}'";
-    $sql .=" LIMIT 1";
-    return find_by_sql($sql);
-  }
-
   /*--------------------------------------------------------------*/
   /* Function for Update product quantity
   /*--------------------------------------------------------------*/
-  function update_product_qty($qty,$p_id){
-    global $db;
-    $qty = (int) $qty;
-    $id  = (int)$p_id;
-    $sql = "UPDATE products SET quantity=quantity -'{$qty}' WHERE id = '{$id}'";
-    $result = $db->query($sql);
-    return($db->affected_rows() === 1 ? true : false);
-
-  }
+ 
   /*--------------------------------------------------------------*/
   /* Function for Display Recent product Added
   /*--------------------------------------------------------------*/
@@ -397,14 +359,6 @@ function join_product_table1(){
  /*--------------------------------------------------------------*/
  /* Function for find all sales
  /*--------------------------------------------------------------*/
- function find_all_sale(){
-   global $db;
-   $sql  = "SELECT s.id,s.qty,s.price,s.date,p.name";
-   $sql .= " FROM sales s";
-   $sql .= " LEFT JOIN products p ON s.product_id = p.id";
-   $sql .= " ORDER BY s.date DESC";
-   return find_by_sql($sql);
- }
  /*--------------------------------------------------------------*/
  /* Function for Display Recent sale
  /*--------------------------------------------------------------*/
@@ -419,123 +373,12 @@ function find_recent_sale_added($limit){
 /*--------------------------------------------------------------*/
 /* Function for Generate sales report by two dates
 /*--------------------------------------------------------------*/
-function find_sale_by_dates($start_date,$end_date){
-  global $db;
-  $start_date  = date("Y-m-d", strtotime($start_date));
-  $end_date    = date("Y-m-d", strtotime($end_date));
-  $sql  = "SELECT s.date, p.name,p.sale_price,p.buy_price,";
-  $sql .= "COUNT(s.product_id) AS total_records,";
-  $sql .= "SUM(s.qty) AS total_sales,";
-  $sql .= "SUM(p.sale_price * s.qty) AS total_saleing_price,";
-  $sql .= "SUM(p.buy_price * s.qty) AS total_buying_price ";
-  $sql .= "FROM sales s ";
-  $sql .= "LEFT JOIN products p ON s.product_id = p.id";
-  $sql .= " WHERE s.date BETWEEN '{$start_date}' AND '{$end_date}'";
-  $sql .= " GROUP BY DATE(s.date),p.name";
-  $sql .= " ORDER BY DATE(s.date) DESC";
-  return $db->query($sql);
-}
 /*--------------------------------------------------------------*/
 /* Function for Generate Daily sales report
 /*--------------------------------------------------------------*/
-function  dailySales($year,$month){
-  global $db;
-  $sql  = "SELECT s.qty,";
-  $sql .= " DATE_FORMAT(s.date, '%Y-%m-%e') AS date,p.name,";
-  $sql .= "SUM(p.sale_price * s.qty) AS total_saleing_price";
-  $sql .= " FROM sales s";
-  $sql .= " LEFT JOIN products p ON s.product_id = p.id";
-  $sql .= " WHERE DATE_FORMAT(s.date, '%Y-%m' ) = '{$year}-{$month}'";
-  $sql .= " GROUP BY DATE_FORMAT( s.date,  '%e' ),s.product_id";
-  return find_by_sql($sql);
-}
-/*--------------------------------------------------------------*/
-/* Function for Generate Monthly sales report
-/*--------------------------------------------------------------*/
-function  monthlySales($year){
-  global $db;
-  $sql  = "SELECT s.qty,";
-  $sql .= " DATE_FORMAT(s.date, '%Y-%m-%e') AS date,p.name,";
-  $sql .= "SUM(p.sale_price * s.qty) AS total_saleing_price";
-  $sql .= " FROM sales s";
-  $sql .= " LEFT JOIN products p ON s.product_id = p.id";
-  $sql .= " WHERE DATE_FORMAT(s.date, '%Y' ) = '{$year}'";
-  $sql .= " GROUP BY DATE_FORMAT( s.date,  '%c' ),s.product_id";
-  $sql .= " ORDER BY date_format(s.date, '%c' ) ASC";
-  return find_by_sql($sql);
-}
-// function get_low_stock_products($threshold) {
-//   global $db; // Assuming you have a global $db connection
-//   $query = "SELECT products.*, categories.name AS category_name 
-//             FROM products 
-//             JOIN categories ON products.categorie_id = categories.id 
-//             WHERE products.quantity <= " . (int)$threshold;
-  
-//   $result = $db->query($query);
-//   $low_stock_data = [];
 
-//   // Fetch each row as an associative array and add it to $low_stock_data
-//   if ($result) {
-//       while ($row = $result->fetch_assoc()) {
-//           $low_stock_data[] = $row;
-//       }
-//   }
 
-//   return $low_stock_data; // Return as an array of associative arrays
-// }
-function report_name($table, $id) {
-  global $db; // Assuming you're using a global database connection
-  $id = (int)$id;
-  $sql = "SELECT * FROM {$table} WHERE id = '{$id}' LIMIT 1";
-  $result = $db->query($sql);
-  return ($result->num_rows === 1) ? $result->fetch_assoc() : null;
-}
-function get_total_quantity($product_id) {
-  global $db;
-  
-  // SQL query to sum the batch quantities for a specific product
-  $query = "SELECT SUM(batch_quantity) AS total_quantity FROM batches WHERE product_id = {$product_id}";
-  
-  // Execute the query
-  $result = $db->query($query);
-  
-  // Check if the query was successful and return the total quantity
-  if ($result) {
-      $row = $result->fetch(PDO::FETCH_ASSOC);
-      return $row['total_quantity'] ? (int)$row['total_quantity'] : 0;
-  } else {
-      // In case of any error, return 0
-      return 0;
-  }
-}
-function get_first_available_batch($product_id, $quantity) {
-  global $db;
-  // Get the first batch that has stock
-  $sql = "SELECT b.id, b.batch_quantity 
-          FROM batches b
-          WHERE b.product_id = '{$product_id}' AND b.batch_quantity >= {$quantity}
-          ORDER BY b.created_at ASC 
-          LIMIT 1";  // Fetch the earliest batch with enough quantity
-  return find_by_sql($sql);
-}
-function join_sp_program() {
-  global $db;
-  
-  // SQL query to join tbl_special_program with tbl_add_instructors
-  $sql = "SELECT sp.special_program_id AS program_id, 
-                  sp.program_title, 
-                  sp.program_description, 
-                  sp.start_date, 
-                  sp.end_date, 
-                  sp.trainer_id, 
-                  CONCAT(i.first_name, ' ', i.last_name) AS instructor_name
-          FROM tbl_special_programs sp 
-          LEFT JOIN tbl_add_instructors i ON i.instructor_id = sp.trainer_id";  // Join tbl_add_instructors to get instructor details
 
-  $sql .= " ORDER BY sp.start_date ASC";  // Order by start date of the program
-
-  return find_by_sql($sql);  // Assuming find_by_sql() is a function that executes the query and returns the result
-}
 function join_pr_program() {
   global $db;
 
@@ -550,4 +393,35 @@ function join_pr_program() {
   $sql .= " ORDER BY  p.program_title ASC"; 
   return find_by_sql($sql);
 }
+// Function to get all orders with product and customer details
+function get_all_orders() {
+  global $db; // Assuming $db is your database connection object
+
+  // SQL query to fetch all orders along with product name and member name
+  $orders_query = "SELECT o.order_id, o.customer_id, o.product_id, o.quantity, o.payment_method, o.order_status, 
+                          p.name AS product_name, c.first_name AS member_name
+                   FROM orders o
+                   JOIN products p ON o.product_id = p.id
+                   JOIN tbl_add_members c ON o.customer_id = c.member_id";
+
+  // Execute the query
+  $result = $db->query($orders_query);
+
+  // Check if the query was successful
+  if ($result) {
+      $orders = [];
+      
+      // Fetch all results and store them in an array
+      while ($row = $result->fetch_assoc()) {
+          $orders[] = $row;
+      }
+      
+      return $orders; // Return the array of orders
+  } else {
+      // If the query failed, return an empty array
+      return [];
+  }
+}
+
+
 ?>
