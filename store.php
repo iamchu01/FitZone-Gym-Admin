@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory - HRMS Admin Template</title>
 
-    <?php include 'layouts/head-main.php'; ?>
-    <?php include 'layouts/title-meta.php'; ?>
     <?php include 'layouts/head-css.php'; ?>
     <?php require_once('vincludes/load.php'); ?>
     <?php include 'layouts/session.php'; ?>

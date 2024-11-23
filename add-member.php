@@ -1,5 +1,6 @@
-<?php require_once('vincludes/load.php'); ?>
+    <?php require_once('vincludes/load.php'); ?>
 <?php
+
 include 'layouts/session.php';
 include 'layouts/head-main.php';
 include 'layouts/db-connection.php';
