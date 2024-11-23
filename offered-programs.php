@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_special_progra
     $program_id = (int)$_POST['id'];
 
     // Validate the program ID and call delete_by_id
-    if ($program_id > 0 && delete_by_id_sp('tbl_special_programs', 'special_program_id', $program_id)) {
+    if ($program_id > 0 && delete_by_id_sp('tbl_special_programs', 'program_title', 'special_program_id')) {
         $session->msg('s', "Program Deleted successfully!");
     } else {
         $_SESSION['error'] = "Failed to delete the Special Program.";
@@ -211,7 +211,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_special_progra
                         <tr>
                             <th class="text-center" style="width: 50px;">#</th>
                             <th>Programs List</th>
-                            <th class="text-center" style="width: 100px;">Enrolled</th>
+                            <th class="text-center" style="width: 100px;">Discription</th>
+                            <th class="text-center" style="width: 100px;">Trainor</th>
                             <th class="text-center" style="width: 100px;">Actions</th>
                         </tr>
                     </thead>
@@ -220,6 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_special_progra
                             <tr>
                                 <td class="text-center"><?php echo count_id(); ?></td>
                                 <td><?php echo remove_junk(ucfirst($program['program_title'])); ?></td>
+                                <td><?php echo remove_junk(ucfirst($program['program_description'])); ?></td>
                                 <td><?php echo remove_junk(ucfirst($program['instructor_name'])); ?></td>
                               
                                 <td class="text-center">
@@ -270,8 +272,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_special_progra
             <tr>
                 <th class="text-center" style="width: 50px;">#</th>
                 <th>Special Programs List</th>
-                <th class="text-center" style="width: 100px;">Trainor</th>
+                
                 <th class="text-center" style="width: 100px;">Discription</th>
+                <th class="text-center" style="width: 100px;">Trainor</th>
                 <th class="text-center" style="width: 100px;">Enrolled</th>
             </tr>
         </thead>
