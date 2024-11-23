@@ -6,69 +6,73 @@ require_once 'PHPMailer-OTP/classes/OTPVerification.php';
 
 $message = ''; // Variable to display messages
 $otpVerified = false;
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email']);
-    $otpHandler = new OTPVerification($conn);
+  $email = trim($_POST['email']);
+  $otpHandler = new OTPVerification($conn);
 
-    // Check if email is verified
-    if ($otpHandler->isEmailVerified($email)) {
-        $otpVerified = true; // Set OTP verified flag
+  // Check if email is verified
+  if ($otpHandler->isEmailVerified($email)) {
+      $otpVerified = true; // Set OTP verified flag
 
-        // Prepare data for moving to `tbl_add_members`
-        $data = [
-            'first_name' => $_POST['firstname'] ?? '',
-            'middle_name' => $_POST['middlename'] ?? '',
-            'last_name' => $_POST['lastname'] ?? '',
-            'phone_number' => $_POST['mobile'] ?? '',
-            'gender' => $_POST['Gender'] ?? 'Others',
-            'date_of_birth' => $_POST['dateOfBirth'] ?? '',
-            'age' => $_POST['member_age'] ?? '',
-            'address' => implode(', ', array_filter([
-                $_POST['region_text'] ?? '',
-                $_POST['province_text'] ?? '',
-                $_POST['city_text'] ?? '',
-                $_POST['barangay_text'] ?? ''
-            ])),
-            'password' => password_hash($_POST['password'] ?? '12345', PASSWORD_DEFAULT),
-        ];
+      $data = [
+        'first_name' => $_POST['firstname'] ?? '',
+        'middle_name' => $_POST['middlename'] ?? 'Not Provided',
+        'last_name' => $_POST['lastname'] ?? '',
+        'phone_number' => $_POST['mobile'] ?? 'Not Provided',
+        'gender' => $_POST['Gender'] ?? 'Not Provided',
+        'date_of_birth' => $_POST['dateOfBirth'] ?? 'Not Provided',
+        'age' => $_POST['member_age'] ?? 'Not Provided',
+        'address' => implode(', ', array_filter([
+            $_POST['region_text'] ?? 'Not Provided',
+            $_POST['province_text'] ?? 'Not Provided',
+            $_POST['city_text'] ?? 'Not Provided',
+            $_POST['barangay_text'] ?? 'Not Provided',
+        ])) ?: 'Not Provided',
+        'password' => password_hash($_POST['password'] ?? '12345', PASSWORD_DEFAULT),
+    ];
+    
+    
+    
+    
 
-        // Insert verified member into `tbl_add_members`
-        $stmt = $conn->prepare("
-            INSERT INTO tbl_add_members (first_name, middle_name, last_name, phone_number, gender, date_of_birth, age, address, email, password, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')
-        ");
+      // Insert into database
+      $stmt = $conn->prepare("
+          INSERT INTO tbl_add_members (first_name, middle_name, last_name, phone_number, gender, date_of_birth, age, address, email, password, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')
+      ");
 
-        if ($stmt) {
-            $stmt->bind_param(
-                "ssssssssss",
-                $data['first_name'],
-                $data['middle_name'],
-                $data['last_name'],
-                $data['phone_number'],
-                $data['gender'],
-                $data['date_of_birth'],
-                $data['age'],
-                $data['address'],
-                $email,
-                $data['password']
-            );
+      if ($stmt) {
+        $stmt->bind_param(
+          "ssssssssss",
+          $data['first_name'],
+          $data['middle_name'],
+          $data['last_name'],
+          $data['phone_number'],
+          $data['gender'], // Use $data['gender']
+          $data['date_of_birth'],
+          $data['age'],
+          $address, // Can be null
+          $email,
+          $data['password']
+      );
 
-            if ($stmt->execute()) {
+          if ($stmt->execute()) {
               header('Location: add-member.php?success=added');
               exit;
-          }else {
-                error_log("Database insertion failed: " . $stmt->error);
-                $message = "Failed to add member to the database.";
-            }
-        } else {
-          error_log("Database insertion failed: " . $stmt->error);
-          $message = "Failed to add member to the database.";
-        }
-    } else {
-        $message = "Email not verified. Please verify your email first.";
-    }
+          } else {
+              error_log("Database insertion failed: " . $stmt->error);
+              $message = "Failed to add member to the database.";
+          }
+      } else {
+          error_log("Database statement preparation failed: " . $conn->error);
+          $message = "Failed to prepare the database query.";
+      }
+  } else {
+      $message = "Email not verified. Please verify your email first.";
+  }
 }
+
+
 
 // AJAX handler for checking email existence
 if (isset($_POST['action']) && $_POST['action'] === 'check_email') {
@@ -302,66 +306,65 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_email') {
                 <div class="row">
                   <!-- Basic Info -->
 
-                  <!-- First Name -->
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label>First Name <span class="text-danger">*</span></label>
-                      <input id="memberFirstname" class="form-control" type="text" name="firstname" 
-                        placeholder="Enter First Name" 
-                        pattern="[A-Za-z\s]+" 
-                        title="First name should only contain letters and spaces." 
-                        required />
-                    </div>
-                  </div>
+                 <!-- First Name -->
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label>First Name <span class="text-danger">*</span></label>
+                <input id="memberFirstname" class="form-control" type="text" name="firstname"
+                    placeholder="Enter First Name"
+                    pattern="[A-Za-z\s]+"
+                    title="First name should only contain letters and spaces."
+                    required />
+            </div>
+        </div>
 
-                  <!-- Middle Name -->
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label>Middle Name</label>
-                      <input id="memberMiddlename" class="form-control" type="text" name="middlename" 
-                        placeholder="Enter Middle Name" 
-                        pattern="[A-Za-z\s]*" 
-                        title="Middle name should only contain letters and spaces." />
-                    </div>
-                  </div>
+        <!-- Middle Name (Optional) -->
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label>Middle Name</label>
+                <input id="memberMiddlename" class="form-control" type="text" name="middlename"
+                    placeholder="Enter Middle Name"
+                    pattern="[A-Za-z\s]*"
+                    title="Middle name should only contain letters and spaces." />
+            </div>
+        </div>
 
-                  <!-- Last Name -->
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label>Last Name <span class="text-danger">*</span></label>
-                      <input id="memberLastname" class="form-control" type="text" name="lastname" 
-                        placeholder="Enter Last Name" 
-                        pattern="[A-Za-z\s]+" 
-                        title="Last name should only contain letters and spaces." 
-                        required />
-                    </div>
-                  </div>
+        <!-- Last Name -->
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label>Last Name <span class="text-danger">*</span></label>
+                <input id="memberLastname" class="form-control" type="text" name="lastname"
+                    placeholder="Enter Last Name"
+                    pattern="[A-Za-z\s]+"
+                    title="Last name should only contain letters and spaces."
+                    required />
+            </div>
+        </div>
 
-                  <!-- Email -->
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label>Email Address <span class="text-danger">*</span></label>
-                      <div class="input-group">
-                        <input type="email" class="form-control" id="memberEmail" name="email" 
-                          placeholder="Enter Email" 
-                          title="Please enter a valid email address." 
-                          required>
-                        <button type="button" id="sendOtpBtn" class="btn btn-outline-primary">Send OTP</button>
-                      </div>
-                    </div>
-                  </div>
+        <!-- Email -->
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label>Email Address <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input type="email" class="form-control" id="memberEmail" name="email"
+                        placeholder="Enter Email"
+                        title="Please enter a valid email address."
+                        required>
+                    <button type="button" id="sendOtpBtn" class="btn btn-outline-primary">Send OTP</button>
+                </div>
+            </div>
+        </div>
 
-
-                  <!-- OTP -->
-                  <div class="col-sm-6 ">
-                    <div class="form-group">
-                      <label>OTP</label>
-                      <div class="input-group">
-                        <input type="text" class="form-control" id="otp" name="otp" placeholder="Enter OTP">
-                        <button type="button" id="verifyOtpBtn" class="btn btn-outline-success">Verify OTP</button>
-                      </div>
-                    </div>
-                  </div>
+        <!-- OTP -->
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label>OTP <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="otp" name="otp" placeholder="Enter OTP" required>
+                    <button type="button" id="verifyOtpBtn" class="btn btn-outline-success">Verify OTP</button>
+                </div>
+            </div>
+        </div>
 
 
 
@@ -380,112 +383,101 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_email') {
                   </div>
                 </div> -->
 
-                <!-- Hidden Additional Info Section -->
-                <div id="additionalInfoSection"
-                  style="overflow: hidden; max-height: 0; transition: max-height 0.5s ease;">
-                  <h5 style="text-align:center; font-size: 20px; margin-top: 20px;">Additional Information</h5>
-                  <div class="row">
-                    <!-- //* add field here -->
-                    <!-- Phone Number -->
-                    <div class="col-sm-6">
-                      <label>Mobile Number</label>
-                      <div class="form-group">
-                        <div class="input-group has-validation">
-                          <span class="input-group-text" id="inputGroupPrepend">+63</span>
-                          <input type="text" class="form-control" id="memberMobile" name="mobile"
-                            placeholder="ex. 9123456789" minlength="10" maxlength="10" pattern="9[0-9]{9}">
-                          <div class="invalid-feedback">Please enter a valid mobile
-                            number.</div>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- //* Gender -->
-                    <div class="col-sm-6">
-                      <div class="form-group mb-2">
-                        <label>Gender</label>
-                        <div class="position-relative">
-                          <select class="form-select py-2" name="Gender" id="gender-selector">
-                            <option value="" disabled selected>Select Gender
-                            </option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Others">Others</option>
-                            <!-- Ensure this option has the value "Others" -->
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="col-sm-6">
-        <div class="form-group mb-2">
-            <label>Date of Birth <span class="text-danger">*</span></label>
-            <div class="cal-icon">
-                <input type="text" id="dateOfBirth" class="form-control datetimepicker" name="dateOfBirth"
-                    placeholder="Select Date of Birth" required>
-                <small id="dateWarning" class="text-danger" style="display: none;">Please select a valid date of birth.</small>
-            </div>
+               <!-- Hidden Additional Info Section -->
+<div id="additionalInfoSection"
+  style="overflow: hidden; max-height: 0; transition: max-height 0.5s ease;">
+  <h5 style="text-align:center; font-size: 20px; margin-top: 20px;">Additional Information</h5>
+  <div class="row">
+    <!-- Phone Number -->
+    <div class="col-sm-6">
+      <label>Mobile Number</label>
+      <div class="form-group">
+        <div class="input-group has-validation">
+          <span class="input-group-text" id="inputGroupPrepend">+63</span>
+          <input type="text" class="form-control" id="memberMobile" name="mobile"
+            placeholder="ex. 9123456789" minlength="10" maxlength="10" pattern="9[0-9]{9}">
+          <div class="invalid-feedback">Please enter a valid mobile number.</div>
         </div>
-          </div>
-          <div class="col-sm-6">
-              <div class="form-group mb-2">
-                  <label>Age</label>
-                  <input type="text" id="age" name="member_age" class="form-control" placeholder="Age" readonly>
-              </div>
       </div>
+    </div>
 
+    <!-- Gender -->
+    <div class="col-sm-6">
+      <div class="form-group mb-2">
+        <label>Gender</label>
+        <div class="position-relative">
+          <select class="form-select py-2" name="Gender" id="gender-selector">
+          <option value="" disabled selected>Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Others">Others</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
-                    <!-- Address Form -->
-                    <div class="col-sm-6">
-                      <div class="form-group">
-                        <label for="region">Region</label>
-                        <select id="region" class="form-select" name="region">
-                          <option value="" disabled selected>Select Region</option>
-                        </select>
-                        <input type="hidden" name="region_text" id="region-text">
-                        <div class="invalid-feedback">Please select a region.</div>
-                      </div>
-                    </div>
+    <!-- Date of Birth -->
+    <div class="col-sm-6">
+      <div class="form-group mb-2">
+        <label>Date of Birth</label>
+        <div class="cal-icon">
+          <input type="text" id="dateOfBirth" class="form-control datetimepicker" name="dateOfBirth"
+            placeholder="Select Date of Birth">
+          <small id="dateWarning" class="text-danger" style="display: none;">Please select a valid date of birth.</small>
+        </div>
+      </div>
+    </div>
 
-                    <div class="col-sm-6">
-                      <div class="form-group">
-                        <label for="province">Province</label>
-                        <select id="province" class="form-select" name="province">
-                          <option value="" disabled selected>Select Province</option>
-                          <!-- Populate provinces dynamically -->
-                        </select>
-                        <input type="hidden" name="province_text" id="province-text">
-                        <div class="invalid-feedback">Please select a province.</div>
-                      </div>
-                    </div>
+    <!-- Age -->
+    <div class="col-sm-6">
+      <div class="form-group mb-2">
+        <label>Age</label>
+        <input type="text" id="age" name="member_age" class="form-control" placeholder="Age" readonly>
+      </div>
+    </div>
 
-                    <div class="col-sm-6">
-                      <div class="form-group">
-                        <label for="city">City/Municipality </label>
-                        <select id="city" class="form-select" name="city">
-                          <option value="" disabled selected>Select City/Municipality
-                          </option>
-                          <!-- Populate cities dynamically -->
-                        </select>
-                        <input type="hidden" name="city_text" id="city-text">
-                        <div class="invalid-feedback">Please select a city or
-                          municipality.</div>
-                      </div>
-                    </div>
+    <!-- Address Fields -->
+    <div class="col-sm-6">
+      <div class="form-group">
+        <label for="region">Region</label>
+        <select id="region" class="form-select" name="region">
+          <option value="" disabled selected>Select Region</option>
+        </select>
+        <input type="hidden" name="region_text" id="region-text">
+      </div>
+    </div>
 
-                    <div class="col-sm-6">
-                      <div class="form-group">
-                        <label for="barangay">Barangay</label>
-                        <select id="barangay" class="form-select" name="barangay">
-                          <option value="" disabled selected>Select Barangay</option>
-                          <!-- Populate barangays dynamically -->
-                        </select>
-                        <input type="hidden" name="barangay_text" id="barangay-text">
-                        <div class="invalid-feedback">Please select a barangay.</div>
-                      </div>
-                    </div>
-                    <!-- //* add field here -->
-                  </div>
-                </div>
+    <div class="col-sm-6">
+      <div class="form-group">
+        <label for="province">Province</label>
+        <select id="province" class="form-select" name="province">
+          <option value="" disabled selected>Select Province</option>
+        </select>
+        <input type="hidden" name="province_text" id="province-text">
+      </div>
+    </div>
+
+    <div class="col-sm-6">
+      <div class="form-group">
+        <label for="city">City/Municipality</label>
+        <select id="city" class="form-select" name="city">
+          <option value="" disabled selected>Select City/Municipality</option>
+        </select>
+        <input type="hidden" name="city_text" id="city-text">
+      </div>
+    </div>
+
+    <div class="col-sm-6">
+      <div class="form-group">
+        <label for="barangay">Barangay</label>
+        <select id="barangay" class="form-select" name="barangay">
+          <option value="" disabled selected>Select Barangay</option>
+        </select>
+        <input type="hidden" name="barangay_text" id="barangay-text">
+      </div>
+    </div>
+  </div>
+</div>
 
                 <!-- Toggle Button for Additional Info -->
                 <div class="col-sm-12 text-center m-t-20">
