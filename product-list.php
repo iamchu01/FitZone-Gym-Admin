@@ -53,29 +53,29 @@ $min_expiration_date = date('Y-m-d', strtotime('+5 months'));
             
             <div class="col-md-12">
                 <div class="panel panel-default">
-                    <div class="panel-heading clearfix">  
-                        <div class="col">Search Product</div>     
-                        <div class="col-md-4">
-                            <div class="input-group">                                             
-                                <span class="input-group-addon"><i class="fa fa-search"></i></span>
-                                <input type="text" id="category-search" class="form-control" placeholder="Type Product name...">
-                            </div>
-                        </div>
-                        <div class="col color-legend" style="margin-bottom: 15px;">
-                            <div style="display: flex; align-items: center;">
-                                <div style="width: 20px; height: 20px; background-color: #ffc107; margin-right: 5px; border-radius: 3px;"></div>
-                                <span>In Stock: Low (below 10)</span>
-                            </div>
-                            <div style="display: flex; align-items: center;">
-                                <div style="width: 20px; height: 20px; background-color: #dc3545; margin-right: 5px; border-radius: 3px;"></div>
-                                <span>Out of Stock</span>
-                            </div>
-                            <div style="display: flex; align-items: center;">
-                                <div class="bg-secondary" style="width: 20px; height: 20px; margin-right: 5px; border-radius: 3px;"></div>
-                                <span>Soon to expire items (within 1 month)</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="panel-heading clearfix">
+    <div class="col">Search Product</div>     
+    <div class="col-md-4">
+        <div class="input-group">                                             
+            <span class="input-group-addon"><i class="fa fa-search"></i></span>
+            <input type="text" id="category-search" class="form-control" placeholder="Type Product name...">
+        </div>
+    </div>
+</div>
+
+<!-- Color Legend Row below the search input -->
+<div class="color-legend" style="margin-top: 15px; margin-left: 1%; display: flex; align-items: center;">
+    <div style="width: 20px; height: 20px; background-color: #ffc107; margin-right: 10px; border-radius: 3px;"></div>
+    <span style="margin-right: 15px;">In Stock: Low (below 10)</span>
+
+    <div style="width: 20px; height: 20px; background-color: #dc3545; margin-right: 10px; border-radius: 3px;"></div>
+    <span style="margin-right: 15px;">Out of Stock</span>
+
+    <div class="bg-secondary" style="width: 20px; height: 20px; margin-right: 10px; border-radius: 3px;"></div>
+    <span>Soon to expire items (within 1 month)</span>
+</div>
+
+
 
                     <div class="panel-body">
                         <div class="table-responsive">

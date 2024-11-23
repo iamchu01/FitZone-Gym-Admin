@@ -13,7 +13,9 @@
 
     <!-- Ensure Bootstrap CSS and jQuery are included -->
     <link rel="stylesheet" href="path/to/bootstrap.min.css">
- 
+ <?php 
+ $payments = find_all('pos_transaction');
+ ?>
 
     
 </head>
@@ -36,6 +38,32 @@
                                 <li class="breadcrumb-item"><a href="admin-dashboard.php">Dashboard</a></li>
                                 <li class="breadcrumb-item active ">payments reports</li>
                             </ul>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Cash Payments</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Transaction ID</th> 
+                                            <th>Transaction Date</th> 
+                                            <th>Payments cash</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="product-list">
+                                        <?php foreach ($payments as $pay): ?>                                          
+                                            <tr>
+                                                <td><?php echo $pay['id']; ?></td>
+                                                <td><?php echo $pay['transaction_date']; ?></td>
+                                                <td><?php echo $pay['total_amount']; ?></td>
+                      
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                        
                     </div>

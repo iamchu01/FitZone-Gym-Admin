@@ -189,6 +189,7 @@ if (isset($_POST['confirm_checkout'])) {
                                             <th>Item code</th>  
                                             <th>Name</th>
                                             <th>Categorie</th>
+                                            <th>Description</th>
                                             <th>Unit of measure</th>
                                             <th>Available qty</th>
                                             <th>Price</th>
@@ -202,6 +203,7 @@ if (isset($_POST['confirm_checkout'])) {
                                                 <td><?php echo $product['item_code']; ?></td>
                                                 <td><?php echo $product['name']; ?></td>
                                                 <td><?php echo $product['categorie']; ?></td>
+                                                <td><?php echo $product['description']; ?></td>
                                                 <td><?php echo $product['uom_name']; ?></td>
                                                 <td><?php echo $product['quantity'] > 0 ? $product['quantity'] : 'Out of Stock'; ?></td>
                                                 <td><?php echo number_format($product['sale_price'], 2); ?></td>

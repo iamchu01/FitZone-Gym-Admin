@@ -1,13 +1,14 @@
 <?php
 require_once('vincludes/load.php');
-$products = join_product_table();
-$all_categories = find_all('categories');
 
-if (isset($_GET['category_id'])) {
-    $category_id = $_GET['category_id'];
+// Fetch all batches
+$all_batches = find_all('batches');
 
-    // Query to get the products for the selected category
-    $query = "SELECT * FROM products WHERE categorie_id = '{$category_id}'";
+if (isset($_GET['batch_id'])) {
+    $batch_id = $_GET['batch_id'];
+
+    // Query to get the products for the selected batch
+    $query = "SELECT * FROM products WHERE batch_id = '{$batch_id}'";
     $result = $db->query($query);
 
     if ($result->num_rows > 0) {
@@ -17,7 +18,7 @@ if (isset($_GET['category_id'])) {
         echo "<tr>";
         echo "<th>Product Name</th>";
         echo "<th>SRP</th>";
-        echo "<th>Item description</th>";
+        echo "<th>Item Description</th>";
         echo "<th>Item Code</th>";
         echo "<th>Quantity in Stock</th>";
         echo "<th>Action (Select Quantity)</th>";
@@ -48,7 +49,7 @@ if (isset($_GET['category_id'])) {
         echo "</tbody>";
         echo "</table>";
     } else {
-        echo "<p>No products found for this category.</p>";
+        echo "<p>No products found for this batch.</p>";
     }
 }
 ?>

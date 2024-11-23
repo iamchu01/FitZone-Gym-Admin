@@ -121,7 +121,42 @@ $('input[name="item-code"]').on('input', function() {
 });
 // Example function to open the modal with pre-filled data
 
-  
+$(document).ready(function() {
+    // Function to validate selling price against buying price
+    function validatePrices() {
+        var buyingPrice = parseFloat($('#edit-buying-price').val());
+        var sellingPrice = parseFloat($('#edit-saleing-price').val());
+
+        if (sellingPrice < buyingPrice) {
+            $('#edit-saleing-price').addClass('is-invalid');
+            $('.selling-price-feedback').text('Selling price must be greater than or equal to buying price.').show();
+            $('button[type="submit"]').prop('disabled', true);
+        } else {
+            $('#edit-saleing-price').removeClass('is-invalid');
+            $('.selling-price-feedback').text('').hide();
+            $('button[type="submit"]').prop('disabled', false);
+        }
+    }
+
+    $('#edit-buying-price, #edit-saleing-price').on('input', function() {
+        validatePrices();
+    });
+
+    // Validate form before submission
+    $('form').on('submit', function(e) {
+        var isPerishable = $('#is-perishable').is(':checked');
+        var expirationDate = $('input[name="expiration-date"]').val();
+
+        // Reset feedback messages
+        $('.expiration-date-feedback').hide();
+
+        if (isPerishable && !expirationDate) {
+            e.preventDefault(); // Prevent form submission
+            $('.expiration-date-feedback').text('Expiration date is required for perishable items.').show(); // Show validation message
+        }
+    });
+});
+
 
   </script>
   <style>
@@ -207,51 +242,54 @@ function validatePrices($buyPrice, $sellPrice) {
     return true;
 }
 ?>
-<?php 
-if (isset($_POST['update_product'])) {
-    // Sanitize inputs to prevent SQL injection
-    $edit_cat_id = (int)$_POST['edit_cat_id'];
-    $product_name = $db->escape($_POST['product-name']);
-    $product_description = $db->escape($_POST['product-description']);
-    $product_item_code = $db->escape($_POST['product-item-code']);
-    $product_buying_price = (float)$_POST['product-buying-price'];
-    $product_selling_price = (float)$_POST['product-selling-price'];
-    $product_photo = (int)$_POST['product-photo']; // Assuming it's an ID
+<?php
+if (isset($_POST['edit_product'])) {
+    // Sanitize inputs
+    $product_id = (int)$_POST['product-id'];  // Sanitize product ID
+    $product_name = $db->escape($_POST['product-title']);
+    $product_description = $db->escape($_POST['item-description']);
+    $product_item_code = $db->escape($_POST['item-code']);
+    $product_buying_price = (float)$_POST['buying-price'];
+    $product_selling_price = (float)$_POST['saleing-price'];
+    $product_category = (int)$_POST['product-categorie'];  // Assuming product category ID is selected
+    $product_photo = (int)$_POST['product-photo'];  // Assuming product photo ID is selected (if applicable)
+    $date = date('Y-m-d H:i:s');  // Update the timestamp to the current time
 
-    // Validate prices
+    // Validate prices: selling price must be greater than or equal to buying price
     if ($product_selling_price < $product_buying_price) {
-        $session->msg('d', "Selling price must be greater than or equal to buying price.");
-        redirect('inventory.php', false);
+        $session->msg('d', "Selling price must be greater than or equal to the buying price.");
+        redirect('inventory.php', false);  // Redirect to inventory page with error message
     }
 
-    // Update product in the database
-    $query = "UPDATE products SET 
-                name = '{$product_name}',  -- Add the name update here
-                description = '{$product_description}',
-                item_code = '{$product_item_code}',
-                buy_price = '{$product_buying_price}',
-                sale_price = '{$product_selling_price}',
-                media_id = '{$product_photo}'
-              WHERE id = '{$edit_cat_id}'";
+    // Prepare the dynamic UPDATE query
+    $query  = "UPDATE products SET ";
+    $query .= "name = '{$product_name}', ";
+    $query .= "buy_price = '{$product_buying_price}', ";
+    $query .= "sale_price = '{$product_selling_price}', ";
+    $query .= "categorie_id = '{$product_category}', ";
+    $query .= "media_id = '{$product_photo}', ";
+    $query .= "date = '{$date}', ";
+    $query .= "description = '{$product_description}', ";
+    $query .= "item_code = '{$product_item_code}' ";
+    $query .= "WHERE id = '{$product_id}'";  // The condition to update the correct record
 
+    // Execute the query
     if ($db->query($query)) {
         $session->msg('s', "Product updated successfully.");
         echo "<script>
                 setTimeout(function(){
-                    window.location.href = 'product.php';
+                    window.location.href = 'product.php';  
                 }, 100);
               </script>";
     } else {
         $session->msg('d', "Sorry, failed to update product!");
-        redirect('product.php', false);
+        redirect('product.php', false);  // Redirect with error message if update fails
     }
 }
-
-// echo '<pre>';
-// print_r($_POST);
-// echo '</pre>';
-// exit;
 ?>
+
+
+
 
 <?php include 'layouts/menu.php'; ?> 
 <div class="page-wrapper">

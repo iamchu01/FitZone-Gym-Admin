@@ -1,8 +1,9 @@
-<?php include 'layouts/session.php'; ?>
+<?php include 'layouts/session.php'; ?> 
 <?php include 'layouts/head-main.php'; ?>
 
 <head>
   <title>Login - HRMS admin template</title>
+  <?php require_once('vincludes/load.php'); ?>  
   <?php include 'layouts/title-meta.php'; ?>
   <?php include 'layouts/head-css.php'; ?>
 </head>

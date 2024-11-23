@@ -41,6 +41,12 @@ $page = $components[2];
         <li class=" submenu">
           <a href="#"><i class="la la-box"></i> <span> File Maintenance</span> <span class="menu-arrow"></span></a>
           <ul style="display: none;">
+          <li><a class="<?php echo ($page == 'offered-programs.php') ? 'active' : ''; ?>"
+          href="offered-programs.php">Program Creation</a></li>
+          
+          <li><a class="<?php echo ($page == 'targeted-exercise.php') ? 'active' : ''; ?>"
+                href="targeted-exercise.php">Targeted Exercise</a></li>
+
             <li><a class="<?php echo ($page == 'add-instructor.php') ? 'active' : ''; ?>"
                 href="add-instructor.php">Instructors</a></li>
             <!-- <li><a class="<?php echo ($page == 'employees-list.php') ? 'active' : ''; ?>" href="employees-list.php">Members</a></li> -->
@@ -49,12 +55,9 @@ $page = $components[2];
             <li><a class="<?php echo ($page == 'create-membership-plan.php') ? 'active' : ''; ?>"
                 href="create-membership-plan.php">Membership</a>
             </li>
-            <li><a class="<?php echo ($page == 'create-payment-method.php') ? 'active' : ''; ?>"
-                href="create-payment-method.php">Payment
-                Methods</a>
-            </li>
+           
             <li>
-              <a class="<?php echo ($page == 'gym_equipment.php' || $page == 'admin.php' || $page == 'add_product.php' || $page == 'product.php' || $page == 'categorie.php') ? 'active' : ''; ?>"
+              <a class="<?php echo ($page == 'product-list.php' || $page == 'gym_equipment.php' || $page == 'admin.php' || $page == 'add_product.php' || $page == 'product.php' || $page == 'categorie.php') ? 'active' : ''; ?>"
                 href="admin.php">Inventory Management</a>
 
             </li>
@@ -62,10 +65,7 @@ $page = $components[2];
             </li>
 
             <!-- <li><a class="<?php echo ($page == 'category-list.php') ? 'active' : ''; ?>" href="category-list.php">Category List</a></li>                  -->
-            <li><a class="<?php echo ($page == 'offered-programs.php') ? 'active' : ''; ?>"
-                href="offered-programs.php">Offered Programs</a></li>
-            <li><a class="<?php echo ($page == 'targeted-exercise.php') ? 'active' : ''; ?>"
-                href="targeted-exercise.php">Targeted Exercise</a></li>
+           
           </ul>
         </li>
 
@@ -108,6 +108,10 @@ $page = $components[2];
         <li class="submenu">
           <a href="#"><i class="la la-tools"></i> <span>Utilities</span> <span class="menu-arrow"></span></a>
           <ul style="display: none;">
+          <li><a class="<?php echo ($page == 'create-payment-method.php') ? 'active' : ''; ?>"
+                href="create-payment-method.php">Payment
+                Methods</a>
+            </li>
             <li><a class="<?php echo ($page == 'discount.php') ? 'active' : ''; ?>" href="discount.php">Discounts</a>
             </li>
             <li><a class="<?php echo ($page == 'media.php') ? 'active' : ''; ?>" href="media.php">Media</a></li>

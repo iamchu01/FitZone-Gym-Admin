@@ -21,6 +21,13 @@ function find_by_sql($sql)
   $result_set = $db->while_loop($result);
  return $result_set;
 }
+function require_login() {
+  global $session;
+  if (!$session->isUserLoggedIn()) {
+      header("Location: admin-login.php");
+      exit;
+  }
+}
 /*--------------------------------------------------------------*/
 /*  Function for Find data from table by id
 /*--------------------------------------------------------------*/
@@ -36,10 +43,40 @@ function find_by_id($table,$id)
             return null;
      }
 }
+function find_by_column($table, $column, $value)
+{
+    global $db;
+    if (tableExists($table)) {
+        $sql = $db->query("SELECT * FROM {$db->escape($table)} WHERE {$db->escape($column)}='{$db->escape($value)}'");
+
+        // Fetch all rows as an associative array
+        $rows = [];
+        while ($row = $db->fetch_assoc($sql)) {
+            $rows[] = $row; // Add each row to the array
+        }
+
+        // Return the array of rows (even if empty)
+        return $rows;
+    }
+    return []; // Return an empty array if the table doesn't exist
+}
+
 /*--------------------------------------------------------------*/
 /* Function for Delete data from table by id
 /*--------------------------------------------------------------*/
 function delete_by_id($table,$id)
+{
+  global $db;
+  if(tableExists($table))
+   {
+    $sql = "DELETE FROM ".$db->escape($table);
+    $sql .= " WHERE id=". $db->escape($id);
+    $sql .= " LIMIT 1";
+    $db->query($sql);
+    return ($db->affected_rows() === 1) ? true : false;
+   }
+}
+function delete_by_id_sp($table,$column,$id)
 {
   global $db;
   if(tableExists($table))
@@ -146,7 +183,7 @@ function tableExists($table){
       if(!$current_user){
          if(isset($_SESSION['user_id'])):
              $user_id = intval($_SESSION['user_id']);
-             $current_user = find_by_id('users',$user_id);
+             $current_user = find_by_id('tbl_users',$user_id);
         endif;
       }
     return $current_user;
@@ -261,7 +298,8 @@ function tableExists($table){
 function join_product_table(){
   global $db;
   $sql  = "SELECT p.id, p.name, p.item_code, p.description, 
-                  p.buy_price, p.sale_price, p.media_id, p.date, 
+                  p.buy_price, p.sale_price, p.media_id, p.date,
+                  b.id AS batch_id, 
                   c.name AS categorie, 
                   m.file_name AS image, 
                   u.name AS uom_name, 
@@ -492,6 +530,36 @@ function get_first_available_batch($product_id, $quantity) {
           LIMIT 1";  // Fetch the earliest batch with enough quantity
   return find_by_sql($sql);
 }
+function join_sp_program() {
+  global $db;
+  
+  // SQL query to join tbl_special_program with tbl_add_instructors
+  $sql = "SELECT sp.special_program_id AS program_id, 
+                  sp.program_title, 
+                  sp.program_description, 
+                  sp.start_date, 
+                  sp.end_date, 
+                  sp.trainer_id, 
+                  CONCAT(i.first_name, ' ', i.last_name) AS instructor_name
+          FROM tbl_special_programs sp 
+          LEFT JOIN tbl_add_instructors i ON i.instructor_id = sp.trainer_id";  // Join tbl_add_instructors to get instructor details
 
+  $sql .= " ORDER BY sp.start_date ASC";  // Order by start date of the program
 
+  return find_by_sql($sql);  // Assuming find_by_sql() is a function that executes the query and returns the result
+}
+function join_pr_program() {
+  global $db;
+
+  // SQL query to join tbl_special_programs with tbl_add_instructors
+  $sql = "SELECT p.program_id AS program_id, 
+                   p.program_title, 
+                   p.program_description, 
+                   p.trainer_id, 
+                   CONCAT(i.first_name, ' ', i.last_name) AS instructor_name
+            FROM tbl_programs p
+            LEFT JOIN tbl_add_instructors i ON i.instructor_id = p.trainer_id"; 
+  $sql .= " ORDER BY  p.program_title ASC"; 
+  return find_by_sql($sql);
+}
 ?>

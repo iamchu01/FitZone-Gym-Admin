@@ -1,6 +1,7 @@
 <?php include 'layouts/session.php'; ?>
 <?php include 'layouts/head-main.php'; ?>
 <?php include 'layouts/db-connection.php'; ?>
+<?php require_once('vincludes/load.php'); ?>
 <?php 
 $_SESSION['last_accessed'] = $_SERVER['PHP_SELF'];
 
