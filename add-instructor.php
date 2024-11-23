@@ -166,13 +166,13 @@
               </button>
             </div>
             <div class="modal-body">
-              <div class="profile-img-wrap edit-img">
-                <img class="inline-block" src="assets/img/profiles/avatar-02.jpg" alt="user">
-                <div class="fileupload btn">
-                  <span class="btn-text">Add</span>
-                  <input class="upload" type="file" required>
-                </div>
-              </div>
+              <!-- <div class="profile-img-wrap edit-img">
+                  <img class="inline-block" src="assets/img/profiles/avatar-02.jpg" alt="user">
+                  <div class="fileupload btn">
+                    <span class="btn-text">Add</span>
+                    <input class="upload" type="file" required>
+                  </div>
+              </div> -->
 
               <!-- //* Add Instructor Form -->
               <form id="addUserForm" class="needs-validation instructor-info" method="POST"
