@@ -1,6 +1,4 @@
 <?php
-include 'layouts/db-connection.php';
-session_start(); 
 
 if (isset($_GET['category'])) {
     $category = $_GET['category'];
@@ -51,6 +49,24 @@ if (isset($_GET['category'])) {
     } else {
         echo '<p>Error executing query.</p>';
     }
+
+    $query = "SELECT * FROM muscle_exercise WHERE me_id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $exerciseId);
+$stmt->execute();
+$result = $stmt->get_result();
+$exercise = $result->fetch_assoc();
+
+if ($exercise) {
+    if ($exercise['me_media_type'] == 'image/jpeg' || $exercise['me_media_type'] == 'image/png') {
+        echo '<img src="' . $exercise['me_image'] . '" alt="Exercise Image" width="300">';
+    } elseif ($exercise['me_media_type'] == 'video/mp4') {
+        echo '<video width="320" height="240" controls>
+                <source src="' . $exercise['me_video'] . '" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>';
+    }
+}
 
     $stmt->close();
 }

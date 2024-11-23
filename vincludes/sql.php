@@ -43,6 +43,24 @@ function find_by_id($table,$id)
             return null;
      }
 }
+function find_by_column($table, $column, $value)
+{
+    global $db;
+    if (tableExists($table)) {
+        $sql = $db->query("SELECT * FROM {$db->escape($table)} WHERE {$db->escape($column)}='{$db->escape($value)}'");
+
+        // Fetch all rows as an associative array
+        $rows = [];
+        while ($row = $db->fetch_assoc($sql)) {
+            $rows[] = $row; // Add each row to the array
+        }
+
+        // Return the array of rows (even if empty)
+        return $rows;
+    }
+    return []; // Return an empty array if the table doesn't exist
+}
+
 /*--------------------------------------------------------------*/
 /* Function for Delete data from table by id
 /*--------------------------------------------------------------*/
@@ -71,7 +89,6 @@ function count_by_id($table){
      return($db->fetch_assoc($result));
   }
 }
-
 function count_by_id_mem($table){
   global $db;
   if(tableExists($table))

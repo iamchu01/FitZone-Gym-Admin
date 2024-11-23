@@ -1,22 +1,167 @@
-<?php include 'layouts/session.php'; ?>
+<?php require_once('vincludes/load.php'); ?>  
 <?php include 'layouts/head-main.php'; ?>
-<?php include 'layouts/db-connection.php'; ?>
-<?php 
-$_SESSION['last_accessed'] = $_SERVER['PHP_SELF'];
+<?php
+// Include the database connection file
+include 'layouts/db-connection.php';
+session_start();
 
- ?>
+// Fetch shoulder exercises from the database
+$category = 'shoulder';  
 
- 
+// Prepare the SQL query
+$stmt = $conn->prepare("SELECT * FROM muscle_exercise WHERE muscle_category = ?");
+if (!$stmt) {
+    die('Statement preparation failed: ' . $conn->error);
+}
+
+// Bind the parameter to the query
+$stmt->bind_param("s", $category);
+
+// Execute the query
+if ($stmt->execute()) {
+    // Get the result set
+    $result = $stmt->get_result();
+} else {
+    // Show error if query execution fails
+    echo 'Error executing query: ' . $stmt->error;
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Collect form data
+    $exerciseName = $_POST['exercise_name'];
+    $muscleCategory = $_POST['muscle_category'];  // This will be 'chest' by default
+    $description = $_POST['exercise_description'];
+
+    // Handle file upload (image or video)
+    if (isset($_FILES['exercise_image']) && $_FILES['exercise_image']['error'] == 0) {
+        // Get the file data
+        $fileTmpName = $_FILES['exercise_image']['tmp_name'];
+        $fileType = $_FILES['exercise_image']['type'];
+        $fileName = $_FILES['exercise_image']['name'];
+        
+        // Define separate directories for images and videos
+        $imageUploadDir = 'uploads/';  // For images
+        $videoUploadDir = 'C:\\xampp\\htdocs\\sendtoal\\FitZone-Gym\\Videos\\shoulder';  // Updated directory for videos
+        
+        // Ensure the directories exist
+        if (!is_dir($imageUploadDir)) {
+            mkdir($imageUploadDir, 0777, true);
+        }
+        if (!is_dir($videoUploadDir)) {
+            mkdir($videoUploadDir, 0777, true);
+        }
+        
+        // Check if the uploaded file is an image or a video
+        if (strpos($fileType, 'image') !== false) {
+            $filePath = $imageUploadDir . basename($fileName);
+            move_uploaded_file($fileTmpName, $filePath);
+            $mediaColumn = 'me_image';
+            $mediaData = $filePath;
+            $mediaType = $fileType;
+        } elseif (strpos($fileType, 'video') !== false) {
+            $filePath = $videoUploadDir . DIRECTORY_SEPARATOR . basename($fileName); // Use DIRECTORY_SEPARATOR for better compatibility
+            move_uploaded_file($fileTmpName, $filePath);
+            $mediaColumn = 'me_video';
+            $mediaData = $filePath;
+            $mediaType = $fileType;
+        } else {
+            // Invalid file type
+            exit('Invalid file type.');
+        }
+
+
+    // Insert the exercise into the database
+    $stmt = $conn->prepare("INSERT INTO muscle_exercise (me_name, muscle_category, me_description, $mediaColumn, me_media_type) VALUES (?, ?, ?, ?, ?)");
+    if ($stmt) {
+        $stmt->bind_param("sssss", $exerciseName, $muscleCategory, $description, $fileName, $mediaType);
+        if ($stmt->execute()) {
+            // Success, redirect to the exercises page
+            header("Location: shoulder-exercises.php"); // Replace with your exercises page URL
+            exit;
+        } else {
+            echo "Error executing query: " . $stmt->error;
+        }
+        $stmt->close();
+    } else {
+        echo "Statement preparation failed: " . $conn->error;
+    }
+} else {
+  
+    exit;
+}
+
+}
+
+$conn->close();
+?>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Dashboard - GYYMS Admin</title>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoulder Exercises</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <?php include 'layouts/title-meta.php'; ?>
     <?php include 'layouts/head-css.php'; ?>
     <style>
-        .sort-indicator {
+    /* Style for the table images */
+    table img {
+        width: 65px;         
+        height: 65px;        
+        object-fit: cover;    
+        border-radius: 5px;  
+    }
+
+    /* Responsive image sizing for mobile devices */
+    @media (max-width: 768px) {
+        table img {
+            width: 80px;    
+            height: 80px;   
+        }
+        <style>
+        /* Style for the table images */
+        table img {
+            width: 65px;         
+            height: 65px;        
+            object-fit: ;    
+            border-radius: 5px;  
+        }
+
+        /* Responsive image sizing for mobile devices */
+        @media (max-width: 768px) {
+            table img {
+                width: 80px;    
+                height: 80px;   
+            }
+        }
+     
+        /* Optional: Hover effect to ensure the dropdown stays open */
+        .dropdown:hover .dropdown-action {
+            display: block;
+        }
+
+        .main-wrapper {
+            width: 100%;
+            height: auto;
+            margin: 0%;
+            flex-direction: column;
+        }
+        .card {
+            transition: transform 0.3s ease; /* Smooth transition */
+        }
+
+        .card:hover {
+            transform: scale(1.05); /* Zoom effect */
+            background-color: #48c92f;
+            color: #fff;
+        }
+       .sort-indicator {
             font-size: 0.8em;
             margin-left: 5px;
             color: #888;
-        }
+}
         .card:hover {
             transition: transform 0.3s ease;
             transform: scale(1.05);
@@ -52,341 +197,467 @@ $_SESSION['last_accessed'] = $_SERVER['PHP_SELF'];
     
 }
 
-    </style>
-</head>
+    }
+</style>
 
+</head>
 <body>
-    <?php include 'layouts/body.php'; ?>
     <div class="main-wrapper">
         <?php include 'layouts/menu.php'; ?>
         <div class="page-wrapper">
             <div class="content container-fluid">
                 <div class="page-header">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h3 class="page-title"> Shoulder Exercises</h3>
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h3 class="page-title">Shoulder Exercises</h3>
                             <ul class="breadcrumb">
-                            <li class="breadcrumb-item active"> Shoulder Exercises</li>
-                            <li class="breadcrumb-item "><a href="targeted-exercise.php"> Muscle groups</a></li>
+                                <li class="breadcrumb-item"><a href="targeted-exercise.php">Muscle Group</a></li>
+                                <li class="breadcrumb-item active">Shoulder Exercises</li>
                             </ul>
                         </div>
-                        <div class="col-auto float-end ms-auto">                   
-                            <a href="" class="btn add-btn" data-bs-toggle="modal" data-bs-target="#exerciseModal"><i class="fa fa-plus"></i>Add Exercises</a>
+                        <div class="col-auto float-end ms-auto">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExerciseModal">
+                                Add Shoulder Workout
+                            </button>
                         </div>
                     </div>
                 </div>
+                
+
+                <!-- Table displaying shoulder exercises -->
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped custom-table mb-0 datatable">
+                            <thead>
+                                <tr>
+                                    <th>Illustration</th>
+                                    <th>Name</th>
+                                    <th>Muscle Category</th>
+                                    <th>Description</th>
+                                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                // Check if there are any results
+                                if ($result->num_rows > 0) {
+                                    // Loop through the results and display them
+                                    while ($row = $result->fetch_assoc()) {
+                                        ?>
+                                        <tr>
+                                        <td>
+                    <?php
+                    // Base path for uploads
+                    $uploadDir = 'uploads/';
+
+                    // Check if the image is available
+                    if (!empty($row['me_image']) && file_exists($uploadDir . $row['me_image'])) {
+                        // Display the image
+                        echo '<img src="' . $uploadDir . htmlspecialchars($row['me_image']) . '" alt="' . htmlspecialchars($row['me_name']) . ' exercise image" style="width: 100px; height: 65px;">';
+                    }
+                    // Check if the video is available
+                    elseif (!empty($row['me_video']) && file_exists($uploadDir . $row['me_video'])) {
+                        // Display the video
+                        echo '<video width="100" controls>
+                                <source src="' . $uploadDir . htmlspecialchars($row['me_video']) . '" type="video/mp4">
+                                Your browser does not support the video tag.
+                              </video>';
+                    } else {
+                        // If neither image nor video exists, show a placeholder or default message
+                        echo '<p>No media available</p>';
+                    }
+                    ?>
+                </td>
+                                            <td><?php echo htmlspecialchars($row['me_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['muscle_category']); ?></td>
+                                            <td class="description-cell" data-bs-toggle="tooltip" title="<?php echo htmlspecialchars($row['me_description']); ?>">
+                                                <?php echo nl2br(htmlspecialchars($row['me_description'])); ?>
+                                                <td class="text-end">
+
+                                            <div class=".dropdown:hover .dropdown-action">
+                                                <a href="#" class="" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="material-icons">more_vert</i>
+                                             </a>
+                                             <div class="dropdown-menu">
+                                             <a class="dropdown-item" href="#" onclick="openViewModal('<?php echo addslashes($row['me_name']); ?>', '<?php echo addslashes($row['me_description']); ?>', '<?php echo $uploadDir . htmlspecialchars($row['me_image'] ?: $row['me_video']); ?>')">
+                                             <i class="fa fa-eye m-r-5"></i> View
+                                             </a>
+                                             <a class="dropdown-item" href="#" onclick="openEditModal(<?php echo $row['me_id']; ?>, '<?php echo addslashes($row['me_name']); ?>', '<?php echo addslashes($row['me_description']); ?>')">
+                                                <i class="fa fa-pencil m-r-5"></i> Edit
+                                             </a>
+                                             <a class="dropdown-item" href="#" onclick="openDeleteModal(<?php echo $row['me_id']; ?>)">
+                                             <i class="fa fa-trash-o m-r-5"></i> Delete
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                             </tr>
+                          <?php
+                                    }
+                                } else {
+                                    echo '<tr><td colspan="5">No exercises found for shoulder.</td></tr>';
+                             }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-
-            <div class="row card-container">
-                <div class="col card" id="anterior-deltiod" onclick="showExercises('anterior deltiod', this)">       
-                    <img src="assets/img/s1.JPG" alt="Anterior deltiod">
-                    <div class="card-body">
-                        <h5 class="card-title">Anterior deltiod</h5> 
-                    </div>
-                </div>
-                <div class="col card" id="medial-deltiod" onclick="showExercises('medial deltiod', this)">              
-                    <img src="assets/img/s2.JPG" alt="Medial deltiod">
-                    <div class="card-body">
-                        <h5 class="card-title">Medial deltiod</h5> 
-                    </div>
-                </div>
-                <div class="col card" id="posterior-deltiod" onclick="showExercises('posterior deltiod', this)">             
-                    <img src="assets/img/s3.JPG" alt="Posterior deltiod">
-                    <div class="card-body">
-                        <h5 class="card-title">Posterior deltiod</h5> 
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-3" id="exercise-list">
-                <!-- Exercise items will be inserted here dynamically -->
-            </div>
-
-            <!-- Add Exercise Modal -->
-            <div class="modal fade" id="exerciseModal" tabindex="-1" aria-labelledby="exerciseModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exerciseModalLabel">Exercise Details</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                        <form id="exerciseFormAdd" enctype="multipart/form-data">
-                                <input type="hidden" id="exercise_id" name="exercise_id" value="">
-                                <div class="mb-3 text-center">
-                                    <label for="exerciseImage" class="form-label">Exercise Image/GIF</label>
-                                    <input type="file" class="form-control" id="exerciseImage" name="exerciseImage" accept="image/*,video/*" required onchange="previewImage(event)">
-                                </div>
-                                <div class="mb-3 text-center">
-                                    <img id="imagePreview" src="" alt="Image Preview" style="display: none; max-width: 100%; height: auto;">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="exerciseName" class="form-label">Exercise Name</label>
-                                    <input type="text" class="form-control" id="exerciseName" name="exerciseName" placeholder="Enter exercise name" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="exerciseDescription" class="form-label">Description</label>
-                                    <textarea class="form-control" id="exerciseDescription" name="exerciseDescription" rows="4" placeholder="Enter exercise description" required></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="muscleCategory" class="form-label">Muscle Category</label>
-                                    <select class="form-select" id="muscleCategory" name="muscleCategory" required>
-                                        <option value="anterior deltiod">Anterior deltiod</option>
-                                        <option value="medial deltiod">Medial deltiod</option>
-                                        <option value="posterior deltiod">Posterior deltiod</option>
-                                    </select>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                    <button type="submit" class="btn btn-primary">Create exercise</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-             <!-- Edit Exercise Modal -->
-                <div class="modal fade" id="exerciseModalEdit" tabindex="-1" aria-labelledby="exerciseModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="exerciseModalLabel">Exercise Details</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                            <form id="exerciseFormEdit" enctype="multipart/form-data">
-                            <input type="hidden" id="exerciseIdEdit" name="exercise_id" value="">
-
-
-                                    <div class="mb-3 text-center">
-                                        <label for="exerciseImageEdit" class="form-label">Exercise Image/GIF</label>
-                                        <input type="file" class="form-control" id="exerciseImageEdit" name="exerciseImage" accept="image/*,video/*" onchange="previewImage(event)">
-                                    </div>
-                                    <div class="mb-3 text-center">
-                                        <img id="imagePreviewEdit" src="" alt="Image Preview" style="display: none; max-width: 100%; height: auto;">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="exerciseNameEdit" class="form-label">Exercise Name</label>
-                                        <input type="text" class="form-control" id="exerciseNameEdit" name="exerciseName" placeholder="Enter exercise name" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="exerciseDescriptionEdit" class="form-label">Description</label>
-                                        <textarea class="form-control" id="exerciseDescriptionEdit" name="exerciseDescription" rows="4" placeholder="Enter exercise description" required></textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="muscleCategoryEdit" class="form-label">Muscle Category</label>
-                                        <select class="form-select" id="muscleCategoryEdit" name="muscleCategory" required>
-                                            <option value="anterior deltiod">Anterior deltiod</option>
-                                            <option value="medial deltiod">Medial deltiod</option>
-                                            <option value="posterior deltiod">Posterior deltiod</option>
-                                        </select>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        <button type="submit" class="btn btn-primary">Save exercise</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-       <!-- Success Modal -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+            
+ <!-- Add Modal -->
+<div class="modal fade" id="addExerciseModal" tabindex="-1" aria-labelledby="addExerciseModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="successModalLabel">Success</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="addExerciseModalLabel">Add New Shoulder Exercise</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"> </button>  
             </div>
-            <div class="modal-body">
-                <p id="successMessage"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-            </div>
+            <form id="addExerciseForm" action="shoulder-exercises.php" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <!-- Exercise Name -->
+                    <div class="mb-3">
+                        <label for="exerciseName" class="form-label">Exercise Name</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="exerciseName" 
+                            name="exercise_name" 
+                            placeholder="Enter the exercise name">
+                    </div>
+
+                    <!-- Muscle Category (Read-Only) -->
+                    <div class="mb-3">
+                        <label for="muscleCategory" class="form-label">Muscle Category</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="muscleCategory" 
+                            name="muscle_category" 
+                            value="shoulder" 
+                            readonly>
+                    </div>
+
+                    <!-- Exercise Description -->
+                    <div class="mb-3">
+                        <label for="exerciseDescription" class="form-label">Description</label>
+                        <textarea 
+                            class="form-control" 
+                            id="exerciseDescription" 
+                            name="exercise_description" 
+                            rows="3" 
+                            placeholder="Provide a brief description"></textarea>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="mb-3">
+                        <label for="exerciseImage" class="form-label">Exercise Image or Video</label>
+                        <input 
+                            type="file" 
+                            class="form-control" 
+                            id="exerciseImage" 
+                            name="exercise_image" 
+                            accept="image/*,video/*" 
+                            >
+                        <small class="form-text text-muted"></small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Exercise</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-         <!-- Delete Modal -->
-            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            Are you sure you want to delete this exercise?
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <a id="confirmDelete" class="btn btn-danger">Delete</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-<!-- View Modal -->
-<div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<script>
+document.getElementById('addExerciseForm').addEventListener('submit', function(event) {
+    // Prevent form submission to handle validation
+    event.preventDefault();
+    
+    // Remove previous highlights
+    const fields = document.querySelectorAll('.form-control');
+    fields.forEach(field => {
+        field.classList.remove('is-invalid');
+    });
+
+    let valid = true;
+    
+    // Check each required field
+    const exerciseName = document.getElementById('exerciseName');
+    const description = document.getElementById('exerciseDescription');
+    const exerciseImage = document.getElementById('exerciseImage');
+
+    // Validate Exercise Name
+    if (!exerciseName.value.trim()) {
+        exerciseName.classList.add('is-invalid');
+        valid = false;
+
+        let existingErrorMessage = exerciseName.parentElement.querySelector('.invalid-feedback');
+        if (existingErrorMessage) {
+            existingErrorMessage.remove();
+        }
+
+        // Create and append the new error message
+        let errorMessage = document.createElement('div');
+        errorMessage.classList.add('invalid-feedback');
+        errorMessage.innerText = 'Exercise name is required';
+        exerciseName.parentElement.appendChild(errorMessage);
+    }
+    
+    // Validate Description
+    if (!description.value.trim()) {
+        description.classList.add('is-invalid');
+        valid = false;
+
+        let existingErrorMessage = description.parentElement.querySelector('.invalid-feedback');
+        if (existingErrorMessage) {
+            existingErrorMessage.remove();
+        }
+
+        // Create and append the new error message
+        let errorMessage = document.createElement('div');
+        errorMessage.classList.add('invalid-feedback');
+        errorMessage.innerText = 'Description is required';
+        description.parentElement.appendChild(errorMessage);
+    }
+
+    // Validate File Upload
+    if (!exerciseImage.files.length) {
+        exerciseImage.classList.add('is-invalid');
+        valid = false;
+
+        let existingErrorMessage = exerciseImage.parentElement.querySelector('.invalid-feedback');
+        if (existingErrorMessage) {
+            existingErrorMessage.remove();
+        }
+
+        let errorMessage = document.createElement('div');
+        errorMessage.classList.add('invalid-feedback');
+        errorMessage.innerText = 'Please upload an image or video';
+        exerciseImage.parentElement.appendChild(errorMessage);
+    } else {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/avi', 'video/mov'];
+        const file = exerciseImage.files[0];
+        if (!allowedTypes.includes(file.type)) {
+            exerciseImage.classList.add('is-invalid');
+            valid = false;
+
+            let existingErrorMessage = exerciseImage.parentElement.querySelector('.invalid-feedback');
+            if (existingErrorMessage) {
+                existingErrorMessage.remove();
+            }
+
+            let errorMessage = document.createElement('div');
+            errorMessage.classList.add('invalid-feedback');
+            errorMessage.innerText = 'Only image or video files are allowed';
+            exerciseImage.parentElement.appendChild(errorMessage);
+        }
+    }
+
+    // If all fields are valid, submit the form
+    if (valid) {
+        this.submit();
+    }
+});
+
+// Add an event listener to remove the 'is-invalid' class when the modal is closed
+var addExerciseModal = document.getElementById('addExerciseModal');
+addExerciseModal.addEventListener('hidden.bs.modal', function () {
+    const fields = document.querySelectorAll('.form-control');
+    fields.forEach(field => {
+        field.classList.remove('is-invalid');
+    });
+});
+
+</script>
+
+<style>
+    .is-invalid {
+        border-color: red;
+        box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+    }
+</style>
+
+<!-- View Exercise Modal -->
+<div class="modal fade" id="viewExerciseModal" tabindex="-1" aria-labelledby="viewExerciseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
+                <h5 class="modal-title" id="viewExerciseModalLabel">Exercise Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body d-flex">
-                <!-- Left side: Image -->
-                <div class="me-3" style="flex: 1; max-width: 300px;">
-                    <img id="viewModalImage" class="img-fluid" alt="Exercise Image" style="border: 1px solid #dee2e6; width: 100%;">
+            <div class="modal-body">
+                <div id="viewMedia"></div> <!-- Media will be displayed here -->
+                <div class="mb-3">
+                    <label for="viewExerciseName" class="form-label">Exercise Name</label>
+                    <input type="text" class="form-control" id="viewExerciseName" readonly>
                 </div>
-                <!-- Right side: Details -->
-                <div style="flex: 2; border-left: 1px solid #dee2e6; padding-left: 20px;">
-                    <h5 class="card-title" id="viewModalTitle">Exercise Name</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">Target Muscle: <span id="viewModalCategory"></span></h6>
-                    <p class="card-text" id="viewModalDescription">Exercise Description</p>
+                <div class="mb-3">
+                    <label for="viewMuscleCategory" class="form-label">Muscle Category</label>
+                    <input type="text" class="form-control" id="viewMuscleCategory" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="viewExerciseDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="viewExerciseDescription" rows="3" readonly></textarea>
                 </div>
             </div>
+            <!-- Modal Footer with Close Button -->
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
-
-
-            <?php include 'layouts/customizer.php'; ?>
-            <?php include 'layouts/vendor-scripts.php'; ?>
+<!-- Delete Exercise Modal -->
+<div class="modal fade" id="deleteExerciseModal" tabindex="-1" aria-labelledby="deleteExerciseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteExerciseModalLabel">Delete Exercise</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this exercise? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="#" id="deleteExerciseLink" class="btn btn-danger">Delete</a>
+            </div>
         </div>
     </div>
-
-    <script>
-        // Image preview for exercise form
-        function previewImage(event) {
-            const imagePreview = document.getElementById('imagePreview');
-            const file = event.target.files[0];
-
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block'; 
-                }
-                reader.readAsDataURL(file);
-            } else {
-                imagePreview.src = '';
-                imagePreview.style.display = 'none';
-            }
-        }
-
-        // Show exercises based on muscle group
-        function showExercises(category, element) {
-            const cards = document.querySelectorAll('.card');
-            cards.forEach(card => card.classList.remove('active'));
-            element.classList.add('active');
-
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', 'fetch-exercises.php?category=' + encodeURIComponent(category), true);
-            xhr.onload = function() {
-                if (this.status === 200) {
-                    document.getElementById('exercise-list').innerHTML = this.responseText;
-                } else {
-                    document.getElementById('exercise-list').innerHTML = '<p>No exercises found.</p>';
-                }
-            };
-            xhr.send();
-        }
-
-        document.getElementById('exerciseFormEdit').addEventListener('submit', handleFormSubmit);
-
-// Attach the event listener to another form (for example, exerciseFormAdd)
-document.getElementById('exerciseFormAdd').addEventListener('submit', handleFormSubmit);
-function handleFormSubmit(event) {
-    event.preventDefault();
-        event.preventDefault(); // Prevent the default form submission
-
-        const formData = new FormData(this); // Get form data
-
-        fetch('save-exercise.php', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok.');
-            }
-            return response.json(); // Parse the JSON response
-        })
-        .then(data => {
-            if (data.success) {
-                // Display the success message in the modal
-                document.getElementById('successMessage').innerText = data.message; // Set message
-                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                successModal.show(); // Show the modal
-                // Optionally, close the edit modal
-                const editModal = bootstrap.Modal.getInstance(document.getElementById('exerciseModalEdit'));
-                editModal.hide();
-            } else {
-                alert('Failed to update the exercise: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            // Handle error case (show error message in modal or alert)
-            document.getElementById('successMessage').innerText = 'An error occurred while updating the exercise.';
-            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-            successModal.show(); // Show the modal with error message
-        });
-    };
-     
-        function openEditModal(exerciseId, exerciseName, exerciseDescription, muscleCategory, exerciseImage) {
-    // Populate modal fields with existing data
-    document.getElementById('exerciseNameEdit').value = exerciseName;
-    document.getElementById('exerciseDescriptionEdit').value = exerciseDescription;
-    document.getElementById('muscleCategoryEdit').value = muscleCategory;
-
-    // Set the hidden input with exercise_id
-    document.getElementById('exerciseIdEdit').value = exerciseId;
-
-    // Set the image preview (if available)
-    if (exerciseImage) {
-        const imagePreview = document.getElementById('imagePreviewEdit');
-        imagePreview.src = 'data:image/jpeg;base64,' + exerciseImage;
-        imagePreview.style.display = 'block'; // Show the image preview
-    } else {
-        document.getElementById('imagePreviewEdit').style.display = 'none';
-    }
-
-    // Show the edit modal
-    const exerciseModalEdit = new bootstrap.Modal(document.getElementById('exerciseModalEdit'));
-    exerciseModalEdit.show();
+</div>
+<script>
+    function openDeleteModal(exerciseId) {
+    const deleteUrl = `delete-exercise.php?id=${exerciseId}`;
+    document.getElementById('deleteExerciseLink').setAttribute('href', deleteUrl);
+    new bootstrap.Modal(document.getElementById('deleteExerciseModal')).show();
 }
+</script>
 
-    function openViewModal(id, name, description, category, image) {
-        // Populate your modal with exercise details here
-        document.getElementById('viewModalTitle').innerText = name;
-        document.getElementById('viewModalCategory').innerText = category;
-        document.getElementById('viewModalDescription').innerText = description;
-        document.getElementById('viewModalImage').src = 'data:image/jpeg;base64,' + image;
+<!-- JavaScript to Open View Modal -->
+<script>
+function openViewModal(name, description, mediaPath) {
+    document.getElementById('viewExerciseName').value = name;
+    document.getElementById('viewMuscleCategory').value = 'shoulder'; // Fixed muscle category
+    document.getElementById('viewExerciseDescription').value = description;
 
-        // Show the modal (assuming you're using Bootstrap modals)
-        $('#viewModal').modal('show');
+    const mediaContainer = document.getElementById('viewMedia');
+
+    // Check if the media is an image or a video
+    if (mediaPath.includes('.mp4')) {
+        mediaContainer.innerHTML = `<video width="100%" controls><source src="${mediaPath}" type="video/mp4">Your browser does not support the video tag.</video>`;
+    } else {
+        mediaContainer.innerHTML = `<img src="${mediaPath}" class="img-fluid" alt="Exercise Media">`;
     }
 
+    // Open the modal
+    new bootstrap.Modal(document.getElementById('viewExerciseModal')).show();
+}
+</script>
 
-    // JavaScript to handle delete modal
-    document.addEventListener('DOMContentLoaded', function () {
-    var deleteModal = document.getElementById('deleteModal');
-    deleteModal.addEventListener('show.bs.modal', function (event) {
-        var button = event.relatedTarget; // Button that triggered the modal
-        var exerciseId = button.getAttribute('data-id');
-        var redirectUrl = button.getAttribute('data-url');
+<!-- Edit Exercise Modal -->
+<div class="modal fade" id="editExerciseModal" tabindex="-1" aria-labelledby="editExerciseModalLabel" aria-hidden="true">
+    <div class="modal-dialog"> 
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editExerciseModalLabel">Edit Shoulder Exercise</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editExerciseForm" action="update-exercise2.php" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <!-- Hidden Input for Exercise ID -->
+                    <input type="hidden" id="editExerciseId" name="exercise_id">
+
+                    <!-- Exercise Name -->
+                    <div class="mb-3">
+                        <label for="editExerciseName" class="form-label">Exercise Name</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="editExerciseName" 
+                            name="exercise_name" 
+                           
+                            >
+                    </div>
+
+                    <!-- Exercise Description -->
+                    <div class="mb-3">
+                        <label for="editExerciseDescription" class="form-label">Description</label>
+                        <textarea 
+                            class="form-control" 
+                            id="editExerciseDescription" 
+                            name="exercise_description" 
+                            rows="3" 
+                            ></textarea>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="mb-3">
+                        <label for="editExerciseImage" class="form-label">Exercise Image or Video</label>
+                        <input 
+                            type="file" 
+                            class="form-control" 
+                            id="editExerciseImage" 
+                            name="exercise_image" 
+                            accept="image/*,video/*"
+                           
+                            >
+                        <small class="form-text text-muted">Upload a new image or video to replace the existing media.</small>
+                        <div id="fileError" class="invalid-feedback d-none">Please upload a valid image or video file.</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+
+    // Function to open the edit modal and populate the fields
+    function openEditModal(id, name, description) {
+        document.getElementById('editExerciseId').value = id;
+        document.getElementById('editExerciseName').value = name;
+        document.getElementById('editExerciseDescription').value = description;
+
+        // Show the modal
+        new bootstrap.Modal(document.getElementById('editExerciseModal')).show();
+    }
+
+    // File input validation with highlighting
+    document.getElementById('editExerciseImage').addEventListener('change', function(event) {
+        const fileInput = event.target;
+        const file = fileInput.files[0];
+        const fileError = document.getElementById('fileError');
+
+        // Clear previous highlight and error message
+        fileInput.classList.remove('is-invalid');
+        fileError.classList.add('d-none');
         
-        var confirmDelete = deleteModal.querySelector('#confirmDelete');
-        confirmDelete.href = 'delete-exercise.php?id=' + exerciseId + '&redirect_url=' + redirectUrl;
+        if (file) {
+            const fileType = file.type;
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg'];
+
+            if (!allowedTypes.includes(fileType)) {
+                // Highlight the field as invalid
+                fileInput.classList.add('is-invalid');
+                fileError.classList.remove('d-none');
+
+                // Clear the file input
+                event.target.value = '';
+            }
+        }
     });
-});
+</script>
 
-        
-    </script>
+
+    <!-- JS Libraries (including Bootstrap) -->
+    <?php include 'layouts/vendor-scripts.php'; ?>
+    
 </body>
 </html>

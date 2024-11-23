@@ -10,9 +10,9 @@ if (isset($_GET['id'])) {
     $stmt->bind_param("i", $exercise_id);
 
     if ($stmt->execute()) {
-        // Redirect back to the last accessed page with a success message
-        $redirect_url = $_SESSION['last_accessed'] ?? 'index.php'; // Fallback to index.php if not set
-        header("Location: $redirect_url?message=Exercise%20deleted%20successfully");
+        // Redirect back to the referring page after deletion
+        $redirect_url = $_SERVER['HTTP_REFERER'] ?? 'index.php'; // Fallback to 'index.php' if not set
+        header("Location: $redirect_url");
         exit(); // Ensure no further code is executed after redirection
     } else {
         echo '<p>Error deleting exercise.</p>';
@@ -22,4 +22,7 @@ if (isset($_GET['id'])) {
 } else {
     echo '<p>Invalid request.</p>';
 }
+
+// Close the database connection
+$conn->close();
 ?>
