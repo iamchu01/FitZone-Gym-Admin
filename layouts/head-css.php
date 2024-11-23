@@ -39,7 +39,7 @@ if ($page == 'events.php' || $page == 'add-instructor.php' || $page == 'add-memb
   <link rel="stylesheet" href="assets/css/bootstrap-datetimepicker.min.css">
 
 <?php }
-if ($page == 'events.php' || $page == 'create-membership-plan.php') { ?>
+if ($page == 'add-member.php' || $page == 'events.php' || $page == 'create-membership-plan.php') { ?>
   <!-- Calendar CSS -->
   <link rel="stylesheet" href="assets/css/fullcalendar.min.css">
 

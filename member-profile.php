@@ -170,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <span class="title">Age:</span>
                                         <span class="text ms-2">
                                             <?php 
-                                            echo (!empty($member['age']) ? htmlspecialchars($member['age'] . ' years old') : ''); 
+                                            echo (!empty($member['age']) ? htmlspecialchars($member['age'] . ' ') : ''); 
                                             ?>
                                         </span>
                                     </li>
