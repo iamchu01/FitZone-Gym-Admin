@@ -48,6 +48,14 @@
         </div>
         <!-- /Page Header -->
 
+        <!-- //*success message after adding member -->
+        <?php if (isset($_GET['success']) && $_GET['success'] === 'added'): ?>
+            <div id="successAlert" class="alert alert-success alert-dismissible fade show" role="alert">
+                Successfully Created!
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
         <!-- //*Search Filter -->
         <div class="row filter-row">
           <div class="col-md-6 col-md-3">
@@ -67,79 +75,76 @@
               <table class="table table-striped custom-table datatable">
                 <thead>
                   <tr>
-                    <th>Plan Name</th>
+                    <!-- <th>Plan Name</th> -->
                     <th>Plan Type</th>
                     <th>Duration (in Days)</th>
-                    <th>Pricing</th>
-                    <th>Payment Method</th>
+                    <th>Membership Fee</th>
+                    <!-- <th>Payment Method</th> -->
                     <th>Description</th>
                     <th>Status</th>
                     <th class="text-end">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <?php
-                  // Fetch membership plans from the database
-                  $query = "SELECT * FROM tbl_membership_plan ORDER BY plan_id DESC";
-                  $result = $conn->query($query);
+    <?php
+    // Fetch membership plans from the database
+    $query = "SELECT * FROM tbl_membership_plan ORDER BY plan_id DESC";
+    $result = $conn->query($query);
 
-                  if ($result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                      $plan_name = htmlspecialchars($row['plan_name']);
-                      $plan_type = htmlspecialchars($row['plan_type']);
-                      $duration_days = htmlspecialchars($row['duration_days']);
-                      $price = htmlspecialchars($row['price']);
-                      $payment_method = htmlspecialchars($row['payment_method']);
-                      $description = htmlspecialchars($row['description']);
-                      $status = htmlspecialchars($row['status']);
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $plan_type = htmlspecialchars($row['plan_type']);
+            $duration_days = htmlspecialchars($row['duration_days']);
+            $price = htmlspecialchars($row['price']);
+            $description = htmlspecialchars($row['description']);
+            $status = htmlspecialchars($row['status']);
 
-                      // Display status with appropriate label color
-                      $status_label = $status === 'active' ? 'text-success' : 'text-danger';
-                      ?>
-                      <tr>
-                        <td><?php echo $plan_name; ?></td>
-                        <td><?php echo $plan_type; ?></td>
-                        <td><?php echo $duration_days . ' days'; ?></td>
-                        <td>₱<?php echo number_format($price, 2); ?></td>
-                        <td><?php echo $payment_method; ?></td>
-                        <td><?php echo $description ? $description : 'N/A'; ?></td>
-                        <td>
-                          <div class="dropdown action-label">
-                            <a href="#" class="btn btn-white btn-sm btn-rounded dropdown-toggle" data-bs-toggle="dropdown">
-                              <i class="fa fa-dot-circle-o <?php echo $status_label; ?>"></i>
-                              <span><?php echo ucfirst($status); ?></span>
+            // Display status with appropriate label color
+            $status_label = $status === 'active' ? 'text-success' : 'text-danger';
+            ?>
+            <tr>
+                <td><?php echo $plan_type; ?></td>
+                <td><?php echo $duration_days . ' days'; ?></td>
+                <td>₱<?php echo number_format($price, 2); ?></td>
+                <td><?php echo !empty($description) ? $description : 'N/A'; ?></td>
+                <td>
+                    <div class="dropdown action-label">
+                        <a href="#" class="btn btn-white btn-sm btn-rounded dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fa fa-dot-circle-o <?php echo $status_label; ?>"></i>
+                            <span><?php echo ucfirst($status); ?></span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="#" onclick="updateStatus(<?php echo $row['plan_id']; ?>, 'active')">
+                                <i class="fa fa-dot-circle-o text-success"></i> Active
                             </a>
-                            <div class="dropdown-menu">
-                              <a class="dropdown-item" href="#"
-                                onclick="updateStatus(<?php echo $row['plan_id']; ?>, 'active')"><i
-                                  class="fa fa-dot-circle-o text-success"></i> Active</a>
-                              <a class="dropdown-item" href="#"
-                                onclick="updateStatus(<?php echo $row['plan_id']; ?>, 'inactive')"><i
-                                  class="fa fa-dot-circle-o text-danger"></i> Inactive</a>
-                            </div>
-                          </div>
-                        </td>
-                        <td class="text-end">
-                          <div class="dropdown dropdown-action">
-                            <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown"><i
-                                class="material-icons">more_vert</i></a>
-                            <div class="dropdown-menu dropdown-menu-right">
-                              <a class="dropdown-item" href="plan-details.php?id=<?php echo $row['plan_id']; ?>"><i
-                                  class="fa fa-eye m-r-5"></i> View Details</a>
-                              <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edit_plan"><i
-                                  class="fa fa-pencil m-r-5"></i>
-                                Edit</a>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <?php
-                    }
-                  } else {
-                    echo "<tr><td colspan='8' class='text-center'>No membership plans found</td></tr>";
-                  }
-                  ?>
-                </tbody>
+                            <a class="dropdown-item" href="#" onclick="updateStatus(<?php echo $row['plan_id']; ?>, 'inactive')">
+                                <i class="fa fa-dot-circle-o text-danger"></i> Inactive
+                            </a>
+                        </div>
+                    </div>
+                </td>
+                <td class="text-end">
+                    <div class="dropdown dropdown-action">
+                        <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown"><i class="material-icons">more_vert</i></a>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="plan-details.php?id=<?php echo $row['plan_id']; ?>">
+                                <i class="fa fa-eye m-r-5"></i> View Details
+                            </a>
+                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edit_plan">
+                                <i class="fa fa-pencil m-r-5"></i> Edit
+                            </a>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <?php
+        }
+    } else {
+        echo "<tr><td colspan='8' class='text-center'>No membership plans found</td></tr>";
+    }
+    ?>
+</tbody>
+
 
               </table>
             </div>
@@ -155,93 +160,74 @@
 
       <!-- //* Create Membership Plan Modal -->
       <div id="create_plan" class="modal custom-modal fade" role="dialog">
-        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-          <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Create Membership Plan</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Create Membership Plan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              <form action="backend-add-authenticate/store-membership-plan.php" method="POST">
-                <div class="row">
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label class="col-form-label">Membership Plan Name <span class="text-danger">*</span></label>
-                      <input class="form-control" type="text" name="plan_name" required>
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label class="col-form-label">Membership Plan Type <span class="text-danger">*</span></label>
-                      <input class="form-control" type="text" name="plan_type" required>
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <label class="col-form-label">Pricing <span class="text-danger">*</span></label>
-                    <div class="form-group">
-                      <div class="input-group">
-                        <span class="input-group-text bg-default-light">₱</span>
-                        <input class="form-control" type="number" name="price" step="0.01" required>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label class="col-form-label">Duration (in days) <span class="text-danger">*</span></label>
-                      <input class="form-control" type="number" name="duration_days" required>
-                    </div>
-                  </div>
-
-                  <!-- //* Payment Drop Down -->
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="payment-selector-dropdown" class="form-label">Payment Methods
-                        <span class="text-danger">*</span></label>
-                      <!-- Dropdown Trigger -->
-                      <div class="dropdown">
-                        <button class="btn btn-secondary w-100 text-start" type="button" id="paymentSelectorButton"
-                          data-bs-toggle="dropdown" aria-expanded="false">
-                          <span id="selected-options">Select Payment Methods</span>
-                        </button>
-                        <!-- Dropdown Menu with Checkboxes -->
-                        <ul class="dropdown-menu w-100" aria-labelledby="paymentSelectorButton"
-                          style="max-height: 200px; overflow-y: auto;">
-                          <li>
-                            <div class="form-check ms-3">
-                              <input class="form-check-input" type="checkbox" id="selectAll"
-                                onclick="toggleSelectAll()">
-                              <label class="form-check-label" for="selectAll"><strong>Select All</strong></label>
+                <form action="backend-add-authenticate/store-membership-plan.php" method="POST">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-form-label">Membership Plan Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="planType" name="plan_type" required onchange="updatePlanDetails()">
+                                    <option value="" disabled selected>Select Plan Type</option>
+                                    <option value="Daily">Daily</option>
+                                    <option value="Weekly">Weekly</option>
+                                    <option value="Half-Month">Half-Month</option>
+                                    <option value="Monthly">Monthly</option>
+                                </select>
                             </div>
-                          </li>
-                          <li>
-                            <hr class="dropdown-divider">
-                          </li>
-                          <div id="payment-options">
-                            <?php include 'backend-add-authenticate/fetch-payment-methods.php'; ?>
-                          </div>
-                        </ul>
-                      </div>
-                      <!-- <small id="selected-count" class="text-muted">0 methods selected</small> -->
-                    </div>
-                  </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="col-form-label">Duration (In Days)</label>
+                                <div class="input-group">
+                                    <input class="form-control" type="number" id="durationDays" name="duration_days" readonly required>
+                                    <span class="input-group-text">Days</span>
+                                </div>
+                            </div>
+                        </div>
 
-                  <!-- //* Payment Drop Down -->
+                        <!-- Toggle for Student/Regular Rates -->
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-form-label">Rate Type</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="rateToggle" name="rate_type" value="Regular" onchange="updatePlanDetails()">
+                                    <label class="form-check-label" for="rateToggle">Toggle for Regular Rate</label>
+                                </div>
+                            </div>
+                        </div>
 
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label class="col-form-label">Description <span style="color: gray;">(Optional)</span></label>
-                      <textarea class="form-control" name="description"></textarea>
+                        <!-- Membership Fee -->
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-form-label">Membership Fee</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-default-light">₱</span>
+                                    <input class="form-control" type="number" id="planPrice" name="price" readonly required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-form-label">Description <span style="color: gray;">(Optional)</span></label>
+                                <textarea class="form-control" name="description"></textarea>
+                            </div>
+                        </div>
                     </div>
-                  </div>
-                </div>
-                <div class="submit-section">
-                  <button class="btn btn-primary submit-btn" type="submit">Create</button>
-                </div>
-              </form>
+                    <div class="submit-section">
+                        <button class="btn btn-primary submit-btn" type="submit">Create</button>
+                    </div>
+                </form>
             </div>
-          </div>
         </div>
-      </div>
+    </div>
+</div>
 
       <!-- //* Create Membership Plan Modal End -->
 
@@ -259,6 +245,8 @@
   <?php include 'layouts/customizer.php'; ?>
   <!-- JAVASCRIPT -->
   <?php include 'layouts/vendor-scripts.php'; ?>
+
+ 
 
   <script>
     function toggleSelectAll() {
@@ -299,6 +287,86 @@
         })
         .catch(error => console.error('Error:', error));
     }
+  </script>
+
+
+<script>
+  function updateDurationDays() {
+    const planType = document.getElementById('planType').value;
+    const durationField = document.getElementById('durationDays');
+
+    switch (planType) {
+      case 'Monthly':
+        durationField.value = "30 Days"; // Assuming 30 days for a month
+        break;
+      case 'Weekly':
+        durationField.value = "7 Days"; // 7 days for a week
+        break;
+      case 'Half-Month':
+        durationField.value = "15 Days"; // 15 days for half a month
+        break;
+      default:
+        durationField.value = ''; // Clear the field if no valid selection
+    }
+  }
+</script>
+<script>
+    function updatePlanDetails() {
+    const planType = document.getElementById('planType').value;
+    const rateToggle = document.getElementById('rateToggle').checked; // Regular rate if true
+    const durationField = document.getElementById('durationDays');
+    const priceField = document.getElementById('planPrice');
+
+    // Prices for student and regular rates
+    const prices = {
+        Daily: { student: 60.00, regular: 80.00 },
+        Weekly: { student: 200.00, regular: 250.00 },
+        'Half-Month': { student: 350.00, regular: 450.00 },
+        Monthly: { student: 600.00, regular: 800.00 }
+    };
+
+    // Durations for each plan type
+    const durations = {
+        Daily: 1,        // 1 day
+        Weekly: 7,       // 7 days
+        'Half-Month': 15, // 15 days
+        Monthly: 30      // 30 days
+    };
+
+    // Determine the rate type (student or regular)
+    const rateType = rateToggle ? 'regular' : 'student';
+
+    // Set the duration and price based on the selected plan type and rate
+    if (planType in prices && planType in durations) {
+        durationField.value = durations[planType];
+        priceField.value = prices[planType][rateType].toFixed(2); // Display price with 2 decimal places
+    } else {
+        durationField.value = ''; // Clear the field if no valid selection
+        priceField.value = '';
+    }
+}
+
+  </script>
+
+  <script>
+    const successAlert = document.getElementById("successAlert");
+  if (successAlert) {
+      setTimeout(() => {
+          successAlert.classList.remove("show");
+          successAlert.classList.add("fade");
+          setTimeout(() => {
+              successAlert.remove();
+          }, 300);
+      }, 5000);
+  }
+
+    // Clean up URL Parameters
+    const url = new URL(window.location.href);
+  if (url.searchParams.has("success") || url.searchParams.has("error")) {
+      url.searchParams.delete("success");
+      url.searchParams.delete("error");
+      history.replaceState(null, "", url);
+  }
   </script>
 
 
